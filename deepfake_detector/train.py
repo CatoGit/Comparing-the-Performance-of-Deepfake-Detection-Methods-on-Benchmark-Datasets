@@ -1,75 +1,15 @@
+import argparse
+import os
+import torch
+import torch.nn as nn
+import torchvision
+import torchvision.models as models
+import torchvision.transforms as transforms
 from albumentations import Compose, HorizontalFlip, Resize, ImageCompression, GaussNoise, GaussianBlur
 from albumentations import PadIfNeeded, OneOf, RandomBrightnessContrast, FancyPCA, HueSaturationValue
 from albumentations import ToGray, ShiftScaleRotate
-
-
-def label_data(dataset_path="uadfv/", test_data=False):
-    """
-    Label the data.
-    # Arguments:
-        dataset_path: path to data
-        test_data: binary choice that indicates whether data is for testing or not.
-    # Implementation: Christopher Otto
-    """
-    # structure data from folder in data frame for loading
-    video_path_real = os.path.join(dataset_path + "real/")
-    video_path_fake = os.path.join(dataset_path + "fake/")
-
-    # add labels to videos
-    data_list = []
-    for _, _, videos in os.walk(video_path_real):
-        for video in tqdm(videos):
-            # label 0 for real video
-            data_list.append({'label': 0, 'image': video})
-
-    for _, _, videos in os.walk(video_path_fake):
-        for video in tqdm(videos):
-            # label 1 for deepfake video
-            data_list.append({'label': 1, 'image': video})
-
-    # put data into dataframe
-    df = pd.DataFrame(data=data_list)
-    return df
-
-
-def df_augmentations(strengh="weak"):
-    """
-    Augmentations with the albumentations package.
-    # Arguments:
-        strength: strong or weak augmentations
-
-    # Implementation: Christopher Otto
-    """
-    if strength == "weak":
-        augs = Compose([
-            # hflip with prob 0.5
-            HorizontalFlip(p=0.5),
-            # adjust image to DNN input size
-            Resize(width=img_size, height=img_size)
-        ])
-        return augs
-    else:
-        # augmentations via albumentations package
-        # augmentations similar to 3rd place private leaderboard solution of
-        # https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
-        augs = Compose([
-            # hflip with prob 0.5
-            HorizontalFlip(p=0.5),
-            ImageCompression(quality_lower=60, quality_upper=100, p=0.5),
-            GaussNoise(p=0.1),
-            GaussianBlur(blur_limit=3, p=0.05),
-            # IsotropicResize(max_side=size),
-            PadIfNeeded(min_height=img_size, min_width=img_size,
-                        border_mode=cv2.BORDER_CONSTANT),
-            OneOf([RandomBrightnessContrast(), FancyPCA(),
-                   HueSaturationValue()], p=0.7),
-            ToGray(p=0.2),
-            ShiftScaleRotate(shift_limit=0.1, scale_limit=0.2,
-                             rotate_limit=10, border_mode=cv2.BORDER_CONSTANT, p=0.5),
-            # adjust image to DNN input size
-            Resize(width=img_size, height=img_size)
-        ])
-        return augs
+from facedetector import retinaface
+from dfdetector import DFDetector
 
 
 def train(folds=5, epochs=0, fulltrain=False):
@@ -258,7 +198,10 @@ def train(folds=5, epochs=0, fulltrain=False):
     # model.load_state_dict(best_model)
     return model, average_auc, average_ap, average_acc, average_loss
 
-from facedetector import retinaface
 
 if __name__ == "__main__":
-    retinaface.detect_face("C:/Users/Chris/Desktop/fake_videos/", saveimgs_path="C:/Users/Chris/Desktop/fake_videos/saved/")
+    results = DFDetector.benchmark(
+        dataset="uadfv", data_path='C:/Users/Chris/Desktop/fake_videos', method="xception")
+    #retinaface.detect_face(args.path, saveimgs_path="C:\\Users\\Chris\\Desktop\\fake_videos\\saved\\fake\\")
+    # C:\\Users\\Chris\\Desktop\\fake_videos\\fake\\
+    #'TESTING CSV!'

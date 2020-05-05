@@ -1,3 +1,4 @@
+from torch.utils.data import Dataset, DataLoader
 # author: Christopher Otto
 # has 50/50 class balance
 class UADFVDataset(Dataset):
@@ -7,9 +8,8 @@ class UADFVDataset(Dataset):
        
        Implementation: Christopher Otto
     """
-    def __init__(self, img_dir, data,img_size,normalization, augmentations):
+    def __init__(self, data,img_size,normalization, augmentations):
         """Dataset constructor."""
-        self.img_dir = img_dir
         self.data = data
         self.img_size = img_size
         self.augmentations = augmentations
@@ -21,9 +21,9 @@ class UADFVDataset(Dataset):
         image = image_row['image']
         label = image_row['label']
         if label == 1:
-            img_path = os.path.join(self.img_dir + 'fake', image)
+            img_path = os.path.join(image)
         else:
-            img_path = os.path.join(self.img_dir + 'real', image)
+            img_path = os.path.join(image)
        
         #load image from path
         try:
@@ -35,6 +35,7 @@ class UADFVDataset(Dataset):
 
         #apply augmentations to image
         if self.augmentations:
+            #TEST
             img = self.augmentations(image=img)['image']
         else:
             #no augmentation during validation or test, just resize to fit DNN input

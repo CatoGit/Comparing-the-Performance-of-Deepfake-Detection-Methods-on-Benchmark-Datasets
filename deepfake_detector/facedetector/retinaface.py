@@ -182,7 +182,7 @@ def detect_faces(net, video, cfg, num_frames):
     return frames
 
 
-def extract_frames(faces, video, save_to, margin, num_frames, test=False):
+def extract_frames(faces, video, save_to, face_margin, num_frames, test=False):
     """
     Extract frames from video and save image with frames.
 
@@ -204,7 +204,8 @@ def extract_frames(faces, video, save_to, margin, num_frames, test=False):
             b = list(map(int, b))
             # add bigger margin around the face as recommended here:
             # https://www.kaggle.com/c/deepfake-detection-challenge/discussion/140236
-            b = [b[0]-margin, b[1]-margin, b[2]+margin, b[3]+margin]
+            b = [b[0]-face_margin, b[1]-face_margin,
+                 b[2]+face_margin, b[3]+face_margin]
         try:
             img_raw = img_raw[b[1]:b[3], b[0]:b[2]]
         except:
@@ -233,13 +234,14 @@ def extract_frames(faces, video, save_to, margin, num_frames, test=False):
     # only save if specified number of frames available
     if len(imgs_same_size) <= num_frames:
         for idx, i in enumerate(imgs_same_size):
-            name = save_to + video[:-4] + '_' + str(idx) + ".jpg"
+            name = video[:-4] + '_' + str(idx) + ".jpg"
             cv2.imwrite(name, i)
     # return sequence length for metadata
     return len(imgs_same_size)
 
 
-def detect_face(video_path, saveimgs_path=None,face_margin=20, backbone="resnet50", backbone_path ="/home/jupyter/Resnet50_Final.pth"):
+def detect(video_path=None, saveimgs_path=None, face_margin=20, backbone="resnet50",
+                backbone_path="./deepfake_detector/facedetector/Resnet50_Final.pth"):
     """
     Detect faces from video frames.
     # Arguments:
@@ -253,15 +255,21 @@ def detect_face(video_path, saveimgs_path=None,face_margin=20, backbone="resnet5
     """
     if saveimgs_path:
         # load pretrained resnet backbone detector
-        net, cfg = my_detector(cfg_mnet, cfg_re50, inp = backbone, model_path=backbone_path, cpu = False)
+        net, cfg = my_detector(
+            cfg_mnet, cfg_re50, inp=backbone, model_path=backbone_path, cpu=False)
 
+        
         video_path = os.path.join(video_path)
         save_path = os.path.join(saveimgs_path)
-
         # detect faces, add margin, crop, upsample to same size, save to images
-        for _,_,videos in os.walk(video_path):
+        for _, _, videos in os.walk(video_path):
             for video in tqdm(videos):
                 vid = video_path + video
-                faces = detect_faces(net, vid, cfg, num_frames = 20)
+                faces = detect_faces(net, vid, cfg, num_frames=20)
                 # save frames to images
-                extract_frames(faces, video,save_to=save_path, face_margin=20,num_frames=20, test=False)
+                extract_frames(faces, video, save_to=save_path,
+                               face_margin=face_margin, num_frames=20, test=False)
+    else:
+        # load face detector for testing
+        detector, config = my_detector(cfg_mnet, cfg_re50, inp=backbone, model_path=backbone_path, cpu=False)
+        return detector, config

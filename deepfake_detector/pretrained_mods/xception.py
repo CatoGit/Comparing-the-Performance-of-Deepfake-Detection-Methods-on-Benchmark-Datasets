@@ -246,8 +246,7 @@ def imagenet_pretrained_xception():
     model.fc = model.last_linear
     del model.last_linear
     # pretrained model from https://data.lip6.fr/cadene/pretrainedmodels/
-    state_dict = torch.load(
-        "./deepfake_detector/models/weights/xception-b5690688.pth")
+    state_dict = torch.load("./deepfake_detector/pretrained_mods/weights/xception-b5690688.pth")
     # from https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py
     for name, weights in state_dict.items():
         if 'pointwise' in name:
