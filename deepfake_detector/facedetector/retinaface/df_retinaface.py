@@ -7,16 +7,15 @@ import torch
 import torch.backends.cudnn as cudnn
 
 import cv2
-from facedetector.data import cfg_mnet, cfg_re50
-from facedetector.layers.functions.prior_box import PriorBox
-from facedetector.models.retinaface import RetinaFace
-from facedetector.utils.box_utils import decode, decode_landm
-from facedetector.utils.nms.py_cpu_nms import py_cpu_nms
+from facedetector.retinaface.data import cfg_mnet, cfg_re50
+from facedetector.retinaface.layers.functions.prior_box import PriorBox
+from facedetector.retinaface.models.retinaface import RetinaFace
+from facedetector.retinaface.utils.box_utils import decode, decode_landm
+from facedetector.retinaface.utils.nms.py_cpu_nms import py_cpu_nms
 from tqdm import tqdm
 
 # from https://github.com/biubug6/Pytorch_Retinaface
 # MIT License
-
 
 def check_keys(model, pretrained_state_dict):
     ckpt_keys = set(pretrained_state_dict.keys())
@@ -234,14 +233,14 @@ def extract_frames(faces, video, save_to, face_margin, num_frames, test=False):
     # only save if specified number of frames available
     if len(imgs_same_size) <= num_frames:
         for idx, i in enumerate(imgs_same_size):
-            name = video[:-4] + '_' + str(idx) + ".jpg"
+            name = save_to + video[:-4] + '_' + str(idx) + ".jpg"
             cv2.imwrite(name, i)
     # return sequence length for metadata
     return len(imgs_same_size)
 
 
 def detect(video_path=None, saveimgs_path=None, face_margin=20, backbone="resnet50",
-                backbone_path="./deepfake_detector/facedetector/Resnet50_Final.pth"):
+                backbone_path="./deepfake_detector/facedetector/retinaface/Resnet50_Final.pth"):
     """
     Detect faces from video frames.
     # Arguments:
@@ -258,7 +257,6 @@ def detect(video_path=None, saveimgs_path=None, face_margin=20, backbone="resnet
         net, cfg = my_detector(
             cfg_mnet, cfg_re50, inp=backbone, model_path=backbone_path, cpu=False)
 
-        
         video_path = os.path.join(video_path)
         save_path = os.path.join(saveimgs_path)
         # detect faces, add margin, crop, upsample to same size, save to images

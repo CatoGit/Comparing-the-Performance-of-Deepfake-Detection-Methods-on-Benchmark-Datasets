@@ -14,12 +14,12 @@ normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],
 The resize parameter of the validation transform should be 333, and make sure to center crop at 299x299
 """
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
 from torch.nn import init
-
 
 pretrained_settings = {
     'xception': {
@@ -168,7 +168,6 @@ class Xception(nn.Module):
 
         self.fc = nn.Linear(2048, num_classes)
 
-
     def features(self, input):
         x = self.conv1(input)
         x = self.bn1(x)
@@ -246,7 +245,8 @@ def imagenet_pretrained_xception():
     model.fc = model.last_linear
     del model.last_linear
     # pretrained model from https://data.lip6.fr/cadene/pretrainedmodels/
-    state_dict = torch.load("./deepfake_detector/pretrained_mods/weights/xception-b5690688.pth")
+    state_dict = torch.load(
+        "./deepfake_detector/pretrained_mods/weights/xception-b5690688.pth")
     # from https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py
     for name, weights in state_dict.items():
         if 'pointwise' in name:

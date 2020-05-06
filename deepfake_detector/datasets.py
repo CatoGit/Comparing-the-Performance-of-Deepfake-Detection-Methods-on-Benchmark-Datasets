@@ -1,3 +1,5 @@
+import os
+import cv2
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -37,7 +39,6 @@ class UADFVDataset(Dataset):
 
         #apply augmentations to image
         if self.augmentations:
-            #TEST
             img = self.augmentations(image=img)['image']
         else:
             #no augmentation during validation or test, just resize to fit DNN input

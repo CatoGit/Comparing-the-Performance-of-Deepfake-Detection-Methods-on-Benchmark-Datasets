@@ -1,23 +1,27 @@
 import argparse
+import copy
 import os
+import time
 
 import torch
 import torch.nn as nn
+from sklearn.model_selection import ShuffleSplit
+from torch.optim import Adam, lr_scheduler
+from torch.utils.data import DataLoader, Dataset
 
+import datasets
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
-from albumentations import (
-    Compose, FancyPCA, GaussianBlur, GaussNoise, HorizontalFlip,
-    HueSaturationValue, ImageCompression, OneOf, PadIfNeeded,
-    RandomBrightnessContrast, Resize, ShiftScaleRotate, ToGray)
-from dfdetector import DFDetector
-from facedetector import retinaface
+from facedetector.retinaface import df_retinaface
+from pretrained_mods import xception
+from tqdm import tqdm
 
-
-def train(folds=5, epochs=0, fulltrain=False):
+def train(dataset, data, method, normalization, augmentations, img_size,
+          folds=1, epochs=1, batch_size=32, lr=0.001, fulltrain=False, load_model=None
+          ):
     """
-    Train DNN for a number of epochs.
+    Train a DNN for a number of epochs.
 
     # parts from https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html
     # adapted by: Christopher Otto
@@ -31,13 +35,16 @@ def train(folds=5, epochs=0, fulltrain=False):
     average_acc = []
     average_ap = []
 
+    # k-fold cross-val if folds > 1
     for fold in range(folds):
-        print(f"Fold: {fold}")
+        if folds > 1:
+            # doing k-fold cross-validation
+            print(f"Fold: {fold}")
 
         best_acc = 0.0
-        best_loss = 10
+        best_loss = 100
         current_acc = 0.0
-        current_loss = 10.0
+        current_loss = 100.0
         best_auc = 0.0
         best_ap = 0.0
         # get train and val indices
@@ -46,21 +53,30 @@ def train(folds=5, epochs=0, fulltrain=False):
 
         # prepare training and validation data
         if fulltrain == True:
-            train_dataset = UADFVDataset(
-                img_dir, df, img_size, augmentations_weak)
-            train_loader = DataLoader(
-                train_dataset, batch_size=32, shuffle=True)
+            if dataset == 'uadfv':
+                train_dataset = datasets.UADFVDataset(
+                    data, img_size, normalization=normalization, augmentations=augmentations)
+                train_loader = DataLoader(
+                    train_dataset, batch_size=batch_size, shuffle=True)
         else:
-            val_dataset = UADFVDataset(
-                img_dir, df.iloc[val_idx], img_size, augmentations=None)
-            train_dataset = UADFVDataset(
-                img_dir, df.iloc[train_idx], img_size, augmentations_weak)
-            train_loader = DataLoader(
-                train_dataset, batch_size=32, shuffle=True)
-            val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+            if dataset == 'uadfv':
+                train_dataset = datasets.UADFVDataset(
+                    data.iloc[train_idx], img_size, augmentations=augmentations)
+                train_loader = DataLoader(
+                    train_dataset, batch_size=batch_size, shuffle=True)
+                val_dataset = datasets.UADFVDataset(
+                    data.iloc[val_idx], img_size, augmentations=None)
+                val_loader = DataLoader(
+                    val_dataset, batch_size=batch_size, shuffle=False)
 
-        # load the xception model
-        model = imagenet_pretrained_xception()
+        if load_model is None:
+            # train model from scratch/pretrained imagenet
+            if method == 'xception':
+                # load the xception model
+                model = xception.imagenet_pretrained_xception()
+        else:
+            # load model
+            model = torch.load(load_model)
 
         if fold == 0:
             best_model = copy.deepcopy(model.state_dict())
@@ -69,7 +85,7 @@ def train(folds=5, epochs=0, fulltrain=False):
         model = model.cuda()
         # binary cross-entropy loss
         loss_func = nn.BCEWithLogitsLoss()
-        lr = 0.001
+        lr = lr
         # adam optimizer
         optimizer = Adam(model.parameters(), lr=lr)
         # cosine annealing scheduler
@@ -202,9 +218,18 @@ def train(folds=5, epochs=0, fulltrain=False):
     return model, average_auc, average_ap, average_acc, average_loss
 
 
-if __name__ == "__main__":
-    results = DFDetector.benchmark(
-        dataset="uadfv", data_path='C:/Users/Chris/Desktop/fake_videos', method="xception")
-    #retinaface.detect_face(args.path, saveimgs_path="C:\\Users\\Chris\\Desktop\\fake_videos\\saved\\fake\\")
-    # C:\\Users\\Chris\\Desktop\\fake_videos\\fake\\
-    #'TESTING CSV!'
+def shuffeled_cross_val(fold):
+    """
+    Return train and val indices for fold.
+    """
+    X = df['image'].values
+    y = df['label'].values
+    skf = ShuffleSplit(n_splits=5, test_size=0.25, random_state=24)
+    train = []
+    val = []
+    for train_index, val_index in skf.split(X, y):
+        train.append(train_index)
+        val.append(val_index)
+
+    # return indices for fold
+    return list(train[fold]), list(val[fold])

@@ -15,25 +15,34 @@ import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
 from sklearn.model_selection import ShuffleSplit
-from torch.optim import Adam, lr_scheduler
 
 import cv2
 import datasets
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
-from albumentations import Compose, HorizontalFlip, Resize
+import train
+from albumentations import (
+    Compose, FancyPCA, GaussianBlur, GaussNoise, HorizontalFlip,
+    HueSaturationValue, ImageCompression, OneOf, PadIfNeeded,
+    RandomBrightnessContrast, Resize, ShiftScaleRotate, ToGray)
 from pretrained_mods import xception
 from tqdm import tqdm
+from facedetector.retinaface import df_retinaface
 
 
 class DFDetector():
+    """
+    The Deepfake Detector.
+    """
+
     def __init__(self, facedetector="retinaface_resnet", visuals=False):
         self.facedetector = facedetector
         self.visuals = visuals
 
     @classmethod
-    def detect(cls, video=None,  method="xception"):
+    def detect_single(cls, video=None,  method="xception"):
+        """Perform deepfake detection on a single video with a chosen method."""
         return result
 
     @classmethod
@@ -53,10 +62,8 @@ class DFDetector():
             cls.method = method
             cls.data_path = data_path
             if cls.method == "xception":
-                img_size = 299
-                # no augs because of testing
-                augmentations = None
-                normalization = "xception"
+                model, img_size, normalization = prepare_method(
+                    method=cls.method, mode='test')
             else:
                 img_size = None
         if dataset == 'uadfv':
@@ -72,7 +79,8 @@ class DFDetector():
             if cls.data_path.endswith("fake_videos.zip"):
                 raise ValueError("Please make sure to extract the zipfile.")
             if cls.data_path.endswith("fake_videos"):
-                print(f"Benchmarking \033[1m{cls.method}\033[0m on the UADFV dataset with ...")
+                print(
+                    f"Benchmarking \033[1m{cls.method}\033[0m on the UADFV dataset with ...")
                 # create test directories if they don't exist
                 if not os.path.exists(data_path + '/test/'):
                     structure_uadfv_files(
@@ -91,18 +99,15 @@ class DFDetector():
                             files_needed_csv="uadfv_test.csv", path_to_data=data_path)
 
                 # get test labels for metric evaluation
-                df = label_data(dataset_path=cls.data_path, test_data=True)
+                df = label_data(dataset_path=cls.data_path, dataset='uadfv', test_data=True)
                 if img_size is None:
                     print("Please specify the DNN input image size.")
                 # uadfv test dataset
                 #cls.dataset = datasets.UADFVDataset(df,img_size,normalization,augmentations)
-                model = xception.imagenet_pretrained_xception()
-                # load the xception model that was pretrained on the uadfv training data
-                model_params = torch.load(
-                    './deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_UADFV.pth')
-                model.load_state_dict(model_params)
+
                 print(f"Detect deepfakes with \033[1m{cls.method}\033[0m ...")
-                auc, ap, loss, acc = test.inference(model, df, img_size)
+                auc, ap, loss, acc = test.inference(
+                    model, df, img_size, normalization)
             else:
                 raise ValueError("""Please organize the dataset directory in this way:
                                     ./fake_videos/
@@ -114,8 +119,74 @@ class DFDetector():
             raise ValueError(f"{dataset} does not exist.")
         return [auc, ap, loss, acc]
 
+    @classmethod
+    def train_method(cls, dataset=None, data_path=None, method="xception", img_save_path=None, epochs=1, batch_size=32,
+                     lr=0.001, folds=1, augmentation_strength='weak', fulltrain=False):
+        """Train a deepfake detection method on a dataset."""
+        if img_save_path is None:
+            raise ValueError("Need a path to save extracted images for training.")
+        cls.dataset = dataset
+        cls.data_path = data_path
+        cls.method = method
+        cls.epochs = epochs
+        cls.batch_size = batch_size
+        cls.augmentations = augmentation_strength
+        # no k-fold cross val if folds == 1
+        cls.folds = folds
+        # whether to train on the entire training data (without val sets)
+        cls.fulltrain = fulltrain
+        _, img_size, normalization = prepare_method(cls.method, mode='train')
+        # get train data and labels
+        df = label_data(dataset_path=cls.data_path,dataset='uadfv', test_data=False)
+        if not os.path.exists(img_save_path + '/train_imgs/'):
+            # create directory in save path for images
+            os.mkdir(img_save_path + '/train_imgs/')
+        save_dir = os.path.join(img_save_path + '/train_imgs/')
+        print("Detect and save max. 20 faces from each video for training.")
+        # load retinaface face detector
+        net, cfg = df_retinaface.detect()
+        for idx, row in tqdm(df.iterrows(), total=df.shape[0]):
+            video = row.loc['video']
+            label = row.loc['label']
+            vid = os.path.join(video)
+            if cls.dataset == 'uadfv':
+                if label == 1:
+                    video = video[-14:]
+                else:
+                    video = video[-9:]
+            # detect faces, add margin, crop, upsample to same size, save to images
+            faces = df_retinaface.detect_faces(net, vid, cfg, num_frames=20)
+            
+            # save frames to directory
+            vid_frames = df_retinaface.extract_frames(faces, video, save_to=save_dir, face_margin=0,num_frames=20, test=False)
+            
+        model, average_auc, average_ap, average_acc, average_loss = train.train(dataset='uadfv', data=df,
+            method=cls.method, img_size=img_size, normalization=normalization, augmentations=cls.augmentations,
+            folds=cls.folds, epochs=cls.epochs, fulltrain=True
+        )
+        return model, average_auc, average_ap, average_acc, average_loss
 
-def label_data(dataset_path=None, test_data=False):
+
+def prepare_method(method, mode='train'):
+    """Prepares the method that will be used."""
+    if method == "xception":
+        img_size = 299
+        if mode == 'test':
+            normalization = "xception"
+            model = xception.imagenet_pretrained_xception()
+            # load the xception model that was pretrained on the uadfv training data
+            model_params = torch.load(
+                './deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_UADFV.pth')
+            model.load_state_dict(model_params)
+            return model, img_size, normalization
+        elif mode == 'train':
+            normalization = "xception"
+            # model is loaded in the train loop, because easier in case of k-fold cross val
+            model = None
+            return model, img_size, normalization
+
+
+def label_data(dataset_path=None,dataset='uadfv', test_data=False):
     """
     Label the data.
     # Arguments:
@@ -133,19 +204,40 @@ def label_data(dataset_path=None, test_data=False):
         video_path_real = os.path.join(dataset_path + "/real/")
         video_path_fake = os.path.join(dataset_path + "/fake/")
 
-        # add labels to videos
-        data_list = []
-        for _, _, videos in os.walk(video_path_real):
-            for video in tqdm(videos):
-                # label 0 for real video
-                data_list.append(
-                    {'label': 0, 'image': video_path_real + video})
+        if dataset == 'uadfv':
+            # prepare uadfv training data
+            test_dat = pd.read_csv("./deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
+            test_list = test_dat['video'].tolist()
 
-        for _, _, videos in os.walk(video_path_fake):
-            for video in tqdm(videos):
-                # label 1 for deepfake video
-                data_list.append(
-                    {'label': 1, 'image': video_path_fake + video})
+            full_list = []
+            for _, _, videos in os.walk(video_path_real):
+                for video in tqdm(videos):
+                    # label 0 for real video
+                    full_list.append(video)
+
+            for _, _, videos in os.walk(video_path_fake):
+                for video in tqdm(videos):
+                    # label 1 for deepfake video
+                    full_list.append(video)
+
+            # training data (not used for testing)
+            new_list = [entry for entry in full_list if entry not in test_list]
+
+            # add labels to videos
+            data_list = []
+            for _, _, videos in os.walk(video_path_real):
+                for video in tqdm(videos):
+                    # append if video in training data
+                    if video in new_list:
+                        # label 0 for real video
+                        data_list.append({'label': 0, 'video': video_path_real + video})
+
+            for _, _, videos in os.walk(video_path_fake):
+                for video in tqdm(videos):
+                    # append if video in training data
+                    if video in new_list:
+                        # label 1 for deepfake video
+                        data_list.append({'label': 1, 'video': video_path_fake + video})
     else:
         # prepare test data
         video_path_test_real = os.path.join(dataset_path + "/test/real/")
@@ -162,9 +254,13 @@ def label_data(dataset_path=None, test_data=False):
                 # label 1 for deepfake image
                 data_list.append(
                     {'label': 1, 'video': video_path_test_fake + video})
+
     # put data into dataframe
     df = pd.DataFrame(data=data_list)
-    print(f"{len(df)} test videos.")
+    if test_data:
+        print(f"{len(df)} test videos.")
+    else:
+        print(f"{len(df)} train videos.")
     print()
     return df
 

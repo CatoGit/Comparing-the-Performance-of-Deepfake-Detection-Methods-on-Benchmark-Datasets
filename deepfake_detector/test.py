@@ -7,7 +7,7 @@ import torch.nn as nn
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
-from facedetector import retinaface
+from facedetector.retinaface import df_retinaface
 
 from sklearn.metrics import confusion_matrix
 from albumentations import Resize
@@ -17,7 +17,7 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 
-def vid_inference(model, video_frames, label, img_size):
+def vid_inference(model, video_frames, label, img_size, normalization):
     # model evaluation mode
     model.cuda()
     model.eval()
@@ -43,7 +43,10 @@ def vid_inference(model, video_frames, label, img_size):
             # turn dtype from uint8 to float and normalize to [0,1] range
             frame = frame.float() / 255.0
             # normalize by imagenet stats
-            transform = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            if normalization == 'xception':
+                transform = transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+            else:
+                transform = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             frame = transform(frame)
             # add batch dimension and input into model
             predictions = model(frame.unsqueeze(0))
@@ -57,7 +60,7 @@ def vid_inference(model, video_frames, label, img_size):
     return np.mean(avg_preds), np.mean(avg_loss)
 
 
-def inference(model, test_df, img_size):
+def inference(model, test_df, img_size, normalization):
     # path to save extracted faces
     #video_path = os.path.join("/home/jupyter/fake_videos/real/test/")
     #save_path = os.path.join("/home/jupyter/0margin/test/real/")
@@ -70,21 +73,21 @@ def inference(model, test_df, img_size):
     labs = []
     prds = []
     # load retinaface face detector
-    net, cfg = retinaface.detect()
+    net, cfg = df_retinaface.detect()
     for idx, row in tqdm(test_df.iterrows(), total=test_df.shape[0]):
         video = row.loc['video']
         label = row.loc['label']
         vid = os.path.join(video)
         #inference (no saving of images inbetween to make it faster)
         # detect faces, add margin, crop, upsample to same size, save to images
-        faces = retinaface.detect_faces(net, vid, cfg, num_frames=20)
+        faces = df_retinaface.detect_faces(net, vid, cfg, num_frames=20)
         # save frames to images
         #try:
-        vid_frames = retinaface.extract_frames(faces, video,save_to=None, face_margin=0,num_frames=20, test=True)
+        vid_frames = df_retinaface.extract_frames(faces, video,save_to=None, face_margin=0,num_frames=20, test=True)
         #except:
             #print("Error: Video frames.")
         # inference for each frame
-        vid_pred, vid_loss = vid_inference(model,vid_frames, label, img_size)
+        vid_pred, vid_loss = vid_inference(model,vid_frames, label, img_size, normalization)
         labs.append(label)
         prds.append(vid_pred)
         running_loss += vid_loss
