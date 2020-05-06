@@ -1,45 +1,38 @@
 # result = dfdetector.detect(video, method, optional->facedetector->default retinafce) --> detects whether file is real/fake
 # result = dfdetector.benchmark(dataset,method) ->benchmarks method on datasets test data
-import zipfile
-import shutil
-import os
-import torch
-import torch.nn as nn
-import torchvision
-import torchvision.models as models
-import torchvision.transforms as transforms
-import datasets
-import os
 import argparse
+import copy
+import os
+import shutil
+import test
+import time
+import zipfile
+
+import numpy as np
+import pandas as pd
 import torch
 import torch.backends.cudnn as cudnn
-import numpy as np
-import cv2
-import time
-import copy
-import torch
 import torch.nn as nn
+from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
+from sklearn.model_selection import ShuffleSplit
+from torch.optim import Adam, lr_scheduler
+
+import cv2
+import datasets
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
-import pandas as pd
-import test 
-
-from pretrained_mods import xception
-from torch.optim import Adam, lr_scheduler
-from tqdm import tqdm
 from albumentations import Compose, HorizontalFlip, Resize
-from sklearn.metrics import average_precision_score, roc_auc_score
-from sklearn.model_selection import ShuffleSplit
-from sklearn.metrics import roc_curve
-from sklearn.metrics import roc_auc_score
+from pretrained_mods import xception
+from tqdm import tqdm
+
 
 class DFDetector():
     def __init__(self, facedetector="retinaface_resnet", visuals=False):
         self.facedetector = facedetector
         self.visuals = visuals
 
-    @classmethod   
+    @classmethod
     def detect(cls, video=None,  method="xception"):
         return result
 
@@ -79,21 +72,24 @@ class DFDetector():
             if cls.data_path.endswith("fake_videos.zip"):
                 raise ValueError("Please make sure to extract the zipfile.")
             if cls.data_path.endswith("fake_videos"):
-                print(f"Benchmarking {cls.method} on the UADFV dataset...")
+                print(f"Benchmarking \033[1m{cls.method}\033[0m on the UADFV dataset with ...")
                 # create test directories if they don't exist
-
                 if not os.path.exists(data_path + '/test/'):
-                    os.mkdir(data_path + '/test/')
-                    os.mkdir(data_path + '/test/fake/')
-                    os.mkdir(data_path + '/test/real/')
-                    test_data = pd.read_csv("./deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
-                    for idx, row in test_data.iterrows():
-                        if len(str(row.loc['video'])) > 8:
-                            # video is fake, therefore move it into fake test folder
-                            shutil.move(data_path + '/fake/' + row['video'],data_path + '/test/fake/')
-                        else:
-                            # video is real, therefore move it into real test folder
-                            shutil.move(data_path + '/real/' + row['video'],data_path + '/test/real/')
+                    structure_uadfv_files(
+                        files_needed_csv="uadfv_test.csv", path_to_data=data_path)
+                else:
+                    # check if path exists but files are not complete (from https://stackoverflow.com/a/2632251)
+                    num_files = len([f for f in os.listdir(
+                        data_path + '/test/') if os.path.isfile(os.path.join(data_path + '/test/real/', f))])
+                    num_files += len([f for f in os.listdir(data_path + '/test/')
+                                      if os.path.isfile(os.path.join(data_path + '/test/fake/', f))])
+                    # check whether all 28 test videos are in directories
+                    if num_files != 28:
+                        # recreate all 28 files
+                        shutil.rmtree(data_path + '/test/')
+                        structure_uadfv_files(
+                            files_needed_csv="uadfv_test.csv", path_to_data=data_path)
+
                 # get test labels for metric evaluation
                 df = label_data(dataset_path=cls.data_path, test_data=True)
                 if img_size is None:
@@ -102,9 +98,11 @@ class DFDetector():
                 #cls.dataset = datasets.UADFVDataset(df,img_size,normalization,augmentations)
                 model = xception.imagenet_pretrained_xception()
                 # load the xception model that was pretrained on the uadfv training data
-                model_params = torch.load('./deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_UADFV.pth')
+                model_params = torch.load(
+                    './deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_UADFV.pth')
                 model.load_state_dict(model_params)
-                auc,ap,loss,acc = test.inference(model, df, img_size)
+                print(f"Detect deepfakes with \033[1m{cls.method}\033[0m ...")
+                auc, ap, loss, acc = test.inference(model, df, img_size)
             else:
                 raise ValueError("""Please organize the dataset directory in this way:
                                     ./fake_videos/
@@ -114,7 +112,7 @@ class DFDetector():
 
         else:
             raise ValueError(f"{dataset} does not exist.")
-        return [auc,ap,loss,acc]
+        return [auc, ap, loss, acc]
 
 
 def label_data(dataset_path=None, test_data=False):
@@ -127,9 +125,9 @@ def label_data(dataset_path=None, test_data=False):
     """
     # structure data from folder in data frame for loading
     if dataset_path is None:
-        #TEST
+        # TEST
         raise ValueError("Please specify a dataset path.")
-    #TEST
+    # TEST
     if not test_data:
         # prepare training data
         video_path_real = os.path.join(dataset_path + "/real/")
@@ -140,28 +138,34 @@ def label_data(dataset_path=None, test_data=False):
         for _, _, videos in os.walk(video_path_real):
             for video in tqdm(videos):
                 # label 0 for real video
-                data_list.append({'label': 0, 'image': video_path_real + video})
+                data_list.append(
+                    {'label': 0, 'image': video_path_real + video})
 
         for _, _, videos in os.walk(video_path_fake):
             for video in tqdm(videos):
                 # label 1 for deepfake video
-                data_list.append({'label': 1, 'image': video_path_fake + video})
+                data_list.append(
+                    {'label': 1, 'image': video_path_fake + video})
     else:
         # prepare test data
         video_path_test_real = os.path.join(dataset_path + "/test/real/")
         video_path_test_fake = os.path.join(dataset_path + "/test/fake/")
         data_list = []
-        for _,_,videos in os.walk(video_path_test_real):
+        for _, _, videos in os.walk(video_path_test_real):
             for video in tqdm(videos):
-                #append test video
-                data_list.append({'label':0,'video':video_path_test_real + video})
-                
-        for _,_,videos in os.walk(video_path_test_fake):
+                # append test video
+                data_list.append(
+                    {'label': 0, 'video': video_path_test_real + video})
+
+        for _, _, videos in os.walk(video_path_test_fake):
             for video in tqdm(videos):
                 # label 1 for deepfake image
-                data_list.append({'label':1, 'video': video_path_test_fake + video})
+                data_list.append(
+                    {'label': 1, 'video': video_path_test_fake + video})
     # put data into dataframe
     df = pd.DataFrame(data=data_list)
+    print(f"{len(df)} test videos.")
+    print()
     return df
 
 
@@ -204,8 +208,25 @@ def df_augmentations(strengh="weak"):
         ])
         return augs
 
+
+def structure_uadfv_files(files_needed_csv, path_to_data):
+    """Creates test folders and moves test videos there."""
+    os.mkdir(path_to_data + '/test/')
+    os.mkdir(path_to_data + '/test/fake/')
+    os.mkdir(path_to_data + '/test/real/')
+    test_data = pd.read_csv(
+        "./deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
+    for idx, row in test_data.iterrows():
+        if len(str(row.loc['video'])) > 8:
+            # video is fake, therefore copy it into fake test folder
+            shutil.copy(path_to_data + '/fake/' +
+                        row['video'], path_to_data + '/test/fake/')
+        else:
+            # video is real, therefore move it into real test folder
+            shutil.copy(path_to_data + '/real/' +
+                        row['video'], path_to_data + '/test/real/')
 #result = DFDetector.detect(video=video_file, method="xception", heatmap=False)
 
 #benchmark_result = DFDetector.benchmark(dataset="uadfv", method="xception", compare=False)
 
-#->compare: whether to compare with the results of other methods that were precomputed by myself
+# ->compare: whether to compare with the results of other methods that were precomputed by myself

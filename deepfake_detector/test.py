@@ -71,7 +71,7 @@ def inference(model, test_df, img_size):
     prds = []
     # load retinaface face detector
     net, cfg = retinaface.detect()
-    for idx, row in tqdm(test_df.iterrows()):
+    for idx, row in tqdm(test_df.iterrows(), total=test_df.shape[0]):
         video = row.loc['video']
         label = row.loc['label']
         vid = os.path.join(video)
@@ -92,14 +92,20 @@ def inference(model, test_df, img_size):
         running_corrects += np.sum(np.round(vid_pred) == label) 
         running_false += np.sum(np.round(vid_pred) != label) 
         
-    auc = roc_auc_score(labs, prds)
-    ap = average_precision_score(labs, prds)
-    loss = running_loss / len(test_df)
-    acc = running_corrects / len(test_df)
-
+    auc = round(roc_auc_score(labs, prds),5)
+    ap = round(average_precision_score(labs, prds),5)
+    loss = round(running_loss / len(test_df), 5)
+    acc = round(running_corrects / len(test_df),5)
+    print("Benchmark results:")
+    print("Confusion matrix:")
     print(confusion_matrix(labs,np.round(prds)))
+    tn, fp, fn, tp = confusion_matrix(labs,np.round(prds)).ravel()
     print(f"Loss: {loss}")
     print(f"Acc: {acc}")
     print(f"AUC: {auc}")
     print(f"AP: {auc}")
+    print(f"Detected \033[1m {tp}\033[0m true deepfake videos and correctly classified \033[1m {tn}\033[0m real videos.")
+    print(f"Mistook \033[1m {fp}\033[0m real videos for deepfakes and \033[1m {fn}\033[0m deepfakes went by undetected by the method.")
+    if fn == 0 and fp == 0:
+        print("Wow! A perfect classifier!")
     return auc,ap,loss,acc

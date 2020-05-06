@@ -1,15 +1,18 @@
 import argparse
 import os
+
 import torch
 import torch.nn as nn
+
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
-from albumentations import Compose, HorizontalFlip, Resize, ImageCompression, GaussNoise, GaussianBlur
-from albumentations import PadIfNeeded, OneOf, RandomBrightnessContrast, FancyPCA, HueSaturationValue
-from albumentations import ToGray, ShiftScaleRotate
-from facedetector import retinaface
+from albumentations import (
+    Compose, FancyPCA, GaussianBlur, GaussNoise, HorizontalFlip,
+    HueSaturationValue, ImageCompression, OneOf, PadIfNeeded,
+    RandomBrightnessContrast, Resize, ShiftScaleRotate, ToGray)
 from dfdetector import DFDetector
+from facedetector import retinaface
 
 
 def train(folds=5, epochs=0, fulltrain=False):

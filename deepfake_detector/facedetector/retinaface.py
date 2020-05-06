@@ -1,16 +1,17 @@
-import os
 import argparse
-import torch
-import torch.backends.cudnn as cudnn
-import numpy as np
-import cv2
+import os
 import time
 
+import numpy as np
+import torch
+import torch.backends.cudnn as cudnn
+
+import cv2
 from facedetector.data import cfg_mnet, cfg_re50
 from facedetector.layers.functions.prior_box import PriorBox
-from facedetector.utils.nms.py_cpu_nms import py_cpu_nms
 from facedetector.models.retinaface import RetinaFace
 from facedetector.utils.box_utils import decode, decode_landm
+from facedetector.utils.nms.py_cpu_nms import py_cpu_nms
 from tqdm import tqdm
 
 # from https://github.com/biubug6/Pytorch_Retinaface
@@ -23,22 +24,21 @@ def check_keys(model, pretrained_state_dict):
     used_pretrained_keys = model_keys & ckpt_keys
     unused_pretrained_keys = ckpt_keys - model_keys
     missing_keys = model_keys - ckpt_keys
-    print('Missing keys:{}'.format(len(missing_keys)))
-    print('Unused checkpoint keys:{}'.format(len(unused_pretrained_keys)))
-    print('Used keys:{}'.format(len(used_pretrained_keys)))
+    # print('Missing keys:{}'.format(len(missing_keys)))
+    # print('Unused checkpoint keys:{}'.format(len(unused_pretrained_keys)))
+    # print('Used keys:{}'.format(len(used_pretrained_keys)))
     assert len(used_pretrained_keys) > 0, 'load NONE from pretrained checkpoint'
     return True
 
 
 def remove_prefix(state_dict, prefix):
     ''' Old style model is stored with all names of parameters sharing common prefix 'module.' '''
-    print('remove prefix \'{}\''.format(prefix))
     def f(x): return x.split(prefix, 1)[-1] if x.startswith(prefix) else x
     return {f(key): value for key, value in state_dict.items()}
 
 
 def load_model(model, pretrained_path, load_to_cpu):
-    print('Loading pretrained model from {}'.format(pretrained_path))
+    # print('Loading pretrained face detector model from {}'.format(pretrained_path))
     if load_to_cpu:
         pretrained_dict = torch.load(
             pretrained_path, map_location=lambda storage, loc: storage)
@@ -69,7 +69,7 @@ def my_detector(cfg_mnet, cfg_re50, inp, model_path, cpu=False):
     net = RetinaFace(cfg=cfg, phase='test')
     net = load_model(net, model_path, cpu)
     net.eval()
-    print('Finished loading model!')
+    # print('Finished loading RetinaFace face detector!')
     # print(net)
     cudnn.benchmark = True
     device = torch.device("cpu" if cpu else "cuda")

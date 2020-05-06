@@ -1,4 +1,6 @@
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
+
+
 # author: Christopher Otto
 # has 50/50 class balance
 class UADFVDataset(Dataset):
