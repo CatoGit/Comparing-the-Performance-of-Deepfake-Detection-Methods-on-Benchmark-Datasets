@@ -47,7 +47,7 @@ class DFDetector():
         return result
 
     @classmethod
-    def benchmark(cls, dataset=None, data_path=None, method="xception"):
+    def benchmark(cls, dataset=None, data_path=None, method="xception", seed=24):
         """Benchmark deepfake detection methods against popular deepfake datasets.
            The methods are already pretrained on the datasets and benchmarked against a
            test set that is distinct from the training data.
@@ -57,6 +57,8 @@ class DFDetector():
             method: The deepfake detection method that is used.
         # Implementation: Christopher Otto
         """
+        # seed for reproducibility
+        reproducibility_seed(seed)
         if method not in ['xception', 'efficientnetb7']:
             raise ValueError("Method is not available for benchmarking.")
         else:
@@ -125,7 +127,7 @@ class DFDetector():
 
     @classmethod
     def train_method(cls, dataset=None, data_path=None, method="xception", img_save_path=None, epochs=1, batch_size=32,
-                     lr=0.001, folds=1, augmentation_strength='weak', fulltrain=False, faces_available=False):
+                     lr=0.001, folds=1, augmentation_strength='weak', fulltrain=False, faces_available=False, face_margin=0, seed=24):
         """Train a deepfake detection method on a dataset."""
         if img_save_path is None:
             raise ValueError(
@@ -140,13 +142,17 @@ class DFDetector():
         cls.folds = folds
         # whether to train on the entire training data (without val sets)
         cls.fulltrain = fulltrain
+        cls.faces_available = faces_available
+        cls.face_margin = face_margin
+        # seed for reproducibility
+        reproducibility_seed(seed)
         _, img_size, normalization = prepare_method(
             cls.method, dataset=dataset, mode='train')
         # get train data and labels
         df = label_data(dataset_path=cls.data_path,
                         dataset='uadfv', test_data=False)
         # detect and extract faces if they are not available already
-        if not faces_available:
+        if not cls.faces_available:
             if not os.path.exists(img_save_path + '/train_imgs/'):
                 # create directory in save path for images
                 os.mkdir(img_save_path + '/train_imgs/')
@@ -174,14 +180,14 @@ class DFDetector():
 
                 # save frames to directory
                 vid_frames = df_retinaface.extract_frames(
-                    faces, video, save_to=save_dir, face_margin=0, num_frames=20, test=False)
+                    faces, video, save_to=save_dir, face_margin=cls.face_margin, num_frames=20, test=False)
         # put all face images in dataframe
         df_faces = label_data(dataset_path=img_save_path + '/train_imgs/',
                               dataset='uadfv', face_crops=True, test_data=False)
         augs = df_augmentations(img_size, strength=cls.augmentations)
         model, average_auc, average_ap, average_acc, average_loss = train.train(dataset='uadfv', data=df_faces,
                                                                                 method=cls.method, img_size=img_size, normalization=normalization, augmentations=augs,
-                                                                                folds=cls.folds, epochs=cls.epochs, fulltrain=True
+                                                                                folds=cls.folds, epochs=cls.epochs, fulltrain=cls.fulltrain
                                                                                 )
         return model, average_auc, average_ap, average_acc, average_loss
 
@@ -195,7 +201,7 @@ def prepare_method(method, dataset, mode='train'):
             model = xception.imagenet_pretrained_xception()
             # load the xception model that was pretrained on the uadfv training data
             model_params = torch.load(
-                os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_{dataset}.pth')
+                os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}_best_fulltrain_{dataset}.pth')
             model.load_state_dict(model_params)
             return model, img_size, normalization
         elif mode == 'train':
@@ -344,7 +350,7 @@ def df_augmentations(img_size, strength="weak"):
             Resize(width=img_size, height=img_size)
         ])
         return augs
-    else:
+    elif strength == "strong":
         # augmentations via albumentations package
         # augmentations similar to 3rd place private leaderboard solution of
         # https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
@@ -366,6 +372,8 @@ def df_augmentations(img_size, strength="weak"):
             Resize(width=img_size, height=img_size)
         ])
         return augs
+    else:
+        raise ValueError("This augmentation option does not exist. Choose \"weak\" or \"strong\".")
 
 
 def structure_uadfv_files(files_needed_csv, path_to_data):
@@ -384,3 +392,10 @@ def structure_uadfv_files(files_needed_csv, path_to_data):
             # video is real, therefore move it into real test folder
             shutil.copy(path_to_data + '/real/' +
                         row['video'], path_to_data + '/test/real/')
+
+def reproducibility_seed(seed):
+    print("Seeded.")
+    # set pytorch random seed for cpu and gpu
+    torch.manual_seed(seed)
+    # set numpy random seed 
+    np.random.seed(seed)

@@ -1,14 +1,17 @@
 from dfdetector import DFDetector
+import os
 if __name__ == "__main__":
-    # results = DFDetector.benchmark(
-    #     dataset="uadfv", data_path='C:/Users/Chris/Desktop/fake_videos', method="xception")
+    
+    print(os.getcwd())
+    results = DFDetector.benchmark(
+        dataset="uadfv", data_path='C:/Users/Chris/Desktop/fake_videos', method="xception")
     # model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
     #     dataset="uadfv", data_path='C:/Users/Chris/Desktop/fake_videos', method="xception",
-    #     img_save_path="C:/Users/Chris/Desktop/fake_videos",epochs=1, batch_size=32, lr=0.001, faces_available=True)
+    #     img_save_path="C:/Users/Chris/Desktop/fake_videos",epochs=1, batch_size=32, lr=0.001, faces_available=True, face_margin=0)
 
-    model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
-        dataset="uadfv", data_path='C:/Users/Chris/Desktop/fake_videos', method="efficientnetb7",
-        img_save_path="C:/Users/Chris/Desktop/fake_videos",epochs=1, batch_size=32, lr=0.001, faces_available=True)
+    # model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
+    #     dataset="uadfv", data_path='C:/Users/Chris/Desktop/fake_videos', method="efficientnetb7",
+    #     img_save_path="C:/Users/Chris/Desktop/fake_videos",epochs=1, batch_size=32, lr=0.001, faces_available=True)
 
 #result = DFDetector.detect(video=video_file, method="xception", heatmap=False)
 
