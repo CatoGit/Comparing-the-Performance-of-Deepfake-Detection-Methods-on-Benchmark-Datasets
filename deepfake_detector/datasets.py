@@ -1,5 +1,7 @@
 import os
 import cv2
+import torch
+import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -22,8 +24,8 @@ class UADFVDataset(Dataset):
     def __getitem__(self, idx):
         """Load and return item and label by index."""
         image_row = self.data.iloc[idx]
-        image = image_row['image']
-        label = image_row['label']
+        image = image_row.loc['video']
+        label = image_row.loc['label']
         if label == 1:
             img_path = os.path.join(image)
         else:

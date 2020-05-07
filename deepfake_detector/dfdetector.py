@@ -20,7 +20,6 @@ import cv2
 import datasets
 import torchvision
 import torchvision.models as models
-import torchvision.transforms as transforms
 import train
 from albumentations import (
     Compose, FancyPCA, GaussianBlur, GaussNoise, HorizontalFlip,
@@ -121,7 +120,7 @@ class DFDetector():
 
     @classmethod
     def train_method(cls, dataset=None, data_path=None, method="xception", img_save_path=None, epochs=1, batch_size=32,
-                     lr=0.001, folds=1, augmentation_strength='weak', fulltrain=False):
+                     lr=0.001, folds=1, augmentation_strength='weak', fulltrain=False, faces_available=False):
         """Train a deepfake detection method on a dataset."""
         if img_save_path is None:
             raise ValueError("Need a path to save extracted images for training.")
@@ -138,30 +137,37 @@ class DFDetector():
         _, img_size, normalization = prepare_method(cls.method, mode='train')
         # get train data and labels
         df = label_data(dataset_path=cls.data_path,dataset='uadfv', test_data=False)
-        if not os.path.exists(img_save_path + '/train_imgs/'):
-            # create directory in save path for images
-            os.mkdir(img_save_path + '/train_imgs/')
-        save_dir = os.path.join(img_save_path + '/train_imgs/')
-        print("Detect and save max. 20 faces from each video for training.")
-        # load retinaface face detector
-        net, cfg = df_retinaface.detect()
-        for idx, row in tqdm(df.iterrows(), total=df.shape[0]):
-            video = row.loc['video']
-            label = row.loc['label']
-            vid = os.path.join(video)
-            if cls.dataset == 'uadfv':
-                if label == 1:
-                    video = video[-14:]
-                else:
-                    video = video[-9:]
-            # detect faces, add margin, crop, upsample to same size, save to images
-            faces = df_retinaface.detect_faces(net, vid, cfg, num_frames=20)
-            
-            # save frames to directory
-            vid_frames = df_retinaface.extract_frames(faces, video, save_to=save_dir, face_margin=0,num_frames=20, test=False)
-            
-        model, average_auc, average_ap, average_acc, average_loss = train.train(dataset='uadfv', data=df,
-            method=cls.method, img_size=img_size, normalization=normalization, augmentations=cls.augmentations,
+        # detect and extract faces if they are not available already
+        if not faces_available:
+            if not os.path.exists(img_save_path + '/train_imgs/'):
+                # create directory in save path for images
+                os.mkdir(img_save_path + '/train_imgs/')
+                os.mkdir(img_save_path + '/train_imgs/real/')
+                os.mkdir(img_save_path + '/train_imgs/fake/')
+            print("Detect and save max. 20 faces from each video for training.")
+            # load retinaface face detector
+            net, cfg = df_retinaface.detect()
+            for idx, row in tqdm(df.iterrows(), total=df.shape[0]):
+                video = row.loc['video']
+                label = row.loc['label']
+                vid = os.path.join(video)
+                if cls.dataset == 'uadfv':
+                    if label == 1:
+                        video = video[-14:]
+                        save_dir = os.path.join(img_save_path + '/train_imgs/fake/')
+                    else:
+                        video = video[-9:]
+                        save_dir = os.path.join(img_save_path + '/train_imgs/real/')
+                # detect faces, add margin, crop, upsample to same size, save to images
+                faces = df_retinaface.detect_faces(net, vid, cfg, num_frames=20)
+                
+                # save frames to directory
+                vid_frames = df_retinaface.extract_frames(faces, video, save_to=save_dir, face_margin=0,num_frames=20, test=False)
+        # put all face images in dataframe
+        df_faces = label_data(dataset_path=img_save_path + '/train_imgs/',dataset='uadfv',face_crops=True, test_data=False) 
+        augs = df_augmentations(img_size,strength=cls.augmentations) 
+        model, average_auc, average_ap, average_acc, average_loss = train.train(dataset='uadfv', data=df_faces,
+            method=cls.method, img_size=img_size, normalization=normalization, augmentations=augs,
             folds=cls.folds, epochs=cls.epochs, fulltrain=True
         )
         return model, average_auc, average_ap, average_acc, average_loss
@@ -186,7 +192,7 @@ def prepare_method(method, mode='train'):
             return model, img_size, normalization
 
 
-def label_data(dataset_path=None,dataset='uadfv', test_data=False):
+def label_data(dataset_path=None,dataset='uadfv',face_crops=False, test_data=False):
     """
     Label the data.
     # Arguments:
@@ -205,37 +211,52 @@ def label_data(dataset_path=None,dataset='uadfv', test_data=False):
         video_path_fake = os.path.join(dataset_path + "/fake/")
 
         if dataset == 'uadfv':
-            # prepare uadfv training data
-            test_dat = pd.read_csv("./deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
-            test_list = test_dat['video'].tolist()
+            # if no face crops available yet, read csv for videos
+            if not face_crops:
+                # prepare uadfv training data
+                test_dat = pd.read_csv("./deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
+                test_list = test_dat['video'].tolist()
 
-            full_list = []
-            for _, _, videos in os.walk(video_path_real):
-                for video in tqdm(videos):
-                    # label 0 for real video
-                    full_list.append(video)
+                full_list = []
+                for _, _, videos in os.walk(video_path_real):
+                    for video in videos:
+                        # label 0 for real video
+                        full_list.append(video)
 
-            for _, _, videos in os.walk(video_path_fake):
-                for video in tqdm(videos):
-                    # label 1 for deepfake video
-                    full_list.append(video)
+                for _, _, videos in os.walk(video_path_fake):
+                    for video in videos:
+                        # label 1 for deepfake video
+                        full_list.append(video)
 
-            # training data (not used for testing)
-            new_list = [entry for entry in full_list if entry not in test_list]
+                # training data (not used for testing)
+                new_list = [entry for entry in full_list if entry not in test_list]
 
-            # add labels to videos
-            data_list = []
-            for _, _, videos in os.walk(video_path_real):
-                for video in tqdm(videos):
-                    # append if video in training data
-                    if video in new_list:
+                # add labels to videos
+                data_list = []
+                for _, _, videos in os.walk(video_path_real):
+                    for video in tqdm(videos):
+                        # append if video in training data
+                        if video in new_list:
+                            # label 0 for real video
+                            data_list.append({'label': 0, 'video': video_path_real + video})
+
+                for _, _, videos in os.walk(video_path_fake):
+                    for video in tqdm(videos):
+                        # append if video in training data
+                        if video in new_list:
+                            # label 1 for deepfake video
+                            data_list.append({'label': 1, 'video': video_path_fake + video})
+            else:
+                # if face crops available go to path with face crops
+                # add labels to videos
+                data_list = []
+                for _, _, videos in os.walk(video_path_real):
+                    for video in tqdm(videos):
                         # label 0 for real video
                         data_list.append({'label': 0, 'video': video_path_real + video})
 
-            for _, _, videos in os.walk(video_path_fake):
-                for video in tqdm(videos):
-                    # append if video in training data
-                    if video in new_list:
+                for _, _, videos in os.walk(video_path_fake):
+                    for video in tqdm(videos):
                         # label 1 for deepfake video
                         data_list.append({'label': 1, 'video': video_path_fake + video})
     else:
@@ -260,12 +281,15 @@ def label_data(dataset_path=None,dataset='uadfv', test_data=False):
     if test_data:
         print(f"{len(df)} test videos.")
     else:
-        print(f"{len(df)} train videos.")
+        if face_crops:
+            print(f"Lead to: {len(df)} face crops.")
+        else:
+            print(f"{len(df)} train videos.")
     print()
     return df
 
 
-def df_augmentations(strengh="weak"):
+def df_augmentations(img_size,strength="weak"):
     """
     Augmentations with the albumentations package.
     # Arguments:
