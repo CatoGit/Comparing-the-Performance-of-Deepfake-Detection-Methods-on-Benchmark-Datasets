@@ -3,13 +3,16 @@ import copy
 import os
 import time
 
+import numpy as np
 import torch
 import torch.nn as nn
+from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
 from sklearn.model_selection import ShuffleSplit
 from torch.optim import Adam, lr_scheduler
 from torch.utils.data import DataLoader, Dataset
 
 import datasets
+import timm
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
@@ -17,8 +20,9 @@ from facedetector.retinaface import df_retinaface
 from pretrained_mods import xception
 from tqdm import tqdm
 
+
 def train(dataset, data, method, normalization, augmentations, img_size,
-          folds=1, epochs=1, batch_size=32, lr=0.001, fulltrain=False, load_model=None
+          folds=1, epochs=1, batch_size=32, lr=0.001, fulltrain=False, load_model_path=None
           ):
     """
     Train a DNN for a number of epochs.
@@ -49,7 +53,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         best_ap = 0.0
         # get train and val indices
         if fulltrain == False:
-            train_idx, val_idx = shuffeled_cross_val(fold)
+            train_idx, val_idx = shuffeled_cross_val(fold, data)
 
         # prepare training and validation data
         if fulltrain == True:
@@ -61,22 +65,26 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         else:
             if dataset == 'uadfv':
                 train_dataset = datasets.UADFVDataset(
-                    data.iloc[train_idx], img_size, augmentations=augmentations)
+                    data.iloc[train_idx], img_size, normalization=normalization, augmentations=augmentations)
                 train_loader = DataLoader(
                     train_dataset, batch_size=batch_size, shuffle=True)
                 val_dataset = datasets.UADFVDataset(
-                    data.iloc[val_idx], img_size, augmentations=None)
+                    data.iloc[val_idx], img_size, normalization=normalization, augmentations=None)
                 val_loader = DataLoader(
                     val_dataset, batch_size=batch_size, shuffle=False)
 
-        if load_model is None:
+        if load_model_path is None:
             # train model from scratch/pretrained imagenet
             if method == 'xception':
                 # load the xception model
                 model = xception.imagenet_pretrained_xception()
+            elif method == 'efficientnetb7':
+                model = timm.create_model(
+                    'tf_efficientnet_b7_ns', pretrained=True)
+                print(model)
         else:
             # load model
-            model = torch.load(load_model)
+            model = torch.load(load_model_path)
 
         if fold == 0:
             best_model = copy.deepcopy(model.state_dict())
@@ -155,7 +163,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                     if fulltrain == True and e+1 == epochs:
                         # save model if epochs reached
                         torch.save(
-                            model.state_dict(), f'/home/jupyter/xception_best_fulltrain_UADFV.pth')
+                            model.state_dict(), os.getcwd() + f'/{method}_best_fulltrain_{dataset}.pth')
 
                 else:
                     if fulltrain == True:
@@ -201,7 +209,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         best_model = copy.deepcopy(model.state_dict())
                         # save best model
                         torch.save(
-                            model.state_dict(), f'/home/jupyter/xception_best_auc_model_fold{fold}.pth')
+                            model.state_dict(), os.getcwd() + f'/{method}_best_auc_model_fold{fold}.pth')
                     if epoch_acc > best_acc:
                         best_acc = epoch_acc
                     if epoch_loss < best_loss:
@@ -213,12 +221,21 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         average_ap.append(best_ap)
         average_acc.append(best_acc)
         average_loss.append(best_loss)
+    average_auc = np.mean(average_auc)
+    print(f"Average AUC: {average_auc}")
+    average_ap = np.mean(average_ap)
+    print(f"Average AP: {average_ap}")
+    average_acc = np.mean(np.asarray(
+        [entry.cpu().numpy() for entry in average_acc]))
+    print(f"Average Acc: {average_acc}")
+    average_loss = np.mean(np.asarray([entry for entry in average_loss]))
+    print(f"Average Loss: {average_loss}")
     # load best model params
     # model.load_state_dict(best_model)
     return model, average_auc, average_ap, average_acc, average_loss
 
 
-def shuffeled_cross_val(fold):
+def shuffeled_cross_val(fold, df):
     """
     Return train and val indices for fold.
     """

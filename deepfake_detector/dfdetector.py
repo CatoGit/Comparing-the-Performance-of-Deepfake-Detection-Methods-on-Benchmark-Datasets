@@ -26,6 +26,8 @@ from albumentations import (
     HueSaturationValue, ImageCompression, OneOf, PadIfNeeded,
     RandomBrightnessContrast, Resize, ShiftScaleRotate, ToGray)
 from pretrained_mods import xception
+# efficientnet library timm: https://github.com/rwightman/pytorch-image-models
+import timm
 from tqdm import tqdm
 from facedetector.retinaface import df_retinaface
 
@@ -55,14 +57,16 @@ class DFDetector():
             method: The deepfake detection method that is used.
         # Implementation: Christopher Otto
         """
-        if method not in ['xception']:
+        if method not in ['xception', 'efficientnetb7']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             cls.method = method
             cls.data_path = data_path
             if cls.method == "xception":
                 model, img_size, normalization = prepare_method(
-                    method=cls.method, mode='test')
+                    method=cls.method, dataset=dataset, mode='test')
+            elif cls.method == "efficientnetb7":
+                model, img_size, normalization = prepare_method(method=cls.method, dataset=dataset, mode='test')
             else:
                 img_size = None
         if dataset == 'uadfv':
@@ -98,7 +102,8 @@ class DFDetector():
                             files_needed_csv="uadfv_test.csv", path_to_data=data_path)
 
                 # get test labels for metric evaluation
-                df = label_data(dataset_path=cls.data_path, dataset='uadfv', test_data=True)
+                df = label_data(dataset_path=cls.data_path,
+                                dataset='uadfv', test_data=True)
                 if img_size is None:
                     print("Please specify the DNN input image size.")
                 # uadfv test dataset
@@ -123,7 +128,8 @@ class DFDetector():
                      lr=0.001, folds=1, augmentation_strength='weak', fulltrain=False, faces_available=False):
         """Train a deepfake detection method on a dataset."""
         if img_save_path is None:
-            raise ValueError("Need a path to save extracted images for training.")
+            raise ValueError(
+                "Need a path to save extracted images for training.")
         cls.dataset = dataset
         cls.data_path = data_path
         cls.method = method
@@ -134,9 +140,11 @@ class DFDetector():
         cls.folds = folds
         # whether to train on the entire training data (without val sets)
         cls.fulltrain = fulltrain
-        _, img_size, normalization = prepare_method(cls.method, mode='train')
+        _, img_size, normalization = prepare_method(
+            cls.method, dataset=dataset, mode='train')
         # get train data and labels
-        df = label_data(dataset_path=cls.data_path,dataset='uadfv', test_data=False)
+        df = label_data(dataset_path=cls.data_path,
+                        dataset='uadfv', test_data=False)
         # detect and extract faces if they are not available already
         if not faces_available:
             if not os.path.exists(img_save_path + '/train_imgs/'):
@@ -154,26 +162,31 @@ class DFDetector():
                 if cls.dataset == 'uadfv':
                     if label == 1:
                         video = video[-14:]
-                        save_dir = os.path.join(img_save_path + '/train_imgs/fake/')
+                        save_dir = os.path.join(
+                            img_save_path + '/train_imgs/fake/')
                     else:
                         video = video[-9:]
-                        save_dir = os.path.join(img_save_path + '/train_imgs/real/')
+                        save_dir = os.path.join(
+                            img_save_path + '/train_imgs/real/')
                 # detect faces, add margin, crop, upsample to same size, save to images
-                faces = df_retinaface.detect_faces(net, vid, cfg, num_frames=20)
-                
+                faces = df_retinaface.detect_faces(
+                    net, vid, cfg, num_frames=20)
+
                 # save frames to directory
-                vid_frames = df_retinaface.extract_frames(faces, video, save_to=save_dir, face_margin=0,num_frames=20, test=False)
+                vid_frames = df_retinaface.extract_frames(
+                    faces, video, save_to=save_dir, face_margin=0, num_frames=20, test=False)
         # put all face images in dataframe
-        df_faces = label_data(dataset_path=img_save_path + '/train_imgs/',dataset='uadfv',face_crops=True, test_data=False) 
-        augs = df_augmentations(img_size,strength=cls.augmentations) 
+        df_faces = label_data(dataset_path=img_save_path + '/train_imgs/',
+                              dataset='uadfv', face_crops=True, test_data=False)
+        augs = df_augmentations(img_size, strength=cls.augmentations)
         model, average_auc, average_ap, average_acc, average_loss = train.train(dataset='uadfv', data=df_faces,
-            method=cls.method, img_size=img_size, normalization=normalization, augmentations=augs,
-            folds=cls.folds, epochs=cls.epochs, fulltrain=True
-        )
+                                                                                method=cls.method, img_size=img_size, normalization=normalization, augmentations=augs,
+                                                                                folds=cls.folds, epochs=cls.epochs, fulltrain=True
+                                                                                )
         return model, average_auc, average_ap, average_acc, average_loss
 
 
-def prepare_method(method, mode='train'):
+def prepare_method(method, dataset, mode='train'):
     """Prepares the method that will be used."""
     if method == "xception":
         img_size = 299
@@ -182,7 +195,7 @@ def prepare_method(method, mode='train'):
             model = xception.imagenet_pretrained_xception()
             # load the xception model that was pretrained on the uadfv training data
             model_params = torch.load(
-                './deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_UADFV.pth')
+                os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_{dataset}.pth')
             model.load_state_dict(model_params)
             return model, img_size, normalization
         elif mode == 'train':
@@ -190,9 +203,29 @@ def prepare_method(method, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
+    elif method == "efficientnetb7":
+        # 380 image size as introduced here https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
+        img_size = 380
+        if mode == 'test':
+            normalization = "imagenet"
+            # successfully used by https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721 (noisy student weights)
+            model = timm.create_model('tf_efficientnet_b7_ns', pretrained=True)
+            # load the efficientnet model that was pretrained on the uadfv training data
+            model_params = torch.load(
+                os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/efficientnetb7_best_fulltrain_{dataset}.pth')
+            model.load_state_dict(model_params)
+            return model, img_size, normalization
+        elif mode == 'train':
+            normalization = "imagenet"
+            # model is loaded in the train loop, because easier in case of k-fold cross val
+            model = None
+            return model, img_size, normalization
+    else:
+        raise ValueError(
+            f"{method} is not available. Please use one of the available methods.")
 
 
-def label_data(dataset_path=None,dataset='uadfv',face_crops=False, test_data=False):
+def label_data(dataset_path=None, dataset='uadfv', face_crops=False, test_data=False):
     """
     Label the data.
     # Arguments:
@@ -214,7 +247,8 @@ def label_data(dataset_path=None,dataset='uadfv',face_crops=False, test_data=Fal
             # if no face crops available yet, read csv for videos
             if not face_crops:
                 # prepare uadfv training data
-                test_dat = pd.read_csv("./deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
+                test_dat = pd.read_csv(os.getcwd(
+                ) + "/deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
                 test_list = test_dat['video'].tolist()
 
                 full_list = []
@@ -229,7 +263,8 @@ def label_data(dataset_path=None,dataset='uadfv',face_crops=False, test_data=Fal
                         full_list.append(video)
 
                 # training data (not used for testing)
-                new_list = [entry for entry in full_list if entry not in test_list]
+                new_list = [
+                    entry for entry in full_list if entry not in test_list]
 
                 # add labels to videos
                 data_list = []
@@ -238,14 +273,16 @@ def label_data(dataset_path=None,dataset='uadfv',face_crops=False, test_data=Fal
                         # append if video in training data
                         if video in new_list:
                             # label 0 for real video
-                            data_list.append({'label': 0, 'video': video_path_real + video})
+                            data_list.append(
+                                {'label': 0, 'video': video_path_real + video})
 
                 for _, _, videos in os.walk(video_path_fake):
                     for video in tqdm(videos):
                         # append if video in training data
                         if video in new_list:
                             # label 1 for deepfake video
-                            data_list.append({'label': 1, 'video': video_path_fake + video})
+                            data_list.append(
+                                {'label': 1, 'video': video_path_fake + video})
             else:
                 # if face crops available go to path with face crops
                 # add labels to videos
@@ -253,12 +290,14 @@ def label_data(dataset_path=None,dataset='uadfv',face_crops=False, test_data=Fal
                 for _, _, videos in os.walk(video_path_real):
                     for video in tqdm(videos):
                         # label 0 for real video
-                        data_list.append({'label': 0, 'video': video_path_real + video})
+                        data_list.append(
+                            {'label': 0, 'video': video_path_real + video})
 
                 for _, _, videos in os.walk(video_path_fake):
                     for video in tqdm(videos):
                         # label 1 for deepfake video
-                        data_list.append({'label': 1, 'video': video_path_fake + video})
+                        data_list.append(
+                            {'label': 1, 'video': video_path_fake + video})
     else:
         # prepare test data
         video_path_test_real = os.path.join(dataset_path + "/test/real/")
@@ -289,7 +328,7 @@ def label_data(dataset_path=None,dataset='uadfv',face_crops=False, test_data=Fal
     return df
 
 
-def df_augmentations(img_size,strength="weak"):
+def df_augmentations(img_size, strength="weak"):
     """
     Augmentations with the albumentations package.
     # Arguments:
@@ -335,7 +374,7 @@ def structure_uadfv_files(files_needed_csv, path_to_data):
     os.mkdir(path_to_data + '/test/fake/')
     os.mkdir(path_to_data + '/test/real/')
     test_data = pd.read_csv(
-        "./deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
+        os.getcwd() + "/deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
     for idx, row in test_data.iterrows():
         if len(str(row.loc['video'])) > 8:
             # video is fake, therefore copy it into fake test folder
@@ -345,8 +384,3 @@ def structure_uadfv_files(files_needed_csv, path_to_data):
             # video is real, therefore move it into real test folder
             shutil.copy(path_to_data + '/real/' +
                         row['video'], path_to_data + '/test/real/')
-#result = DFDetector.detect(video=video_file, method="xception", heatmap=False)
-
-#benchmark_result = DFDetector.benchmark(dataset="uadfv", method="xception", compare=False)
-
-# ->compare: whether to compare with the results of other methods that were precomputed by myself

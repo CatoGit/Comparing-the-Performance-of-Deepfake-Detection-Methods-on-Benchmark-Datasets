@@ -240,7 +240,7 @@ def extract_frames(faces, video, save_to, face_margin, num_frames, test=False):
 
 
 def detect(video_path=None, saveimgs_path=None, face_margin=20, backbone="resnet50",
-                backbone_path="./deepfake_detector/facedetector/retinaface/Resnet50_Final.pth"):
+                backbone_path=os.getcwd() + "/deepfake_detector/facedetector/retinaface/Resnet50_Final.pth"):
     """
     Detect faces from video frames.
     # Arguments:

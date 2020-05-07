@@ -45,7 +45,7 @@ def vid_inference(model, video_frames, label, img_size, normalization):
             # normalize by imagenet stats
             if normalization == 'xception':
                 transform = transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-            else:
+            elif normalization == "imagenet":
                 transform = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             frame = transform(frame)
             # add batch dimension and input into model
