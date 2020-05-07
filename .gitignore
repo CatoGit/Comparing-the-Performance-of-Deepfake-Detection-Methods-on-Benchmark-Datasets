@@ -140,3 +140,6 @@ cython_debug/
 # Large data files
 *.csv
 *.pth
+
+# Visual Studio Code
+.vscode
