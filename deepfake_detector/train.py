@@ -81,6 +81,8 @@ def train(dataset, data, method, normalization, augmentations, img_size,
             elif method == 'efficientnetb7':
                 model = timm.create_model(
                     'tf_efficientnet_b7_ns', pretrained=True)
+                # binary classification output
+                model.classifier = nn.Linear(2560,1)
                 print(model)
         else:
             # load model
@@ -239,7 +241,7 @@ def shuffeled_cross_val(fold, df):
     """
     Return train and val indices for fold.
     """
-    X = df['image'].values
+    X = df['video'].values
     y = df['label'].values
     skf = ShuffleSplit(n_splits=5, test_size=0.25, random_state=24)
     train = []

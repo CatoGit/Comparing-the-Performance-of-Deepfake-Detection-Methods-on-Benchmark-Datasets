@@ -137,6 +137,7 @@ class DFDetector():
         cls.method = method
         cls.epochs = epochs
         cls.batch_size = batch_size
+        cls.lr = lr
         cls.augmentations = augmentation_strength
         # no k-fold cross val if folds == 1
         cls.folds = folds
@@ -187,7 +188,7 @@ class DFDetector():
         augs = df_augmentations(img_size, strength=cls.augmentations)
         model, average_auc, average_ap, average_acc, average_loss = train.train(dataset='uadfv', data=df_faces,
                                                                                 method=cls.method, img_size=img_size, normalization=normalization, augmentations=augs,
-                                                                                folds=cls.folds, epochs=cls.epochs, fulltrain=cls.fulltrain
+                                                                                folds=cls.folds, epochs=cls.epochs, batch_size=cls.batch_size, lr=cls.lr, fulltrain=cls.fulltrain
                                                                                 )
         return model, average_auc, average_ap, average_acc, average_loss
 
@@ -202,6 +203,7 @@ def prepare_method(method, dataset, mode='train'):
             # load the xception model that was pretrained on the uadfv training data
             model_params = torch.load(
                 os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}_best_fulltrain_{dataset}.pth')
+            print(os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}_best_fulltrain_{dataset}.pth')
             model.load_state_dict(model_params)
             return model, img_size, normalization
         elif mode == 'train':
@@ -246,8 +248,8 @@ def label_data(dataset_path=None, dataset='uadfv', face_crops=False, test_data=F
     # TEST
     if not test_data:
         # prepare training data
-        video_path_real = os.path.join(dataset_path + "/real/")
-        video_path_fake = os.path.join(dataset_path + "/fake/")
+        video_path_real = os.path.join(dataset_path + "real/")
+        video_path_fake = os.path.join(dataset_path + "fake/")
 
         if dataset == 'uadfv':
             # if no face crops available yet, read csv for videos
