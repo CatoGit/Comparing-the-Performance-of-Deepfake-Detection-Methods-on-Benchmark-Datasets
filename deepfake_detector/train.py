@@ -117,8 +117,10 @@ def train(dataset, data, method, normalization, augmentations, img_size,
 
                 running_loss = 0.0
                 running_corrects = 0.0
-                running_auc = []
-                running_ap = []
+                running_auc_labels = []
+                running_ap_labels = []
+                running_auc_preds = []
+                running_ap_preds = []
                 if phase == "train":
                     # then load training data
                     for imgs, labels in tqdm(train_loader):
@@ -148,17 +150,17 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         # calc accuracy
                         running_corrects += torch.sum(thresh_preds ==
                                                       labels.unsqueeze(1))
-                        running_auc.append(roc_auc_score(
-                            labels.detach().cpu().numpy(), sig.detach().cpu().numpy()))
-                        running_ap.append(average_precision_score(
-                            labels.detach().cpu().numpy(), sig.detach().cpu().numpy()))
+                        running_auc_labels.extend(labels.detach().cpu().numpy())
+                        running_auc_preds.extend(sig.detach().cpu().numpy().flatten().tolist())
+                        running_ap_labels.extend(labels.detach().cpu().numpy())
+                        running_ap_preds.extend(sig.detach().cpu().numpy().flatten().tolist())
                     if phase == 'train':
                         # update lr
                         scheduler.step()
                     epoch_loss = running_loss / len(train_dataset)
                     epoch_acc = running_corrects / len(train_dataset)
-                    epoch_auc = np.mean(running_auc)
-                    epoch_ap = np.mean(running_ap)
+                    epoch_auc = roc_auc_score(running_auc_labels, running_auc_preds)
+                    epoch_ap = average_precision_score(running_ap_labels, running_ap_preds)
                     print(
                         f"{phase} Loss: {epoch_loss}, Acc: {epoch_acc}, AUC: {epoch_auc}, AP: {epoch_ap}")
                     print(e)
@@ -193,15 +195,15 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         running_corrects += torch.sum(thresh_preds ==
                                                       labels.unsqueeze(1))
 
-                        running_auc.append(roc_auc_score(
-                            labels.detach().cpu().numpy(), sig.detach().cpu().numpy()))
-                        running_ap.append(average_precision_score(
-                            labels.detach().cpu().numpy(), sig.detach().cpu().numpy()))
+                        running_auc_labels.extend(labels.detach().cpu().numpy())
+                        running_auc_preds.extend(sig.detach().cpu().numpy().flatten().tolist())
+                        running_ap_labels.extend(labels.detach().cpu().numpy())
+                        running_ap_preds.extend(sig.detach().cpu().numpy().flatten().tolist())
 
                     epoch_loss = running_loss / len(val_dataset)
                     epoch_acc = running_corrects / len(val_dataset)
-                    epoch_auc = np.mean(running_auc)
-                    epoch_ap = np.mean(running_ap)
+                    epoch_auc = roc_auc_score(running_auc_labels, running_auc_preds)
+                    epoch_ap = average_precision_score(running_ap_labels, running_ap_preds)
                     print(
                         f"{phase} Loss: {epoch_loss}, Acc: {epoch_acc}, AUC: {epoch_auc}, AP: {epoch_ap}")
 
