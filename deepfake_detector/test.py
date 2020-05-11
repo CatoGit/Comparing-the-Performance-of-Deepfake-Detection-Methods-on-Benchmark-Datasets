@@ -48,15 +48,16 @@ def vid_inference(model, video_frames, label, img_size, normalization):
             elif normalization == "imagenet":
                 transform = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             frame = transform(frame)
-            # add batch dimension and input into model
+            # add batch dimension and input into model to get logits
             predictions = model(frame.unsqueeze(0))
             
             # get probabilitiy for frame from logits
             preds = torch.sigmoid(predictions)
             avg_preds.append(preds.cpu().numpy())
+            # calculate loss from logits
             loss = loss_func(predictions.squeeze(1), torch.tensor(label).unsqueeze(0).type_as(predictions))
             avg_loss.append(loss.cpu().numpy())
-    # return the prediction for the video as average over all frames
+    # return the prediction for the video as average of the precidctions over all frames
     return np.mean(avg_preds), np.mean(avg_loss)
 
 

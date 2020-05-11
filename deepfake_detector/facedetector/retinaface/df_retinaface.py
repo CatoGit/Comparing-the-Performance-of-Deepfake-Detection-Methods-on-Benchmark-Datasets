@@ -208,8 +208,7 @@ def extract_frames(faces, video, save_to, face_margin, num_frames, test=False):
         try:
             img_raw = img_raw[b[1]:b[3], b[0]:b[2]]
         except:
-            print(f"No face detected in frame from video: {video}")
-            print(f"Frame without face detection success: {face}")
+            print(f"No face detected in frame {idx + 1} from video: {video}.")
             continue
         imgs_result.append(img_raw)
         # to resize images of same video to max height/width

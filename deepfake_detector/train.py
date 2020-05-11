@@ -83,7 +83,6 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                     'tf_efficientnet_b7_ns', pretrained=True)
                 # binary classification output
                 model.classifier = nn.Linear(2560,1)
-                print(model)
         else:
             # load model
             model = torch.load(load_model_path)
@@ -163,7 +162,6 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                     epoch_ap = average_precision_score(running_ap_labels, running_ap_preds)
                     print(
                         f"{phase} Loss: {epoch_loss}, Acc: {epoch_acc}, AUC: {epoch_auc}, AP: {epoch_ap}")
-                    print(e)
                     if fulltrain == True and e+1 == epochs:
                         # save model if epochs reached
                         torch.save(
@@ -225,6 +223,9 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         average_ap.append(best_ap)
         average_acc.append(best_acc)
         average_loss.append(best_loss)
+    if fulltrain == True:
+        # only saved model is returned
+        return model, 0,0,0,0
     average_auc = np.mean(average_auc)
     print(f"Average AUC: {average_auc}")
     average_ap = np.mean(average_ap)
