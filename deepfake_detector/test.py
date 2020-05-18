@@ -57,7 +57,7 @@ def vid_inference(model, video_frames, label, img_size, normalization):
             # calculate loss from logits
             loss = loss_func(predictions.squeeze(1), torch.tensor(label).unsqueeze(0).type_as(predictions))
             avg_loss.append(loss.cpu().numpy())
-    # return the prediction for the video as average of the precidctions over all frames
+    # return the prediction for the video as average of the predictions over all frames
     return np.mean(avg_preds), np.mean(avg_loss)
 
 
