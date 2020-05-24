@@ -12,6 +12,8 @@ def prec_rec(y_true, y_pred, method, alpha=100, plot = False):
     Calculates the weighted precision metric at recall levels 0.1, 0.5 and 0.9 as proposed in:
     The Deepfake Detection Challenge (DFDC) Preview Dataset (https://arxiv.org/abs/1910.08854)
 
+    Parts from sklearn.metrics precision_recall_curve adapted by: Christopher Otto
+
     alpha = 100 as suggested in the paper.
     """
 

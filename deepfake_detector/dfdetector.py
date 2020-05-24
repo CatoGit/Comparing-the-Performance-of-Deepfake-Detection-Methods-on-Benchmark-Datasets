@@ -114,7 +114,7 @@ class DFDetector():
 
                 print(f"Detect deepfakes with \033[1m{cls.method}\033[0m ...")
                 auc, ap, loss, acc = test.inference(
-                    model, df, img_size, normalization)
+                    model, df, img_size, normalization,dataset=dataset, method=cls.method)
             else:
                 raise ValueError("""Please organize the dataset directory in this way:
                                     ./fake_videos/
@@ -335,7 +335,7 @@ def label_data(dataset_path=None, dataset='uadfv',face_crops=False, test_data=Fa
                 # if face crops available go to path with face crops
                 # add labels to videos
                 video_path_real = os.path.join(dataset_path + "/train_imgs/real/")
-                video_path_fake = os.path.join(dataset_path + "/train_imags/fake/")
+                video_path_fake = os.path.join(dataset_path + "/train_imgs/fake/")
 
                 data_list = []
                 for _, _, videos in os.walk(video_path_real):
@@ -466,7 +466,7 @@ def df_augmentations(img_size, strength="weak"):
     elif strength == "strong":
         print("Strong augmentations.")
         # augmentations via albumentations package
-        # augmentations similar to 3rd place private leaderboard solution of
+        # augmentations taken from Selim Seferbekov's 3rd place private leaderboard solution from
         # https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
         augs = Compose([
             # hflip with prob 0.5

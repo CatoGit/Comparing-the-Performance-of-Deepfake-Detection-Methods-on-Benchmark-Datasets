@@ -2,7 +2,9 @@
 import os
 import cv2
 import numpy as np
+import pandas as pd
 import torch
+import time
 import torch.nn as nn
 import torchvision
 import torchvision.models as models
@@ -12,6 +14,7 @@ from facedetector.retinaface import df_retinaface
 from sklearn.metrics import confusion_matrix
 from albumentations import Resize
 from tqdm import tqdm
+import metrics
 from sklearn.metrics import average_precision_score, roc_auc_score
 from sklearn.model_selection import ShuffleSplit
 from sklearn.metrics import roc_curve
@@ -61,11 +64,7 @@ def vid_inference(model, video_frames, label, img_size, normalization):
     return np.mean(avg_preds), np.mean(avg_loss)
 
 
-def inference(model, test_df, img_size, normalization):
-    # path to save extracted faces
-    #video_path = os.path.join("/home/jupyter/fake_videos/real/test/")
-    #save_path = os.path.join("/home/jupyter/0margin/test/real/")
-    # detect faces, add margin, crop, upsample to same size, save to images
+def inference(model, test_df, img_size, normalization,dataset, method):
     running_loss = 0.0
     running_corrects = 0.0
     running_false = 0.0
@@ -73,8 +72,10 @@ def inference(model, test_df, img_size, normalization):
     running_ap = []
     labs = []
     prds = []
+    ids = []
     # load retinaface face detector
     net, cfg = df_retinaface.detect()
+    inference_time = time.time()
     for idx, row in tqdm(test_df.iterrows(), total=test_df.shape[0]):
         video = row.loc['video']
         label = row.loc['label']
@@ -89,13 +90,20 @@ def inference(model, test_df, img_size, normalization):
             #print("Error: Video frames.")
         # inference for each frame
         vid_pred, vid_loss = vid_inference(model,vid_frames, label, img_size, normalization)
+        ids.append(video)
         labs.append(label)
         prds.append(vid_pred)
         running_loss += vid_loss
         #calc accuracy; thresh 0.5
         running_corrects += np.sum(np.round(vid_pred) == label) 
         running_false += np.sum(np.round(vid_pred) != label) 
-        
+
+    # save predictions to csv for ensembling    
+    df = pd.DataFrame(list(zip(ids, labs,prds)), columns =['Video', 'Label', 'Prediction'])    
+    df.to_csv(f'{method}_predictions_on_{dataset}.csv', index=False) 
+
+    # get metrics
+    one_rec, five_rec, nine_rec = metrics.prec_rec(labs, prds, method, alpha=100, plot=False)
     auc = round(roc_auc_score(labs, prds),5)
     ap = round(average_precision_score(labs, prds),5)
     loss = round(running_loss / len(test_df), 5)
@@ -108,6 +116,13 @@ def inference(model, test_df, img_size, normalization):
     print(f"Acc: {acc}")
     print(f"AUC: {auc}")
     print(f"AP: {auc}")
+    print()
+    print("Cost (best possible cost is 0.0):")
+    print(f"{one_rec} cost for 0.1 recall.")
+    print(f"{five_rec} cost for 0.5 recall.")
+    print(f"{nine_rec} cost for 0.9 recall.")
+    print(f"Duration: {(time.time() - inference_time) // 60} min and {(time.time() - inference_time) % 60} sec.")
+    print()
     print(f"Detected \033[1m {tp}\033[0m true deepfake videos and correctly classified \033[1m {tn}\033[0m real videos.")
     print(f"Mistook \033[1m {fp}\033[0m real videos for deepfakes and \033[1m {fn}\033[0m deepfakes went by undetected by the method.")
     if fn == 0 and fp == 0:
