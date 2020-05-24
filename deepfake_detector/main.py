@@ -1,18 +1,22 @@
 from dfdetector import DFDetector
 import os
 import numpy as np
-
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import _ranking
+from sklearn.utils import multiclass
+from sklearn.metrics._plot import precision_recall_curve
 import metrics
-if __name__ == "__main__":
-        
+import matplotlib.pyplot as plt
 
-    y_true = np.array([[1, 0, 1], [0, 1, 0]])
-    y_pred = np.array([[1, 0, 0], [0, 1, 1]])
-    result = metrics.weighted_precision(y_true, y_pred)
-    print(result)
-    # model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
-    #     dataset="uadfv", data_path='/home/jupyter/fake_videos', method="efficientnetb7",
-    #     img_save_path="/home/jupyter/fake_videos",epochs=10, batch_size=8, lr=0.001,folds=5,augmentation_strength="weak", fulltrain=False,faces_available=True,face_margin=0, seed=24)
+if __name__ == "__main__":
+    
+        
+    
+    # result = metrics.weighted_precision(y_true, y_pred)
+    # print(result)
+    model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
+        dataset="uadfv", data_path="C:/Users/Chris/Desktop/fake_videos", method="xception",
+        img_save_path="C:/Users/Chris/Desktop/fake_videos",epochs=1, batch_size=32, lr=0.001,folds=5,augmentation_strength="weak", fulltrain=False,faces_available=True,face_margin=0, seed=24)
 
     # model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
     # dataset="celebdf", data_path='C:/Users/Chris/Desktop/Celeb-DF-v2', method="xception",

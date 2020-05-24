@@ -31,7 +31,6 @@ class UADFVDataset(Dataset):
             img_path = os.path.join(image)
         else:
             img_path = os.path.join(image)
-       
         #load image from path
         try:
             img = cv2.imread(img_path)

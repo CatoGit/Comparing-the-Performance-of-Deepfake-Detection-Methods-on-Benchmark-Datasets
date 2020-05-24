@@ -83,7 +83,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                 model = timm.create_model(
                     'tf_efficientnet_b7_ns', pretrained=True)
                 # binary classification output
-                model.classifier = nn.Linear(2560,1)
+                model.classifier = nn.Linear(2560, 1)
         else:
             # load model
             model = torch.load(load_model_path)
@@ -150,17 +150,22 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         # calc accuracy
                         running_corrects += torch.sum(thresh_preds ==
                                                       labels.unsqueeze(1))
-                        running_auc_labels.extend(labels.detach().cpu().numpy())
-                        running_auc_preds.extend(sig.detach().cpu().numpy().flatten().tolist())
+                        running_auc_labels.extend(
+                            labels.detach().cpu().numpy())
+                        running_auc_preds.extend(
+                            sig.detach().cpu().numpy().flatten().tolist())
                         running_ap_labels.extend(labels.detach().cpu().numpy())
-                        running_ap_preds.extend(sig.detach().cpu().numpy().flatten().tolist())
+                        running_ap_preds.extend(
+                            sig.detach().cpu().numpy().flatten().tolist())
                     if phase == 'train':
                         # update lr
                         scheduler.step()
                     epoch_loss = running_loss / len(train_dataset)
                     epoch_acc = running_corrects / len(train_dataset)
-                    epoch_auc = roc_auc_score(running_auc_labels, running_auc_preds)
-                    epoch_ap = average_precision_score(running_ap_labels, running_ap_preds)
+                    epoch_auc = roc_auc_score(
+                        running_auc_labels, running_auc_preds)
+                    epoch_ap = average_precision_score(
+                        running_ap_labels, running_ap_preds)
                     print(
                         f"{phase} Loss: {epoch_loss}, Acc: {epoch_acc}, AUC: {epoch_auc}, AP: {epoch_ap}")
                     if fulltrain == True and e+1 == epochs:
@@ -194,48 +199,76 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         running_corrects += torch.sum(thresh_preds ==
                                                       labels.unsqueeze(1))
 
-                        running_auc_labels.extend(labels.detach().cpu().numpy())
-                        running_auc_preds.extend(sig.detach().cpu().numpy().flatten().tolist())
+                        running_auc_labels.extend(
+                            labels.detach().cpu().numpy())
+                        running_auc_preds.extend(
+                            sig.detach().cpu().numpy().flatten().tolist())
                         running_ap_labels.extend(labels.detach().cpu().numpy())
-                        running_ap_preds.extend(sig.detach().cpu().numpy().flatten().tolist())
-
+                        running_ap_preds.extend(
+                            sig.detach().cpu().numpy().flatten().tolist())
+                    metrics.prec_rec(
+                        running_auc_labels, running_auc_preds, method, alpha=100, plot=False)
                     epoch_loss = running_loss / len(val_dataset)
                     epoch_acc = running_corrects / len(val_dataset)
-                    epoch_auc = roc_auc_score(running_auc_labels, running_auc_preds)
-                    epoch_ap = average_precision_score(running_ap_labels, running_ap_preds)
+                    epoch_auc = roc_auc_score(
+                        running_auc_labels, running_auc_preds)
+                    epoch_ap = average_precision_score(
+                        running_ap_labels, running_ap_preds)
                     print(
                         f"{phase} Loss: {epoch_loss}, Acc: {epoch_acc}, AUC: {epoch_auc}, AP: {epoch_ap}")
 
-                    # save model if loss better than best loss
-                    if epoch_auc > best_auc:
-                        best_auc = epoch_auc
-                        best_model = copy.deepcopy(model.state_dict())
-                        # save best model
-                        torch.save(
-                            model.state_dict(), os.getcwd() + f'/{method}_best_auc_model_fold{fold}.pth')
+                    # save model if acc better than best acc
                     if epoch_acc > best_acc:
+                        print("Found a better model.")
+                        one_rec, five_rec, nine_rec = metrics.prec_rec(
+                            running_auc_labels, running_auc_preds, method, alpha=100, plot=False)
                         best_acc = epoch_acc
-                    if epoch_loss < best_loss:
+                        best_auc = epoch_auc
                         best_loss = epoch_loss
-                    if epoch_ap > best_ap:
                         best_ap = epoch_ap
+                        if folds > 1:
+                            torch.save(
+                                model.state_dict(), os.getcwd() + f'/{method}_best_acc_model_fold{fold}.pth')
+                        else:
+                            torch.save(
+                                model.state_dict(), os.getcwd() + f'/{method}_best_acc_model.pth')
 
         average_auc.append(best_auc)
         average_ap.append(best_ap)
         average_acc.append(best_acc)
         average_loss.append(best_loss)
-    if fulltrain == True:
-        # only saved model is returned
-        return model, 0,0,0,0
     average_auc = np.mean(average_auc)
-    print(f"Average AUC: {average_auc}")
     average_ap = np.mean(average_ap)
-    print(f"Average AP: {average_ap}")
     average_acc = np.mean(np.asarray(
         [entry.cpu().numpy() for entry in average_acc]))
-    print(f"Average Acc: {average_acc}")
     average_loss = np.mean(np.asarray([entry for entry in average_loss]))
-    print(f"Average Loss: {average_loss}")
+
+    if fulltrain == True:
+        # only saved model is returned
+        return model, 0, 0, 0, 0
+
+    if folds > 1:
+        print(f"Average AUC: {average_auc}")
+        print(f"Average AP: {average_ap}")
+        print(f"Average Acc: {average_acc}")
+        print(f"Average Loss: {average_loss}")
+        print(
+            f"Duration: {(time.time() - training_time) // 60} min and {(time.time() - training_time) % 60} sec.")
+    else:
+        print()
+        print("Best models metrics:")
+        print(f"Acc: {average_acc}")
+        print(f"AUC: {average_auc}")
+        print(f"AP: {average_ap}")
+        print(f"Loss: {average_loss}")
+        print()
+        print("Cost (best possible cost is 0.0):")
+        print(f"{one_rec} cost for 0.1 recall.")
+        print(f"{five_rec} cost for 0.5 recall.")
+        print(f"{nine_rec} cost for 0.9 recall.")
+        print(
+            f"Duration: {(time.time() - training_time) // 60} min and {(time.time() - training_time) % 60} sec.")
+
     # load best model params
     # model.load_state_dict(best_model)
     return model, average_auc, average_ap, average_acc, average_loss
@@ -245,6 +278,7 @@ def shuffeled_cross_val(fold, df):
     """
     Return train and val indices for fold.
     """
+
     X = df['video'].values
     y = df['label'].values
     skf = ShuffleSplit(n_splits=5, test_size=0.25, random_state=24)
@@ -256,6 +290,4 @@ def shuffeled_cross_val(fold, df):
 
     # return indices for fold
     return list(train[fold]), list(val[fold])
-
-
 

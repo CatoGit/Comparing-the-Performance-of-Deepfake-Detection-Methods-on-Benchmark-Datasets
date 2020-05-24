@@ -286,15 +286,15 @@ def label_data(dataset_path=None, dataset='uadfv',face_crops=False, test_data=Fa
     if not test_data:
         if dataset == 'uadfv':
             # prepare training data
-            video_path_real = os.path.join(dataset_path + "real/")
-            video_path_fake = os.path.join(dataset_path + "fake/")
+            video_path_real = os.path.join(dataset_path + "/real/")
+            video_path_fake = os.path.join(dataset_path + "/fake/")
             # if no face crops available yet, read csv for videos
             if not face_crops:
                 # read csv for videos
                 test_dat = pd.read_csv(os.getcwd(
                 ) + "/deepfake_detector/data/uadfv_test.csv", names=['video'], header=None)
                 test_list = test_dat['video'].tolist()
-
+             
                 full_list = []
                 for _, _, videos in os.walk(video_path_real):
                     for video in videos:
@@ -334,6 +334,9 @@ def label_data(dataset_path=None, dataset='uadfv',face_crops=False, test_data=Fa
             else:
                 # if face crops available go to path with face crops
                 # add labels to videos
+                video_path_real = os.path.join(dataset_path + "/train_imgs/real/")
+                video_path_fake = os.path.join(dataset_path + "/train_imags/fake/")
+
                 data_list = []
                 for _, _, videos in os.walk(video_path_real):
                     for video in tqdm(videos):
