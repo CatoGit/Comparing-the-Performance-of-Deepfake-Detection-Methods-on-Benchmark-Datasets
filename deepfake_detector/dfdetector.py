@@ -232,8 +232,8 @@ def prepare_method(method, dataset, mode='train'):
     """Prepares the method that will be used."""
     if method == "xception":
         img_size = 299
+        normalization = "xception"
         if mode == 'test':
-            normalization = "xception"
             model = xception.imagenet_pretrained_xception()
             # load the xception model that was pretrained on the uadfv training data
             model_params = torch.load(
@@ -243,15 +243,14 @@ def prepare_method(method, dataset, mode='train'):
             model.load_state_dict(model_params)
             return model, img_size, normalization
         elif mode == 'train':
-            normalization = "xception"
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
     elif method == "efficientnetb7":
         # 380 image size as introduced here https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
         img_size = 380
+        normalization = "imagenet"
         if mode == 'test':
-            normalization = "imagenet"
             # successfully used by https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721 (noisy student weights)
             model = timm.create_model('tf_efficientnet_b7_ns', pretrained=True)
             model.classifier = nn.Linear(2560,1)
@@ -261,7 +260,23 @@ def prepare_method(method, dataset, mode='train'):
             model.load_state_dict(model_params)
             return model, img_size, normalization
         elif mode == 'train':
-            normalization = "imagenet"
+            # model is loaded in the train loop, because easier in case of k-fold cross val
+            model = None
+            return model, img_size, normalization
+    elif method == "mesonet":
+        # 256 image size as proposed in the MesoNet paper (https://arxiv.org/abs/1809.00888)
+        img_size = 256
+        # use [0.5,0.5,0.5] normalization scheme, because no imagenet pretraining
+        normalization = "xception"
+        if mode == 'test':
+            # load the mesonet model that was pretrained on the uadfv training data
+            model_params = torch.load(
+                os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}_best_fulltrain_{dataset}.pth')
+            print(os.getcwd(
+            ) + f'/deepfake_detector/pretrained_mods/weights/{method}_best_fulltrain_{dataset}.pth')
+            model.load_state_dict(model_params)
+            return model, img_size, normalization
+        elif mode == 'train':
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization

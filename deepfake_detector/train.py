@@ -19,6 +19,7 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from facedetector.retinaface import df_retinaface
 from pretrained_mods import xception
+from pretrained_mods import mesonet
 from tqdm import tqdm
 
 
@@ -84,6 +85,9 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                     'tf_efficientnet_b7_ns', pretrained=True)
                 # binary classification output
                 model.classifier = nn.Linear(2560, 1)
+            elif method == 'mesonet':
+                # load MesoInception4 model
+                model = mesonet.MesoInception4()
         else:
             # load model
             model = torch.load(load_model_path)
