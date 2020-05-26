@@ -525,11 +525,14 @@ def structure_uadfv_files(files_needed_csv, path_to_data):
 
 
 def reproducibility_seed(seed):
-    print("Seeded.")
-    # set pytorch random seed for cpu and gpu
-    torch.manual_seed(seed)
+    print("The random seed is set to {seed}.")
     # set numpy random seed
     np.random.seed(seed)
+    # set pytorch random seed for cpu and gpu
+    torch.manual_seed(seed)
+    # get deterministic behavior
+    torch.backends.cudnn.deterministic = True
+    
 
 
 def switch_one_zero(num):

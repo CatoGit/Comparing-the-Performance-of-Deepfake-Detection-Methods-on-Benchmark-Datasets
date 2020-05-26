@@ -88,6 +88,9 @@ def train(dataset, data, method, normalization, augmentations, img_size,
             elif method == 'mesonet':
                 # load MesoInception4 model
                 model = mesonet.MesoInception4()
+                # load mesonet weights that were pretrained on the mesonet dataset from https://github.com/DariusAf/MesoNet
+                model.load_state_dict(torch.load("./deepfake_detector/pretrained_mods/weights/mesonet_pretrain.pth"))
+                
         else:
             # load model
             model = torch.load(load_model_path)
@@ -142,7 +145,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                             thresh_preds = torch.round(
                                 torch.sigmoid(predictions))
                             loss = loss_func(
-                                predictions.squeeze(), labels.type_as(predictions))
+                                predictions.squeeze(-1), labels.type_as(predictions))
 
                             if phase == "train":
                                 # backpropagate gradients
@@ -196,7 +199,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                             thresh_preds = torch.round(
                                 torch.sigmoid(predictions))
                             loss = loss_func(
-                                predictions.squeeze(), labels.type_as(predictions))
+                                predictions.squeeze(-1), labels.type_as(predictions))
 
                         running_loss += loss.item() * imgs.size(0)
                         # calc accuracy
