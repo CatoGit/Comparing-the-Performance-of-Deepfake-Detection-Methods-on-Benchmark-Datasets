@@ -70,6 +70,16 @@ class DFDetector():
             elif cls.method == "efficientnetb7":
                 model, img_size, normalization = prepare_method(
                     method=cls.method, dataset=dataset, mode='test')
+            elif cls.method == 'mesonet':
+                #TODO
+            elif cls.method == 'resnetlstm':
+                #TODO
+            elif cls.method == 'efficientnetb1_lstm':
+                #TODO
+            elif cls.method == 'dfdc_rank90_ensemble':
+                #TODO
+            elif cls.method == 'all_methods_ensemble':
+                #TODO
             else:
                 img_size = None
         if dataset == 'uadfv':

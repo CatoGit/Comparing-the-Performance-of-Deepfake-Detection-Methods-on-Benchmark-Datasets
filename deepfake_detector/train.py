@@ -90,6 +90,13 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                 model = mesonet.MesoInception4()
                 # load mesonet weights that were pretrained on the mesonet dataset from https://github.com/DariusAf/MesoNet
                 model.load_state_dict(torch.load("./deepfake_detector/pretrained_mods/weights/mesonet_pretrain.pth"))
+            elif method == 'resnetlstm':
+                #TODO
+            elif method == 'efficientnetb1_lstm':
+                #TODO
+            elif method == 'dfdc_rank90_ensemble':
+                #TODO
+            elif method == 'all_methods_ensemble:'
                 
         else:
             # load model
