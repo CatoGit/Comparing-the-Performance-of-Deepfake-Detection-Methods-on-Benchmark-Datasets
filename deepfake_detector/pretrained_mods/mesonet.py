@@ -78,7 +78,6 @@ class MesoInception4(nn.Module):
         self.leakyrelu = nn.LeakyReLU(negative_slope=0.1)
         self.drop2 = nn.Dropout(0.5)
         self.fc2 = nn.Linear(in_features=16, out_features=num_classes)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, input):
         x = F.relu(self.inception1(input))
@@ -99,4 +98,3 @@ class MesoInception4(nn.Module):
         x = self.leakyrelu(x)
         x = self.drop2(x)
         x = self.fc2(x)
-        x = self.sigm
