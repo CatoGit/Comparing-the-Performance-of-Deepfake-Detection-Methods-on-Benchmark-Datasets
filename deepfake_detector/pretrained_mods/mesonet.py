@@ -98,3 +98,5 @@ class MesoInception4(nn.Module):
         x = self.leakyrelu(x)
         x = self.drop2(x)
         x = self.fc2(x)
+
+        return x

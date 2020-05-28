@@ -71,15 +71,15 @@ class DFDetector():
                 model, img_size, normalization = prepare_method(
                     method=cls.method, dataset=dataset, mode='test')
             elif cls.method == 'mesonet':
-                #TODO
+                pass
             elif cls.method == 'resnetlstm':
-                #TODO
+                pass
             elif cls.method == 'efficientnetb1_lstm':
-                #TODO
+                pass
             elif cls.method == 'dfdc_rank90_ensemble':
-                #TODO
+                pass
             elif cls.method == 'all_methods_ensemble':
-                #TODO
+                pass
             else:
                 img_size = None
         if dataset == 'uadfv':
@@ -117,6 +117,7 @@ class DFDetector():
                 # get test labels for metric evaluation
                 df = label_data(dataset_path=cls.data_path,
                                 dataset='uadfv', test_data=True)
+                    
                 if img_size is None:
                     print("Please specify the DNN input image size.")
                 # uadfv test dataset
@@ -229,7 +230,7 @@ class DFDetector():
                 cls.data_path = img_save_path + addon_path
         # put all face images in dataframe
         df_faces = label_data(dataset_path=cls.data_path,
-                              dataset=cls.dataset, face_crops=True, test_data=False)
+                              dataset=cls.dataset,method=cls.method, face_crops=True, test_data=False)
         augs = df_augmentations(img_size, strength=cls.augmentations)
         model, average_auc, average_ap, average_acc, average_loss = train.train(dataset=cls.dataset, data=df_faces,
                                                                                 method=cls.method, img_size=img_size, normalization=normalization, augmentations=augs,
@@ -240,9 +241,9 @@ class DFDetector():
 
 def prepare_method(method, dataset, mode='train'):
     """Prepares the method that will be used."""
-    if method == "xception":
+    if method == 'xception':
         img_size = 299
-        normalization = "xception"
+        normalization = 'xception'
         if mode == 'test':
             model = xception.imagenet_pretrained_xception()
             # load the xception model that was pretrained on the uadfv training data
@@ -256,10 +257,10 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == "efficientnetb7":
+    elif method == 'efficientnetb7':
         # 380 image size as introduced here https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
         img_size = 380
-        normalization = "imagenet"
+        normalization = 'imagenet'
         if mode == 'test':
             # successfully used by https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721 (noisy student weights)
             model = timm.create_model('tf_efficientnet_b7_ns', pretrained=True)
@@ -273,11 +274,11 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == "mesonet":
+    elif method == 'mesonet':
         # 256 image size as proposed in the MesoNet paper (https://arxiv.org/abs/1809.00888)
         img_size = 256
         # use [0.5,0.5,0.5] normalization scheme, because no imagenet pretraining
-        normalization = "xception"
+        normalization = 'xception'
         if mode == 'test':
             # load the mesonet model that was pretrained on the uadfv training data
             model_params = torch.load(
@@ -290,12 +291,30 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
+    elif method == 'resnetlstm':
+        img_size = 224
+        normalization = 'imagenet'
+        if mode == 'test':
+            pass
+        elif mode == 'train':
+            # model is loaded in the train loop, because easier in case of k-fold cross val
+            model = None
+            return model, img_size, normalization
+    elif method == 'efficientnetb1_lstm':
+        img_size = 240
+        normalization = 'imagenet'
+        if mode == 'test':
+            pass
+        elif mode == 'train':
+            # model is loaded in the train loop, because easier in case of k-fold cross val
+            model = None
+            return model, img_size, normalization
     else:
         raise ValueError(
             f"{method} is not available. Please use one of the available methods.")
 
 
-def label_data(dataset_path=None, dataset='uadfv',face_crops=False, test_data=False):
+def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops=False, test_data=False):
     """
     Label the data.
     # Arguments:
@@ -357,26 +376,62 @@ def label_data(dataset_path=None, dataset='uadfv',face_crops=False, test_data=Fa
                 df = pd.DataFrame(data=data_list)
 
             else:
-                # if face crops available go to path with face crops
-                # add labels to videos
-                video_path_real = os.path.join(dataset_path + "/train_imgs/real/")
-                video_path_fake = os.path.join(dataset_path + "/train_imgs/fake/")
+                # if sequence, prepare sequence dataframe 
+                if method == 'resnetlstm' or method == 'efficientnetb1_lstm':
+                    # prepare dataframe for sequence model
+                    print("yep")
+                    video_path_real = os.path.join(dataset_path + "/train_imgs/real/")
+                    video_path_fake = os.path.join(dataset_path + "/train_imgs/fake/")
+                    
+                    data_list = []
+                    for _, _, videos in os.walk(video_path_real):
+                        for video in tqdm(videos):
+                            # label 0 for real video
+                            data_list.append(
+                                {'label': 0, 'video': video})
 
-                data_list = []
-                for _, _, videos in os.walk(video_path_real):
-                    for video in tqdm(videos):
-                        # label 0 for real video
-                        data_list.append(
-                            {'label': 0, 'video': video_path_real + video})
+                    for _, _, videos in os.walk(video_path_fake):
+                        for video in tqdm(videos):
+                            # label 1 for deepfake video
+                            data_list.append(
+                                {'label': 1, 'video': video})
+                      
+                    # put data into dataframe
+                    df = pd.DataFrame(data=data_list)
+                    df = prepare_sequence_data(dataset,df)
+                    # add path to data
+                    for idx, row in df.iterrows():
+                        if row['label'] == 0:
+                            df.loc[idx,'original'] = str(video_path_real) + str(row['original'])
+                        elif row['label'] == 1:
+                            df.loc[idx,'original'] = str(video_path_fake) + str(row['original'])   
+                    print(df['original'])
+                else:
+                    # if face crops available go to path with face crops
+                    # add labels to videos
+                    
+                    video_path_real = os.path.join(dataset_path + "/train_imgs/real/")
+                    video_path_fake = os.path.join(dataset_path + "/train_imgs/fake/")
 
-                for _, _, videos in os.walk(video_path_fake):
-                    for video in tqdm(videos):
-                        # label 1 for deepfake video
-                        data_list.append(
-                            {'label': 1, 'video': video_path_fake + video})    
-                # put data into dataframe
-                df = pd.DataFrame(data=data_list)
-         
+                    data_list = []
+                    for _, _, videos in os.walk(video_path_real):
+                        for video in tqdm(videos):
+                            # label 0 for real video
+                            data_list.append(
+                                {'label': 0, 'video': video_path_real + video})
+
+                    for _, _, videos in os.walk(video_path_fake):
+                        for video in tqdm(videos):
+                            # label 1 for deepfake video
+                            data_list.append(
+                                {'label': 1, 'video': video_path_fake + video})  
+
+                    # put data into dataframe
+                    df = pd.DataFrame(data=data_list)
+
+                
+                    
+                    
         elif dataset == 'celebdf':
             # prepare celebdf training data by
             # reading in the testing data first
@@ -491,7 +546,7 @@ def df_augmentations(img_size, strength="weak"):
     elif strength == "strong":
         print("Strong augmentations.")
         # augmentations via albumentations package
-        # augmentations taken from Selim Seferbekov's 3rd place private leaderboard solution from
+        # augmentations adapted from Selim Seferbekov's 3rd place private leaderboard solution from
         # https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
         augs = Compose([
             # hflip with prob 0.5
@@ -499,7 +554,6 @@ def df_augmentations(img_size, strength="weak"):
             ImageCompression(quality_lower=60, quality_upper=100, p=0.5),
             GaussNoise(p=0.1),
             GaussianBlur(blur_limit=3, p=0.05),
-            # IsotropicResize(max_side=size),
             PadIfNeeded(min_height=img_size, min_width=img_size,
                         border_mode=cv2.BORDER_CONSTANT),
             OneOf([RandomBrightnessContrast(), FancyPCA(),
@@ -535,7 +589,7 @@ def structure_uadfv_files(files_needed_csv, path_to_data):
 
 
 def reproducibility_seed(seed):
-    print("The random seed is set to {seed}.")
+    print(f"The random seed is set to {seed}.")
     # set numpy random seed
     np.random.seed(seed)
     # set pytorch random seed for cpu and gpu
@@ -554,3 +608,29 @@ def switch_one_zero(num):
     else:
         num = 1
     return num
+
+def prepare_sequence_data(dataset, df):
+    """
+    Prepares the dataframe for sequence models.
+    """
+    df = df.sort_values(by=['video']).reset_index(drop=True)
+    # add original column
+    df['original'] = ""
+    if dataset == 'uadfv':
+        # label data
+        for idx, row in df.iterrows():
+            if row.loc['label'] == 0:
+                df.loc[idx,'original'] = row.loc['video'][:4] 
+            elif row.loc['label'] == 1:
+                df.loc[idx,'original'] = row.loc['video'][:9]
+    # count frames per video            
+    df1 = df.groupby(['original']).size().reset_index(name='count')
+    df = pd.merge(df, df1, on='original')
+    # remove videos that don't where less than 20 frames
+    # were detected to ensure equal frame size of 20 for sequence
+    df = df[df['count'] == 20]
+    df = df[['label','original']]
+    # ensure that dataframe includes each video with 20 frames once
+    df = df.groupby(['label','original']).size().reset_index(name='count')
+    df = df[['label','original']] 
+    return df

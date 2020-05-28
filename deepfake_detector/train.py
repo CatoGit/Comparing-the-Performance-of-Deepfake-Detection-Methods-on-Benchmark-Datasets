@@ -11,6 +11,7 @@ from sklearn.model_selection import ShuffleSplit
 from torch.optim import Adam, lr_scheduler
 from torch.utils.data import DataLoader, Dataset
 
+
 import datasets
 import timm
 import metrics
@@ -20,6 +21,9 @@ import torchvision.transforms as transforms
 from facedetector.retinaface import df_retinaface
 from pretrained_mods import xception
 from pretrained_mods import mesonet
+from pretrained_mods import resnetlstm
+from pretrained_mods import efficientnetb1lstm
+from pretrained_mods import dfdcrank90
 from tqdm import tqdm
 
 
@@ -55,28 +59,20 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         best_ap = 0.0
         # get train and val indices
         if fulltrain == False:
-            train_idx, val_idx = shuffeled_cross_val(fold, data)
+            train_idx, val_idx = shuffled_cross_val(method, fold, data)
 
         # prepare training and validation data
-        if fulltrain == True:
-            if dataset == 'uadfv':
-                train_dataset = datasets.UADFVDataset(
-                    data, img_size, normalization=normalization, augmentations=augmentations)
-                train_loader = DataLoader(
-                    train_dataset, batch_size=batch_size, shuffle=True)
-        else:
-            if dataset == 'uadfv':
-                train_dataset = datasets.UADFVDataset(
-                    data.iloc[train_idx], img_size, normalization=normalization, augmentations=augmentations)
-                train_loader = DataLoader(
-                    train_dataset, batch_size=batch_size, shuffle=True)
-                val_dataset = datasets.UADFVDataset(
-                    data.iloc[val_idx], img_size, normalization=normalization, augmentations=None)
-                val_loader = DataLoader(
-                    val_dataset, batch_size=batch_size, shuffle=False)
+        if dataset == 'uadfv':
+            if fulltrain == True:
+                train_dataset, train_loader = prepare_fulltrain_datasets(
+                    dataset, method, data, img_size, normalization, augmentations, batch_size)
+
+            else:
+                train_dataset, train_loader, val_dataset, val_loader = prepare_train_val(
+                    dataset, method, data, img_size, normalization, augmentations, batch_size, train_idx,val_idx)
 
         if load_model_path is None:
-            # train model from scratch/pretrained imagenet
+            # train model from pretrained imagenet or mesonet or noisy student weights
             if method == 'xception':
                 # load the xception model
                 model = xception.imagenet_pretrained_xception()
@@ -89,17 +85,18 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                 # load MesoInception4 model
                 model = mesonet.MesoInception4()
                 # load mesonet weights that were pretrained on the mesonet dataset from https://github.com/DariusAf/MesoNet
-                model.load_state_dict(torch.load("./deepfake_detector/pretrained_mods/weights/mesonet_pretrain.pth"))
+                model.load_state_dict(torch.load(
+                    "./deepfake_detector/pretrained_mods/weights/mesonet_pretrain.pth"))
             elif method == 'resnetlstm':
-                #TODO
+                model = resnetlstm.ResNetLSTM()
             elif method == 'efficientnetb1_lstm':
-                #TODO
+                model = efficientnetb1lstm.EfficientNetB1LSTM()
             elif method == 'dfdc_rank90_ensemble':
-                #TODO
-            elif method == 'all_methods_ensemble:'
-                
+                model = dfdcrank90.Rank90DFDC()
+            elif method == 'all_methods_ensemble':
+                pass
         else:
-            # load model
+            # continue to train model from custom checkpoint
             model = torch.load(load_model_path)
 
         if fold == 0:
@@ -246,6 +243,23 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         else:
                             torch.save(
                                 model.state_dict(), os.getcwd() + f'/{method}_best_acc_model.pth')
+                    # if loss is lower, but accuracy equal, take that model as best new model
+                    # e.g. used with small datasets when accuracy goes to 1.0 quickly
+                    elif epoch_acc == best_acc and epoch_loss < best_loss:
+                        print("Found a better model.")
+                        one_rec, five_rec, nine_rec = metrics.prec_rec(
+                            running_auc_labels, running_auc_preds, method, alpha=100, plot=False)
+                        best_acc = epoch_acc
+                        best_auc = epoch_auc
+                        best_loss = epoch_loss
+                        best_ap = epoch_ap
+                        if folds > 1:
+                            torch.save(
+                                model.state_dict(), os.getcwd() + f'/{method}_best_acc_model_fold{fold}.pth')
+                        else:
+                            torch.save(
+                                model.state_dict(), os.getcwd() + f'/{method}_best_acc_model.pth')
+
 
         average_auc.append(best_auc)
         average_ap.append(best_ap)
@@ -288,13 +302,17 @@ def train(dataset, data, method, normalization, augmentations, img_size,
     return model, average_auc, average_ap, average_acc, average_loss
 
 
-def shuffeled_cross_val(fold, df):
+def shuffled_cross_val(method, fold, df):
     """
     Return train and val indices for fold.
     """
-
-    X = df['video'].values
-    y = df['label'].values
+    if method == 'resnetlstm' or method == 'efficientnetb1_lstm':
+        print(df)
+        X = df['original'].values
+        y = df['label'].values
+    else:
+        X = df['video'].values
+        y = df['label'].values
     skf = ShuffleSplit(n_splits=5, test_size=0.25, random_state=24)
     train = []
     val = []
@@ -305,3 +323,36 @@ def shuffeled_cross_val(fold, df):
     # return indices for fold
     return list(train[fold]), list(val[fold])
 
+
+def prepare_fulltrain_datasets(dataset, method, data, img_size, normalization, augmentations, batch_size):
+    """
+    Prepare datasets for training with all data.
+    """
+    if dataset == 'uadfv':
+            train_dataset = datasets.UADFVDataset(
+                data, img_size,method=method,  normalization=normalization, augmentations=augmentations)
+            train_loader = DataLoader(
+                train_dataset, batch_size=batch_size, shuffle=True)
+      
+    elif dataset == 'celebdf':
+        pass
+    return train_dataset, train_loader
+
+
+def prepare_train_val(dataset, method, data, img_size, normalization, augmentations, batch_size,train_idx,val_idx):
+    """
+    Prepare training and validation dataset.
+    """
+    if dataset == 'uadfv':
+        train_dataset = datasets.UADFVDataset(
+            data.iloc[train_idx], img_size,method=method, normalization=normalization, augmentations=augmentations)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True)
+        val_dataset = datasets.UADFVDataset(
+            data.iloc[val_idx], img_size,method=method, normalization=normalization, augmentations=None)
+        val_loader = DataLoader(
+            val_dataset, batch_size=batch_size, shuffle=False)
+
+    elif dataset == 'celebdf':
+        pass
+    return train_dataset, train_loader, val_dataset, val_loader

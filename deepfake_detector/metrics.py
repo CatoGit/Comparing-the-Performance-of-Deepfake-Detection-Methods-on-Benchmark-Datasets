@@ -23,7 +23,7 @@ def prec_rec(y_true, y_pred, method, alpha=100, plot = False):
     weighted_precision = tps / (tps + alpha*fps)
     weighted_precision[np.isnan(weighted_precision)] = 0
     # take log of weighted precision similar to The Deepfake Detection Challenge (DFDC) Preview Dataset (https://arxiv.org/abs/1910.08854)
-    weighted_precision = [math.log(entry) for entry in weighted_precision]
+    weighted_precision = [math.log(entry) if entry > 0 else 0 for entry in weighted_precision]
     recall = tps / tps[-1]
 
     # stop when full recall attained
