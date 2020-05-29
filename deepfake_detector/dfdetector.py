@@ -160,7 +160,7 @@ class DFDetector():
                     os.mkdir(img_save_path + '/facecrops/real/')
                     os.mkdir(img_save_path + '/facecrops/fake/')
 
-            print("Detect and save max. 20 faces from each video for training.")
+            print("Detect and save 20 faces from each video for training.")
             # load retinaface face detector
             net, cfg = df_retinaface.detect()
             for idx, row in tqdm(df.iterrows(), total=df.shape[0]):
@@ -552,6 +552,9 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                             {'label': 1, 'video': video_path_crops_fake + video})
                 # put data into dataframe
                 df = pd.DataFrame(data=data_list)
+                if len(df) == 0:
+                    raise ValueError(
+                        "No faces available. Please set faces_available=False.")
 
     else:
         # prepare test data
