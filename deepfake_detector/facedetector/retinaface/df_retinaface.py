@@ -186,9 +186,8 @@ def extract_frames(faces, video, save_to, face_margin, num_frames, test=False):
     Extract frames from video and save image with frames.
 
     # parts from https://github.com/biubug6/Pytorch_Retinaface
-    # MIT License
+    
     # adapted by Christopher Otto
-
     """
     # threshold for confidence in face that is required to confirm it as face
     thresh = 0.6
@@ -201,10 +200,22 @@ def extract_frames(faces, video, save_to, face_margin, num_frames, test=False):
             if b[4] < thresh:
                 continue
             b = list(map(int, b))
-            # add bigger margin around the face as recommended here:
+            # add 100*margin% around the face as recommended here:
             # https://www.kaggle.com/c/deepfake-detection-challenge/discussion/140236
-            b = [b[0]-face_margin, b[1]-face_margin,
-                 b[2]+face_margin, b[3]+face_margin]
+            # and here https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
+            if face_margin > 0.0:
+                old_length_height = b[3] - b[1]
+                old_length_width = b[2] - b[0]
+                new_length_height = (b[3] - b[1])*(1+face_margin)
+                new_length_width = (b[2] - b[0])*(1+face_margin)
+                pixel_add_sub_height = int((new_length_height - old_length_height) / 2) 
+                pixel_add_sub_width = int((new_length_width - old_length_width) / 2) 
+        
+                b = [b[0]-pixel_add_sub_width, b[1]-pixel_add_sub_height,
+                    b[2]+pixel_add_sub_width, b[3]+pixel_add_sub_height]
+            else:           
+                b = [b[0], b[1],
+                     b[2], b[3]]
         try:
             img_raw = img_raw[b[1]:b[3], b[0]:b[2]]
         except:

@@ -167,7 +167,7 @@ class DFDetector():
                 video = row.loc['video']
                 label = row.loc['label']
                 vid = os.path.join(video)
-                vid_name = row.loc['video_name']
+                
                 if cls.dataset == 'uadfv':
                     if label == 1:
                         video = video[-14:]
@@ -178,6 +178,7 @@ class DFDetector():
                         save_dir = os.path.join(
                             img_save_path + '/train_imgs/real/')
                 elif cls.dataset == 'celebdf':
+                    vid_name = row.loc['video_name']
                     if label == 1:
                         video = vid_name
                         save_dir = os.path.join(

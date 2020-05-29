@@ -23,7 +23,6 @@ from pretrained_mods import xception
 from pretrained_mods import mesonet
 from pretrained_mods import resnetlstm
 from pretrained_mods import efficientnetb1lstm
-from pretrained_mods import dfdcrank90
 from tqdm import tqdm
 
 
@@ -265,15 +264,16 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         average_ap.append(best_ap)
         average_acc.append(best_acc)
         average_loss.append(best_loss)
+    if fulltrain == True:
+        # only saved model is returned
+        return model, 0, 0, 0, 0
     average_auc = np.mean(average_auc)
     average_ap = np.mean(average_ap)
     average_acc = np.mean(np.asarray(
         [entry.cpu().numpy() for entry in average_acc]))
     average_loss = np.mean(np.asarray([entry for entry in average_loss]))
 
-    if fulltrain == True:
-        # only saved model is returned
-        return model, 0, 0, 0, 0
+    
 
     if folds > 1:
         print(f"Average AUC: {average_auc}")
