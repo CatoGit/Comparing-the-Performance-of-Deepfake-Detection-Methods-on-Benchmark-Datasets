@@ -43,6 +43,9 @@ def train(dataset, data, method, normalization, augmentations, img_size,
     average_loss = []
     average_acc = []
     average_ap = []
+    average_one_rec = []
+    average_five_rec = []
+    average_nine_rec = []
 
     # k-fold cross-val if folds > 1
     for fold in range(folds):
@@ -273,21 +276,28 @@ def train(dataset, data, method, normalization, augmentations, img_size,
     if fulltrain == True:
         # only saved model is returned
         return model, 0, 0, 0, 0
-    average_auc = np.mean(average_auc)
-    average_ap = np.mean(average_ap)
+    # average the best results of all folds                          
+    average_auc = np.array(average_auc).mean()
+    average_ap = np.array(average_ap).mean()
     average_acc = np.mean(np.asarray(
         [entry.cpu().numpy() for entry in average_acc]))
     average_loss = np.mean(np.asarray([entry for entry in average_loss]))
-
-    
+    average_one_rec = np.array(average_one_rec).mean()
+    average_five_rec = np.array(average_five_rec).mean()
+    average_nine_rec = np.array(average_nine_rec).mean()
 
     if folds > 1:
         print(f"Average AUC: {average_auc}")
         print(f"Average AP: {average_ap}")
         print(f"Average Acc: {average_acc}")
         print(f"Average Loss: {average_loss}")
+        print()
+        print("Average Cost (best possible cost is 0.0):")
+        print(f"{average_one_rec} cost for 0.1 recall.")
+        print(f"{average_five_rec} cost for 0.5 recall.")
+        print(f"{average_nine_rec} cost for 0.9 recall.")
         print(
-            f"Duration: {(time.time() - training_time) // 60} min and {(time.time() - training_time) % 60} sec.")
+            f"Duration: {(time.time() - training_time) // 60} min and {(time.time() - training_time) % 60} sec."
     else:
         print()
         print("Best models metrics:")
