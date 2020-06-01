@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
-from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import KFold,train_test_split
 from torch.optim import Adam, lr_scheduler
 from torch.utils.data import DataLoader, Dataset
 
@@ -58,7 +58,13 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         best_ap = 0.0
         # get train and val indices
         if fulltrain == False:
-            train_idx, val_idx = shuffled_cross_val(method, fold, data)
+            if folds > 1:
+                # cross validation
+                train_idx, val_idx = kfold_cross_val(method, fold, data)
+            else: 
+                _, _, _, _, train_idx,val_idx = holdout_val(method,fold,data)
+                
+
 
         # prepare training and validation data
         if dataset == 'uadfv':
@@ -302,27 +308,41 @@ def train(dataset, data, method, normalization, augmentations, img_size,
     return model, average_auc, average_ap, average_acc, average_loss
 
 
-def shuffled_cross_val(method, fold, df):
+def kfold_cross_val(method, fold, df):
     """
-    Return train and val indices for fold.
+    Return train and val indices for 5 folds of 5-fold cross validation.
     """
     if method == 'resnetlstm' or method == 'efficientnetb1_lstm':
-        print(df)
         X = df['original'].values
         y = df['label'].values
     else:
         X = df['video'].values
         y = df['label'].values
-    skf = ShuffleSplit(n_splits=5, test_size=0.25, random_state=24)
+    kf = KFold(n_splits=5, shuffle=True)
     train = []
     val = []
-    for train_index, val_index in skf.split(X, y):
+    for train_index, val_index in kf.split(X):
         train.append(train_index)
         val.append(val_index)
 
     # return indices for fold
     return list(train[fold]), list(val[fold])
 
+def holdout_val(method,fold,df):
+    """
+        Return training and validation data in a holdout split.
+    """
+    if method == 'resnetlstm' or method == 'efficientnetb1_lstm':
+        X = df['original'].values
+        y = df['label'].values
+        indices = df.index.values.tolist()
+    else:
+        X = df['video'].values
+        y = df['label'].values
+        indices = df.index.values.tolist()
+      
+    X_train, X_test, y_train, y_test, train_idx,val_idx = train_test_split(X, y,indices, test_size=0.25, random_state=24)
+    return X_train, X_test, y_train, y_test, train_idx,val_idx
 
 def prepare_fulltrain_datasets(dataset, method, data, img_size, normalization, augmentations, batch_size):
     """
@@ -354,5 +374,12 @@ def prepare_train_val(dataset, method, data, img_size, normalization, augmentati
             val_dataset, batch_size=batch_size, shuffle=False)
 
     elif dataset == 'celebdf':
-        pass
+        train_dataset = datasets.CelebDFDataset(
+            data.iloc[train_idx], img_size,method=method, normalization=normalization, augmentations=augmentations)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True)
+        val_dataset = datasets.CelebDFDataset(
+            data.iloc[val_idx], img_size,method=method, normalization=normalization, augmentations=None)
+        val_loader = DataLoader(
+            val_dataset, batch_size=batch_size, shuffle=False)
     return train_dataset, train_loader, val_dataset, val_loader

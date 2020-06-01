@@ -127,9 +127,9 @@ class DFDetector():
         reproducibility_seed(seed)
         _, img_size, normalization = prepare_method(
             cls.method, dataset=cls.dataset, mode='train')
-        # get train data and labels
-        df = label_data(dataset_path=cls.data_path,
-                        dataset=cls.dataset, test_data=False)
+        # # get train data and labels
+        # df = label_data(dataset_path=cls.data_path,
+        #                 dataset=cls.dataset, test_data=False)
         # detect and extract faces if they are not available already
         if not cls.faces_available:
             if cls.dataset == 'uadfv':
@@ -193,13 +193,14 @@ class DFDetector():
                 # save frames to directory
                 vid_frames = df_retinaface.extract_frames(
                     faces, video, save_to=save_dir, face_margin=cls.face_margin, num_frames=20, test=False)
-                cls.data_path = img_save_path + addon_path
+                # cls.data_path = img_save_path + addon_path
         # put all face images in dataframe
         df_faces = label_data(dataset_path=cls.data_path,
                               dataset=cls.dataset, method=cls.method, face_crops=True, test_data=False)
         # choose augmentation strength
         augs = df_augmentations(img_size, strength=cls.augmentations)
         # start method training
+    
         model, average_auc, average_ap, average_acc, average_loss = train.train(dataset=cls.dataset, data=df_faces,
                                                                                 method=cls.method, img_size=img_size, normalization=normalization, augmentations=augs,
                                                                                 folds=cls.folds, epochs=cls.epochs, batch_size=cls.batch_size, lr=cls.lr, fulltrain=cls.fulltrain
