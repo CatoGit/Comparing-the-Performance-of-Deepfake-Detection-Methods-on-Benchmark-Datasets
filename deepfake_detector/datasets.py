@@ -119,7 +119,7 @@ class CelebDFDataset(Dataset):
        
        Implementation: Christopher Otto
     """
-    def __init__(self, data,img_size,normalization, augmentations):
+    def __init__(self, data,img_size,method,normalization, augmentations):
         """Dataset constructor."""
         self.data = data
         self.img_size = img_size

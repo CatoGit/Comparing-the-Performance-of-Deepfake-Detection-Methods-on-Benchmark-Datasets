@@ -31,6 +31,7 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
     avg_vid_loss = []
     avg_preds = []
     avg_loss = []
+    frame_level_preds = []
     if sequence_model:
         all_vid_frames = []
         for frame in video_frames:   
@@ -93,11 +94,15 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
                 # get probabilitiy for frame from logits
                 preds = torch.sigmoid(predictions)
                 avg_preds.append(preds.cpu().numpy())
+                if not sequence_model:
+                    frame_level_preds.extend(preds.cpu().numpy()[-1])
+                else:
+                    frame_level_preds = []
                 # calculate loss from logits
                 loss = loss_func(predictions.squeeze(1), torch.tensor(label).unsqueeze(0).type_as(predictions))
                 avg_loss.append(loss.cpu().numpy())
         # return the prediction for the video as average of the predictions over all frames
-        return np.mean(avg_preds), np.mean(avg_loss)
+        return np.mean(avg_preds), np.mean(avg_loss), frame_level_preds
 
 
 def inference(model, test_df, img_size, normalization,dataset, method, sequence_model=False, ensemble=False):
@@ -109,6 +114,10 @@ def inference(model, test_df, img_size, normalization,dataset, method, sequence_
     labs = []
     prds = []
     ids = []
+    frame_level_prds = []
+    frame_level_labs = []
+    running_corrects_frame_level = 0.0
+    running_false_frame_level = 0.0
     # load retinaface face detector
     net, cfg = df_retinaface.detect()
     inference_time = time.time()
@@ -125,8 +134,16 @@ def inference(model, test_df, img_size, normalization,dataset, method, sequence_
         #except:
             #print("Error: Video frames.")
         # inference for each frame
-      
-        vid_pred, vid_loss = vid_inference(model,vid_frames, label, img_size, normalization, sequence_model)
+        if not sequence_model:
+            # frame level auc can be measured
+            vid_pred, vid_loss, frame_level_preds = vid_inference(model,vid_frames, label, img_size, normalization, sequence_model)
+            frame_level_prds.extend(frame_level_preds)
+            frame_level_labs.extend([label]*len(frame_level_preds))
+            running_corrects_frame_level += np.sum(np.round(frame_level_preds) == np.array([label]*len(frame_level_preds))) 
+            running_false_frame_level += np.sum(np.round(frame_level_preds) != np.array([label]*len(frame_level_preds)))
+        else:
+            # only video level
+            vid_pred, vid_loss, _ = vid_inference(model,vid_frames, label, img_size, normalization, sequence_model)
         ids.append(video)
         labs.append(label)
         prds.append(vid_pred)
@@ -135,30 +152,33 @@ def inference(model, test_df, img_size, normalization,dataset, method, sequence_
         running_corrects += np.sum(np.round(vid_pred) == label) 
         running_false += np.sum(np.round(vid_pred) != label) 
 
-    
+ 
     # save predictions to csv for ensembling    
-    df = pd.DataFrame(list(zip(ids, labs,prds)), columns =['Video', 'Label', 'Prediction']) 
+    df = pd.DataFrame(list(zip(ids, labs,prds)), columns =['Video', 'Label', 'Prediction'])
     if ensemble:
         return df
     df.to_csv(f'{method}_predictions_on_{dataset}.csv', index=False) 
-    
-    print(labs)
-    print(prds)
-    print(method)
     # get metrics
     one_rec, five_rec, nine_rec = metrics.prec_rec(labs, prds, method, alpha=100, plot=False)
     auc = round(roc_auc_score(labs, prds),5)
+    frame_level_auc = round(roc_auc_score(frame_level_labs,frame_level_prds),5)
     ap = round(average_precision_score(labs, prds),5)
     loss = round(running_loss / len(test_df), 5)
     acc = round(running_corrects / len(test_df),5)
+    frame_level_acc = round(running_corrects_frame_level/ (running_corrects_frame_level + running_false_frame_level),5)
     print("Benchmark results:")
-    print("Confusion matrix:")
-    print(confusion_matrix(labs,np.round(prds)))
+    print("Confusion matrix (video-level):")
+    print(confusion_matrix(labs,np.round(prds),labels=[1, 0]))
     tn, fp, fn, tp = confusion_matrix(labs,np.round(prds)).ravel()
     print(f"Loss: {loss}")
     print(f"Acc: {acc}")
     print(f"AUC: {auc}")
     print(f"AP: {auc}")
+    if not sequence_model:
+        print("Confusion matrix (frame-level):")
+        print(confusion_matrix(frame_level_labs,np.round(frame_level_prds),labels=[1, 0]))
+        print(f"Frame-level AUC: {frame_level_auc}")
+        print(f"Frame-level ACC: {frame_level_acc}")
     print()
     print("Cost (best possible cost is 0.0):")
     print(f"{one_rec} cost for 0.1 recall.")

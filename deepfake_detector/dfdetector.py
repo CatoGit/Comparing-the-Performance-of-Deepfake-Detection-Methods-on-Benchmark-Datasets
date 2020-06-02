@@ -70,6 +70,8 @@ class DFDetector():
         if cls.dataset == 'uadfv':
             # setup the dataset folders
             setup_uadfv_benchmark(cls.data_path, cls.method)
+        elif cls.dataset == 'celebdf':
+            setup_celebdf_benchmark(cls.data_path, cls.method)
         else:
             raise ValueError(f"{cls.dataset} does not exist.")
         # get test labels for metric evaluation
@@ -95,7 +97,7 @@ class DFDetector():
         elif cls.method == 'five_methods_ensemble':
             pass
 
-        print(f"Detect deepfakes with \033[1m{cls.method}\033[0m ...")
+        print(f"Detecting deepfakes with \033[1m{cls.method}\033[0m ...")
         # benchmarking
         auc, ap, loss, acc = test.inference(
             model, df, img_size, normalization, dataset=cls.dataset, method=cls.method)
@@ -123,13 +125,14 @@ class DFDetector():
         cls.fulltrain = fulltrain
         cls.faces_available = faces_available
         cls.face_margin = face_margin
+        print(f"Training on {cls.dataset} dataset with {cls.method}.")
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
         _, img_size, normalization = prepare_method(
             cls.method, dataset=cls.dataset, mode='train')
-        # # get train data and labels
-        # df = label_data(dataset_path=cls.data_path,
-        #                 dataset=cls.dataset, test_data=False)
+        # # get video train data and labels 
+        df = label_data(dataset_path=cls.data_path,
+                        dataset=cls.dataset, test_data=False)
         # detect and extract faces if they are not available already
         if not cls.faces_available:
             if cls.dataset == 'uadfv':
@@ -159,15 +162,24 @@ class DFDetector():
                     os.mkdir(img_save_path + addon_path)
                     os.mkdir(img_save_path + '/facecrops/real/')
                     os.mkdir(img_save_path + '/facecrops/fake/')
+                else:
+                    # delete create again if it already exists with old files
+                    shutil.rmtree(img_save_path + '/facecrops/')
+                    os.mkdir(img_save_path + addon_path)
+                    os.mkdir(img_save_path + '/facecrops/real/')
+                    os.mkdir(img_save_path + '/facecrops/fake/')
 
             print("Detect and save 20 faces from each video for training.")
+            if cls.face_margin > 0.0:
+                print(f"Apply {cls.face_margin*100}% margin to each side of the face crop.")
+            else:
+                print("Apply no margin to the face crop.")
             # load retinaface face detector
             net, cfg = df_retinaface.detect()
             for idx, row in tqdm(df.iterrows(), total=df.shape[0]):
                 video = row.loc['video']
                 label = row.loc['label']
                 vid = os.path.join(video)
-                
                 if cls.dataset == 'uadfv':
                     if label == 1:
                         video = video[-14:]
@@ -193,7 +205,7 @@ class DFDetector():
                 # save frames to directory
                 vid_frames = df_retinaface.extract_frames(
                     faces, video, save_to=save_dir, face_margin=cls.face_margin, num_frames=20, test=False)
-                # cls.data_path = img_save_path + addon_path
+                
         # put all face images in dataframe
         df_faces = label_data(dataset_path=cls.data_path,
                               dataset=cls.dataset, method=cls.method, face_crops=True, test_data=False)
@@ -574,6 +586,16 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                     # label 1 for deepfake image
                     data_list.append(
                         {'label': 1, 'video': video_path_test_fake + video})
+        elif dataset == 'celebdf':
+            # reading in the celebdf testing data 
+            df_test = pd.read_csv(
+                dataset_path + '/List_of_testing_videos.txt', sep=" ", header=None)
+            df_test.columns = ["label", "video"]
+            # switch labels so that fake label is 1
+            df_test['label'] = df_test['label'].apply(switch_one_zero)
+            df_test['video'] = dataset_path + '/' + df_test['video']
+            print(f"{len(df_test)} test videos.")
+            return df_test
 
         # put data into dataframe
         df = pd.DataFrame(data=data_list)
@@ -736,4 +758,32 @@ def setup_uadfv_benchmark(data_path, method):
                             ./fake_videos/
                                         fake/
                                         real/
+                        """)
+
+
+def setup_celebdf_benchmark(data_path, method):
+    """
+    Setup the folder structure of the Celeb-DF Dataset.
+    """
+    if data_path is None:
+        raise ValueError("""Please go to https://github.com/danmohaha/celeb-deepfakeforensics
+                                and scroll down to the dataset section.
+                                Click on the link \"this form\" and download the dataset. 
+                                Extract the files and organize the folders follwing this folder structure:
+                                ./celebdf/
+                                        Celeb-real/
+                                        Celeb-synthesis/
+                                        YouTube-real/
+                                        List_of_testing_videos.txt
+                                """)
+    if data_path.endswith("celebdf"):
+        print(
+            f"Benchmarking \033[1m{method}\033[0m on the \033[1m{Celeb-DF}\033[0m dataset with ...")
+    else:
+        raise ValueError("""Please organize the dataset directory in this way:
+                            ./celebdf/
+                                    Celeb-real/
+                                    Celeb-synthesis/
+                                    YouTube-real/
+                                    List_of_testing_videos.txt
                         """)

@@ -70,14 +70,16 @@ def train(dataset, data, method, normalization, augmentations, img_size,
 
 
         # prepare training and validation data
-        if dataset == 'uadfv':
-            if fulltrain == True:
-                train_dataset, train_loader = prepare_fulltrain_datasets(
-                    dataset, method, data, img_size, normalization, augmentations, batch_size)
+        
+        if fulltrain == True:
+            train_dataset, train_loader = prepare_fulltrain_datasets(
+                dataset, method, data, img_size, normalization, augmentations, batch_size)
 
-            else:
-                train_dataset, train_loader, val_dataset, val_loader = prepare_train_val(
-                    dataset, method, data, img_size, normalization, augmentations, batch_size, train_idx,val_idx)
+        else:
+            train_dataset, train_loader, val_dataset, val_loader = prepare_train_val(
+                dataset, method, data, img_size, normalization, augmentations, batch_size, train_idx,val_idx)
+
+
 
         if load_model_path is None:
             # train model from pretrained imagenet or mesonet or noisy student weights
@@ -225,8 +227,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         running_ap_labels.extend(labels.detach().cpu().numpy())
                         running_ap_preds.extend(
                             sig.detach().cpu().numpy().flatten().tolist())
-                    metrics.prec_rec(
-                        running_auc_labels, running_auc_preds, method, alpha=100, plot=False)
+                    
                     epoch_loss = running_loss / len(val_dataset)
                     epoch_acc = running_corrects / len(val_dataset)
                     epoch_auc = roc_auc_score(
@@ -287,29 +288,29 @@ def train(dataset, data, method, normalization, augmentations, img_size,
     average_nine_rec = np.array(average_nine_rec).mean()
 
     if folds > 1:
-        print(f"Average AUC: {average_auc}")
-        print(f"Average AP: {average_ap}")
-        print(f"Average Acc: {average_acc}")
-        print(f"Average Loss: {average_loss}")
+        print(f"Average AUC: {round(average_auc,4)}")
+        print(f"Average AP: {round(average_ap,4)}")
+        print(f"Average Acc: {round(average_acc,4)}")
+        print(f"Average Loss: {round(average_loss,4)}")
         print()
         print("Average Cost (best possible cost is 0.0):")
-        print(f"{average_one_rec} cost for 0.1 recall.")
-        print(f"{average_five_rec} cost for 0.5 recall.")
-        print(f"{average_nine_rec} cost for 0.9 recall.")
+        print(f"{round(average_one_rec,4)} cost for 0.1 recall.")
+        print(f"{round(average_five_rec,4)} cost for 0.5 recall.")
+        print(f"{round(average_nine_rec,4)} cost for 0.9 recall.")
         print(
-            f"Duration: {(time.time() - training_time) // 60} min and {(time.time() - training_time) % 60} sec."
+            f"Duration: {(time.time() - training_time) // 60} min and {(time.time() - training_time) % 60} sec.")
     else:
         print()
         print("Best models metrics:")
-        print(f"Acc: {average_acc}")
-        print(f"AUC: {average_auc}")
-        print(f"AP: {average_ap}")
-        print(f"Loss: {average_loss}")
+        print(f"Acc: {round(average_acc,4)}")
+        print(f"AUC: {round(average_auc,4)}")
+        print(f"AP: {round(average_ap,4)}")
+        print(f"Loss: {round(average_loss,4)}")
         print()
         print("Cost (best possible cost is 0.0):")
-        print(f"{one_rec} cost for 0.1 recall.")
-        print(f"{five_rec} cost for 0.5 recall.")
-        print(f"{nine_rec} cost for 0.9 recall.")
+        print(f"{round(average_one_rec,4)} cost for 0.1 recall.")
+        print(f"{round(average_five_rec,4)} cost for 0.5 recall.")
+        print(f"{round(average_nine_rec,4)} cost for 0.9 recall.")
         print(
             f"Duration: {(time.time() - training_time) // 60} min and {(time.time() - training_time) % 60} sec.")
 
@@ -328,7 +329,7 @@ def kfold_cross_val(method, fold, df):
     else:
         X = df['video'].values
         y = df['label'].values
-    kf = KFold(n_splits=5, shuffle=True)
+    kf = KFold(n_splits=5, shuffle=True, random_state=24)
     train = []
     val = []
     for train_index, val_index in kf.split(X):
@@ -351,7 +352,7 @@ def holdout_val(method,fold,df):
         y = df['label'].values
         indices = df.index.values.tolist()
       
-    X_train, X_test, y_train, y_test, train_idx,val_idx = train_test_split(X, y,indices, test_size=0.25, random_state=24)
+    X_train, X_test, y_train, y_test, train_idx,val_idx = train_test_split(X, y,indices, test_size=0.2, random_state=24)
     return X_train, X_test, y_train, y_test, train_idx,val_idx
 
 def prepare_fulltrain_datasets(dataset, method, data, img_size, normalization, augmentations, batch_size):
@@ -359,13 +360,15 @@ def prepare_fulltrain_datasets(dataset, method, data, img_size, normalization, a
     Prepare datasets for training with all data.
     """
     if dataset == 'uadfv':
-            train_dataset = datasets.UADFVDataset(
-                data, img_size,method=method,  normalization=normalization, augmentations=augmentations)
-            train_loader = DataLoader(
-                train_dataset, batch_size=batch_size, shuffle=True)
-      
+        train_dataset = datasets.UADFVDataset(
+            data, img_size,method=method,  normalization=normalization, augmentations=augmentations)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True)
     elif dataset == 'celebdf':
-        pass
+        train_dataset = datasets.CelebDFDataset(
+                data, img_size,method=method,  normalization=normalization, augmentations=augmentations)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True)
     return train_dataset, train_loader
 
 
