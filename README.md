@@ -33,72 +33,71 @@ data_path takes arguments in the following way: your_path/datasetfolder
 There are 56 methods available for benchmarking. The dataset in the method name is the dataset that the method was fine-tuned on. 
 If available, all methods made use of transfer learning (e.g. imagenet weights, noisy student weights), before they were fine-tuned for additional epochs on the respective dataset (see Experiments for more information).
 
-| Deepfake detection methods | 
-| ------------- | 
-| ------------- | -------------  | ------------- | | ------------- | | ------------- | 
-xception_uadfv
-efficientnetb7_uadfv
-mesonet_uadfv
-resnet_lstm_uadfv
-efficientnetb1_lstm_uadfv
-dfdcrank90_uadfv
-full_ensemble_uadfv
+| Deepfake detection methods | ACC on UADFV | ACC on Celeb-DF | ACC on DFDC| ACC on DF-1.0 | ACC on DF-Timit-HQ | ACC on DF-Timit-LQ| ACC on DFD | Accuracy on FF++|  
+| ------------- | ------------- | ------------- |------------- |------------- | ------------- |------------- |------------- |------------- |
+| xception_uadfv | a | b | c |  d | e | f | g | h |  
+| efficientnetb7_uadfv |  |  |  |  |  |  |
+| mesonet_uadfv |  |  |  |  |  |  |
+| resnet_lstm_uadfv |  |  |  |  |  |  |
+| efficientnetb1_lstm_uadfv |  |  |  |  |  |  |
+| dfdcrank90_uadfv |  |  |  |  |  |  |
+| full_ensemble_uadfv |  |  |  |  |  |  |
+| xception_celebdf | a | b | c |  d | e | f | g | h |  
+| efficientnetb7_celebdf |  |  |  |  |  |  |
+| mesonet_celebdf |  |  |  |  |  |  |
+| resnet_lstm_celebdf |  |  |  |  |  |  |
+| efficientnetb1_lstm_celebdf |  |  |  |  |  |  |
+| dfdcrank90_celebdf |  |  |  |  |  |  |
+| full_ensemble_celebdf |  |  |  |  |  |  |
+| xception_dfdc | a | b | c |  d | e | f | g | h |  
+| efficientnetb7_dfdc |  |  |  |  |  |  |
+| mesonet_dfdc |  |  |  |  |  |  |
+| resnet_lstm_dfdc |  |  |  |  |  |  |
+| efficientnetb1_lstm_dfdc |  |  |  |  |  |  |
+| dfdcrank90_dfdc|  |  |  |  |  |  |
+|full_ensemble_dfdc |  |  |  |  |  |  |
+|xception_deeperforensics | a | b | c |  d | e | f | g | h |  
+| efficientnetb7_deeperforensics |  |  |  |  |  |  |
+| mesonet_deeperforensics |  |  |  |  |  |  |
+| resnet_lstm_deeperforensics |  |  |  |  |  |  |
+| efficientnetb1_lstm_deeperforensics|  |  |  |  |  |  |
+| dfdcrank90_deeperforensics |  |  |  |  |  |  |
+| full_ensemble_deeperforensics |  |  |  |  |  |  |
+| xception_dftimithq| a | b | c |  d | e | f | g | h |  
+| efficientnetb7_dftimithq|  |  |  |  |  |  |
+| mesonet_dftimithq |  |  |  |  |  |  |
+| resnet_lstm_dftimithq |  |  |  |  |  |  |
+| efficientnetb1_lstm_dftimithq |  |  |  |  |  |  |
+| dfdcrank90_dftimithq |  |  |  |  |  |  |
+| full_ensemble_dftimithq|  |  |  |  |  |  |
+| xception_dftimitlq| a | b | c |  d | e | f | g | h |  
+| efficientnetb7_dftimitlq|  |  |  |  |  |  |
+| mesonet_dftimitlq |  |  |  |  |  |  |
+| resnet_lstm_dftimitlq |  |  |  |  |  |  |
+| efficientnetb1_lstm_dftimitlq |  |  |  |  |  |  |
+| dfdcrank90_dftimitlq |  |  |  |  |  |  |
+| full_ensemble_dftimitlq|  |  |  |  |  |  |
+| xception_dfd| a | b | c |  d | e | f | g | h |  
+| efficientnetb7_dfd|  |  |  |  |  |  |
+| mesonet_dfd|  |  |  |  |  |  |
+| resnet_lstm_dfd |  |  |  |  |  |  |
+| efficientnetb1_lstm_dfd |  |  |  |  |  |  |
+| dfdcrank90_dfd |  |  |  |  |  |  |
+| full_ensemble_dfd|  |  |  |  |  |  |
+|xception_faceforensics++| a | b | c |  d | e | f | g | h |  
+| efficientnetb7_faceforensics++|  |  |  |  |  |  |
+| mesonet_faceforensics++|  |  |  |  |  |  |
+| resnet_lstm_faceforensics++|  |  |  |  |  |  |
+| efficientnetb1_lstm_faceforensics++|  |  |  |  |  |  |
+| dfdcrank90_faceforensics++|  |  |  |  |  |  |
+| full_ensemble_faceforensics++|  |  |  |  |  |  |
 
-xception_celebdf
-efficientnetb7_celebdf
-mesonet_celebdf
-resnet_lstm_celebdf
-efficientnetb1_lstm_celebdf
-dfdcrank90_celebdf
-full_ensemble_celebdf
 
-xception_dfdc
-efficientnetb7_dfdc
-mesonet_dfdc
-resnet_lstm_dfdc
-efficientnetb1_lstm_dfdc
-dfdcrank90_dfdc
-full_ensemble_dfdc
 
-xception_deeperforensics
-efficientnetb7_deeperforensics
-mesonet_deeperforensics
-resnet_lstm_deeperforensics
-efficientnetb1_lstm_deeperforensics
-dfdcrank90_deeperforensics
-full_ensemble_deeperforensics
 
-xception_dftimithq
-efficientnetb7_dftimithq
-mesonet_dftimithq
-resnet_lstm_dftimithq
-efficientnetb1_lstm_dftimithq
-dfdcrank90_dftimithq
-full_ensemble_dftimithq
 
-xception_dftimitlq
-efficientnetb7_dftimitlq
-mesonet_dftimitlq
-resnet_lstm_dftimitlq
-efficientnetb1_lstm_dftimitlq
-dfdcrank90_dftimitlq
-full_ensemble_dftimitlq
 
-xception_dfd
-efficientnetb7_dfd
-mesonet_dfd
-resnet_lstm_dfd
-efficientnetb1_lstm_dfd
-dfdcrank90_dfd
-full_ensemble_dfd
 
-xception_faceforensics++
-efficientnetb7_faceforensics++
-mesonet_faceforensics++
-resnet_lstm_faceforensics++
-efficientnetb1_lstm_faceforensics++
-dfdcrank90_faceforensics++
-full_ensemble_faceforensics++
 
 
 ## Training
@@ -116,3 +115,22 @@ If you don't specify more arguments, the hyperparameters that were employed for 
 `model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
                 dataset="uadfv", data_path="/home/jupyter/fake_videos", method="xception",
                 img_save_path="/home/jupyter/fake_videos",epochs=10, batch_size=32, lr=0.0001,folds=1,augmentation_strength="weak", fulltrain=True,faces_available=True,face_margin=0.3, seed=24)`          
+
+Methods that can be used for training:
+
+| Methods | Pretrained weights | 
+| ------------- | ------------- | 
+|xception| ImageNet|
+|efficientnetb7| NoisyStudent|
+
+
+
+
+Continue training from model (i.e. load model path): Not implemented (yet)
+
+## Performance of Deepfake Detection Methods (Results)
+
+The accuracy of the examined methods is presented here. Further insights can be found in the "Experiments"-file where the performance of each method is evaluated on other metrics as well.
+
+
+
