@@ -1,3 +1,106 @@
+## Benchmarking
+
+To benchmark a method against a dataset, simply call .benchmark(dataset,data_path,method) on the DFDetector:
+
+```benchmark_result = DFDetector.benchmark(dataset="uadfv",data_path="/home/jupyter/fake_videos", method="xception_celebdf")```
+
+You can also benchmark from the command line by simply passing the three arguments via arg.parse:
+
+#TODO
+
+What should you specify for dataset, data_path and method?
+
+### Data path setup:
+
+Prior to benchmarking, you have to download the respective datasets and setup the path to the dataset. To get access to some of the datasets, the authors require you to fill out a form where you have to agree to their terms of use. After filling out the form, the datasets authors will send you a dataset download link. Links to the authors repositories, where you can access datasets or forms are linked below.
+data_path takes arguments in the following way: your_path/datasetfolder
+"your_path" is the path to the dataset folder (e.g. /home/jupyter/) and "datasetfolder" is the (unzipped) folder that contains the dataset (e.g. fake_videos). Below are the examples with the correct dataset folder names given:
+
+
+| Benchmark dataset | Setup path | Download from |
+| ------------- | ------------- | ------------- |
+| uadfv  | your_path/fake_videos   | https://github.com/danmohaha/WIFS2018_In_Ictu_Oculi |
+| celebdf  | your_path/celebdf  |https://github.com/danmohaha/celeb-deepfakeforensics|
+| dfdc  | your_path/   |https://www.kaggle.com/c/deepfake-detection-challenge/data|
+| dftimithq | your_path/  |https://www.idiap.ch/dataset/deepfaketimit|
+| dftimitlq  | your_path/  |https://www.idiap.ch/dataset/deepfaketimit|
+| dfd  | your_path/ |https://github.com/ondyari/FaceForensics/|
+| faceforensics++  | your_path/   |https://github.com/ondyari/FaceForensics/|
+
+
+### Choices for methods:
+
+There are 56 methods available for benchmarking. The dataset in the method name is the dataset that the method was fine-tuned on. 
+If available, all methods made use of transfer learning (e.g. imagenet weights, noisy student weights), before they were fine-tuned for additional epochs on the respective dataset (see Experiments for more information).
+
+| Deepfake detection methods | 
+| ------------- | 
+| ------------- | -------------  | ------------- | | ------------- | | ------------- | 
+xception_uadfv
+efficientnetb7_uadfv
+mesonet_uadfv
+resnet_lstm_uadfv
+efficientnetb1_lstm_uadfv
+dfdcrank90_uadfv
+full_ensemble_uadfv
+
+xception_celebdf
+efficientnetb7_celebdf
+mesonet_celebdf
+resnet_lstm_celebdf
+efficientnetb1_lstm_celebdf
+dfdcrank90_celebdf
+full_ensemble_celebdf
+
+xception_dfdc
+efficientnetb7_dfdc
+mesonet_dfdc
+resnet_lstm_dfdc
+efficientnetb1_lstm_dfdc
+dfdcrank90_dfdc
+full_ensemble_dfdc
+
+xception_deeperforensics
+efficientnetb7_deeperforensics
+mesonet_deeperforensics
+resnet_lstm_deeperforensics
+efficientnetb1_lstm_deeperforensics
+dfdcrank90_deeperforensics
+full_ensemble_deeperforensics
+
+xception_dftimithq
+efficientnetb7_dftimithq
+mesonet_dftimithq
+resnet_lstm_dftimithq
+efficientnetb1_lstm_dftimithq
+dfdcrank90_dftimithq
+full_ensemble_dftimithq
+
+xception_dftimitlq
+efficientnetb7_dftimitlq
+mesonet_dftimitlq
+resnet_lstm_dftimitlq
+efficientnetb1_lstm_dftimitlq
+dfdcrank90_dftimitlq
+full_ensemble_dftimitlq
+
+xception_dfd
+efficientnetb7_dfd
+mesonet_dfd
+resnet_lstm_dfd
+efficientnetb1_lstm_dfd
+dfdcrank90_dfd
+full_ensemble_dfd
+
+xception_faceforensics++
+efficientnetb7_faceforensics++
+mesonet_faceforensics++
+resnet_lstm_faceforensics++
+efficientnetb1_lstm_faceforensics++
+dfdcrank90_faceforensics++
+full_ensemble_faceforensics++
+
+
 ## Training
 
 You can simply retrain the inference models yourself by calling train on the deepfake detector:
@@ -9,5 +112,7 @@ If you don't specify more arguments, the hyperparameters that were employed for 
 
 `DFDetector.train(dataset, data_path, method, img_save_path=None, epochs=1, batch_size=32,
                      lr=0.001, folds=1, augmentation_strength='weak', fulltrain=False, faces_available=False)`
-                     
-             
+                  
+`model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
+                dataset="uadfv", data_path="/home/jupyter/fake_videos", method="xception",
+                img_save_path="/home/jupyter/fake_videos",epochs=10, batch_size=32, lr=0.0001,folds=1,augmentation_strength="weak", fulltrain=True,faces_available=True,face_margin=0.3, seed=24)`          
