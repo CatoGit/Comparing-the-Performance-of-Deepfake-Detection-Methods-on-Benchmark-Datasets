@@ -13,7 +13,7 @@ if __name__ == "__main__":
     
     #DFDetector.detect_single(video_path=None,image_path="C:/Users/Chris/Desktop/fake_videos/train_imgs/real/0006_19.jpg", label=None, method="xception_uadfv")
     #benchmark_result = DFDetector.benchmark(dataset="uadfv",data_path="C:/Users/Chris/Desktop/fake_videos", method="xception")
-    _ = DFDetector.detect_single(video_path=None,image_path="C:/Users/Chris/Desktop/fake_videos/train_imgs/fake/0000_fake_0.jpg", label=None, method="xception_uadfv")
+    _ = DFDetector.detect_single(video_path=None,image_path="C:/Users/Chris/Desktop/fake_videos/train_imgs/real/0000_0.jpg", label=0, method="xception_uadfv")
     
     # result = metrics.weighted_precision(y_true, y_pred)
     # print(result)

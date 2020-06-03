@@ -57,19 +57,16 @@ class DFDetector():
         # apply facedetector
         # predict on 20 images
         # result
-        ##image
-
+        #if input is single image
         if image_path:
             # read image in
             img = os.path.join(image_path)
-       
             try:
                 img = cv2.imread(img)
             
             except:
                 print(img)
             #turn img to rgb color
-
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             augmentations = Resize(width=img_size,height=img_size)
             img = augmentations(image=img)['image']
@@ -86,28 +83,31 @@ class DFDetector():
             img = transform(img)
             # load model for prediction
             # add batch dimension
-            print(img.unsqueeze(0).shape)
             prediction = model(img.unsqueeze(0))
-
             # get probabilitiy for frame from logits
             preds = torch.sigmoid(prediction)
             preds = preds.detach().numpy()[0]
             preds = round(preds[0])
             if preds == 1:
-                img=mpimg.imread(image_path)
-                imgplot = plt.imshow(img)
-                plt.text(50, 50, "Deepfake detected.", color="red",fontsize=25, bbox=dict(fill=False, edgecolor='red',linewidth=2))
-                plt.show()
-                result = "Deepfake detected."
+                if label == 0 and preds == 1:
+                    print("False Positive: Thought it's a deepfake, but the image is real.")
+                    result = "False Positive."
+                else:
+                    img=mpimg.imread(image_path)
+                    imgplot = plt.imshow(img)
+                    plt.text(50, 50, "Deepfake detected.", color="red",fontsize=25, bbox=dict(fill=False, edgecolor='red',linewidth=2))
+                    plt.show()
+                    result = "Deepfake detected."
             else:
-                img=mpimg.imread(image_path)
-                imgplot = plt.imshow(img)
-                plt.text(50, 50, "This is a real image.", color="green",fontsize=25, bbox=dict(fill=False, edgecolor='green',linewidth=2))
-                plt.show()
-                result = "This is a real image."
-            # load model from checkpoint
-            # predict
-            # plot image + prediction + label
+                if label == 1 and preds == 0:
+                    print("False Negative: Thought it is a real image, but it is actually a deepfake.")
+                    result = "False Negative."
+                else:
+                    img=mpimg.imread(image_path)
+                    imgplot = plt.imshow(img)
+                    plt.text(50, 50, "This is a real image.", color="green",fontsize=25, bbox=dict(fill=False, edgecolor='green',linewidth=2))
+                    plt.show()
+                    result = "This is a real image."
             return result
             
         
