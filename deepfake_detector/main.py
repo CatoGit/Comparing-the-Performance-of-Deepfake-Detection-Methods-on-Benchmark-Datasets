@@ -10,12 +10,16 @@ import matplotlib.pyplot as plt
 from pretrained_mods.mesonet import MesoInception4
 
 if __name__ == "__main__":
-
+    
+    #DFDetector.detect_single(video_path=None,image_path="C:/Users/Chris/Desktop/fake_videos/train_imgs/real/0006_19.jpg", label=None, method="xception_uadfv")
+    #benchmark_result = DFDetector.benchmark(dataset="uadfv",data_path="C:/Users/Chris/Desktop/fake_videos", method="xception")
+    _ = DFDetector.detect_single(video_path=None,image_path="C:/Users/Chris/Desktop/fake_videos/train_imgs/fake/0000_fake_0.jpg", label=None, method="xception_uadfv")
+    
     # result = metrics.weighted_precision(y_true, y_pred)
     # print(result)
-    model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
-        dataset="uadfv", data_path="C:/Users/Chris/Desktop/fake_videos", method="xception",
-        img_save_path="C:/Users/Chris/Desktop/fake_videos", epochs=1, batch_size=32, lr=0.001, folds=1, augmentation_strength="weak", fulltrain=False, faces_available=True, face_margin=0.0, seed=24)
+    # model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
+    #     dataset="uadfv", data_path="C:/Users/Chris/Desktop/fake_videos", method="xception",
+    #     img_save_path="C:/Users/Chris/Desktop/fake_videos", epochs=1, batch_size=32, lr=0.001, folds=1, augmentation_strength="weak", fulltrain=False, faces_available=False, face_margin=0.0, seed=24)
 
     # model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
     # dataset="celebdf", data_path='C:/Users/Chris/Desktop/Celeb-DF-v2', method="xception",
@@ -27,6 +31,6 @@ if __name__ == "__main__":
 
 #result = DFDetector.detect(video=video_file, method="xception", heatmap=False)
 
-   # benchmark_result = DFDetector.benchmark(dataset="uadfv",data_path="C:/Users/Chris/Desktop/fake_videos", method="efficientnetb7")
+   
 
 # ->compare: whether to compare with the results of other methods that were precomputed by myself

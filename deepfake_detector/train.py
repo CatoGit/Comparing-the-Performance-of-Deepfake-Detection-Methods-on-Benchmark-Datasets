@@ -59,6 +59,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         current_loss = 100.0
         best_auc = 0.0
         best_ap = 0.0
+
         # get train and val indices
         if fulltrain == False:
             if folds > 1:
@@ -66,21 +67,13 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                 train_idx, val_idx = kfold_cross_val(method, fold, data)
             else: 
                 _, _, _, _, train_idx,val_idx = holdout_val(method,fold,data)
-                
-
-
         # prepare training and validation data
-        
         if fulltrain == True:
             train_dataset, train_loader = prepare_fulltrain_datasets(
                 dataset, method, data, img_size, normalization, augmentations, batch_size)
-
         else:
             train_dataset, train_loader, val_dataset, val_loader = prepare_train_val(
                 dataset, method, data, img_size, normalization, augmentations, batch_size, train_idx,val_idx)
-
-
-
         if load_model_path is None:
             # train model from pretrained imagenet or mesonet or noisy student weights
             if method == 'xception':
@@ -192,7 +185,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                     if fulltrain == True and e+1 == epochs:
                         # save model if epochs reached
                         torch.save(
-                            model.state_dict(), os.getcwd() + f'/{method}_best_fulltrain_{dataset}.pth')
+                            model.state_dict(), os.getcwd() + f'/{method}_{dataset}.pth')
 
                 else:
                     if fulltrain == True:
@@ -274,6 +267,9 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         average_ap.append(best_ap)
         average_acc.append(best_acc)
         average_loss.append(best_loss)
+        average_one_rec.append(one_rec)
+        average_five_rec.append(five_rec)
+        average_nine_rec.append(nine_rec)
     if fulltrain == True:
         # only saved model is returned
         return model, 0, 0, 0, 0

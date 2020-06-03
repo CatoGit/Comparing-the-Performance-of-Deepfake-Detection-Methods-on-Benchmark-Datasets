@@ -16,8 +16,10 @@ import cv2
 import datasets
 import torchvision
 import torchvision.models as models
+import torchvision.transforms as transforms
 import train
-
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from albumentations import (
     Compose, FancyPCA, GaussianBlur, GaussNoise, HorizontalFlip,
     HueSaturationValue, ImageCompression, OneOf, PadIfNeeded,
@@ -43,12 +45,75 @@ class DFDetector():
         self.facedetector = facedetector
 
     @classmethod
-    def detect_single(cls, video=None,  method="xception"):
-        """Perform deepfake detection on a single video with a chosen method."""
-        return result
+    def detect_single(cls, video_path=None,image_path=None, label=None, method="xception_uadfv"):
+        """Perform deepfake detection on a single video or image with a chosen method."""
+        # prepare the method of choice
+        if method == "xception_uadfv":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+
+        
+        ##video 
+        # apply facedetector
+        # predict on 20 images
+        # result
+        ##image
+
+        if image_path:
+            # read image in
+            img = os.path.join(image_path)
+       
+            try:
+                img = cv2.imread(img)
+            
+            except:
+                print(img)
+            #turn img to rgb color
+
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            augmentations = Resize(width=img_size,height=img_size)
+            img = augmentations(image=img)['image']
+            img = torch.tensor(img).permute(2, 0, 1)
+            # turn dtype from uint8 to float and normalize to [0,1] range
+            img = img.float() / 255.0
+            # normalize 
+            if normalization == "xception":
+                # normalize by xception stats
+                transform = transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+            elif normalization == "imagenet":
+                # normalize by imagenet stats
+                transform = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            img = transform(img)
+            # load model for prediction
+            # add batch dimension
+            print(img.unsqueeze(0).shape)
+            prediction = model(img.unsqueeze(0))
+
+            # get probabilitiy for frame from logits
+            preds = torch.sigmoid(prediction)
+            preds = preds.detach().numpy()[0]
+            preds = round(preds[0])
+            if preds == 1:
+                img=mpimg.imread(image_path)
+                imgplot = plt.imshow(img)
+                plt.text(50, 50, "Deepfake detected.", color="red",fontsize=25, bbox=dict(fill=False, edgecolor='red',linewidth=2))
+                plt.show()
+                result = "Deepfake detected."
+            else:
+                img=mpimg.imread(image_path)
+                imgplot = plt.imshow(img)
+                plt.text(50, 50, "This is a real image.", color="green",fontsize=25, bbox=dict(fill=False, edgecolor='green',linewidth=2))
+                plt.show()
+                result = "This is a real image."
+            # load model from checkpoint
+            # predict
+            # plot image + prediction + label
+            return result
+            
+        
 
     @classmethod
-    def benchmark(cls, dataset=None, data_path=None, method="xception", seed=24):
+    def benchmark(cls, dataset=None, data_path=None, method="xception_celebdf", seed=24):
         """Benchmark deepfake detection methods against popular deepfake datasets.
            The methods are already pretrained on the datasets. 
            Methods get benchmarked against a test set that is distinct from the training data.
@@ -60,7 +125,7 @@ class DFDetector():
         """
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        if method not in ['xception', 'efficientnetb7', 'mesonet', 'resnetlstm', 'efficientnetb1_lstm', 'dfdcrank90', 'five_methods_ensemble']:
+        if method not in ['xception_uadfv','xception_celebdf', 'efficientnetb7_uadfv','efficientnetb7_celebdf', 'mesonet', 'resnetlstm', 'efficientnetb1_lstm', 'dfdcrank90', 'five_methods_ensemble']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             # method exists
@@ -78,10 +143,13 @@ class DFDetector():
         df = label_data(dataset_path=cls.data_path,
                         dataset=cls.dataset, test_data=True)
         # prepare the method of choice
-        if cls.method == "xception":
+        if cls.method == "xception_uadfv":
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == "efficientnetb7":
+        elif cls.method == 'xception_celebdf':
+            model, img_size, normalization = prepare_method(
+                method=cls.method, dataset=cls.dataset, mode='test')
+        elif cls.method == "efficientnetb7_uadfv":
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
         elif cls.method == 'mesonet':
@@ -221,35 +289,43 @@ class DFDetector():
 
 
 def prepare_method(method, dataset, mode='train'):
-    """Prepares the method that will be used."""
-    if method == 'xception':
+    """Prepares the method that will be used for training or benchmarking."""
+    if method == 'xception' or method == 'xception_uadfv' or method == 'xception_celebdf':
         img_size = 299
         normalization = 'xception'
         if mode == 'test':
             model = xception.imagenet_pretrained_xception()
-            # load the xception model that was pretrained on the uadfv training data
-            model_params = torch.load(
-                os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}_best_fulltrain_{dataset}.pth')
-            print(os.getcwd(
-            ) + f'/deepfake_detector/pretrained_mods/weights/{method}_best_fulltrain_{dataset}.pth')
-            model.load_state_dict(model_params)
+            # load the xception model that was pretrained on the respective datasets training data
+            if method == 'xception_uadfv':
+                model_params = torch.load(
+                    os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                print(os.getcwd(
+                ) + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                model.load_state_dict(model_params)
+            elif method == 'xception_celebdf':
+                model_params = torch.load(
+                    os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                print(os.getcwd(
+                ) + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                model.load_state_dict(model_params)
             return model, img_size, normalization
         elif mode == 'train':
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'efficientnetb7':
+    elif method == 'efficientnetb7' or method == 'efficientnetb7_uadfv':
         # 380 image size as introduced here https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
         img_size = 380
         normalization = 'imagenet'
         if mode == 'test':
-            # successfully used by https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721 (noisy student weights)
-            model = timm.create_model('tf_efficientnet_b7_ns', pretrained=True)
-            model.classifier = nn.Linear(2560, 1)
-            # load the efficientnet model that was pretrained on the uadfv training data
-            model_params = torch.load(
-                os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/efficientnetb7_best_fulltrain_{dataset}.pth')
-            model.load_state_dict(model_params)
+            if method == 'efficientnetb7_uadfv':
+                # successfully used by https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721 (noisy student weights)
+                model = timm.create_model('tf_efficientnet_b7_ns', pretrained=True)
+                model.classifier = nn.Linear(2560, 1)
+                # load the efficientnet model that was pretrained on the uadfv training data
+                model_params = torch.load(
+                    os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                model.load_state_dict(model_params)
             return model, img_size, normalization
         elif mode == 'train':
             # model is loaded in the train loop, because easier in case of k-fold cross val
@@ -738,7 +814,7 @@ def setup_uadfv_benchmark(data_path, method):
         raise ValueError("Please make sure to extract the zipfile.")
     if data_path.endswith("fake_videos"):
         print(
-            f"Benchmarking \033[1m{method}\033[0m on the UADFV dataset with ...")
+            f"Benchmarking \033[1m{method}\033[0m on the \033[1m UADFV \033[0m dataset with ...")
         # create test directories if they don't exist
         if not os.path.exists(data_path + '/test/'):
             structure_uadfv_files(path_to_data=data_path)
@@ -778,7 +854,7 @@ def setup_celebdf_benchmark(data_path, method):
                                 """)
     if data_path.endswith("celebdf"):
         print(
-            f"Benchmarking \033[1m{method}\033[0m on the \033[1m{Celeb-DF}\033[0m dataset with ...")
+            f"Benchmarking \033[1m{method}\033[0m on the \033[1m Celeb-DF \033[0m dataset with ...")
     else:
         raise ValueError("""Please organize the dataset directory in this way:
                             ./celebdf/

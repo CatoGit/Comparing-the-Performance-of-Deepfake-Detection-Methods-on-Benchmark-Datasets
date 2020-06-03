@@ -168,7 +168,8 @@ def inference(model, test_df, img_size, normalization,dataset, method, sequence_
     frame_level_acc = round(running_corrects_frame_level/ (running_corrects_frame_level + running_false_frame_level),5)
     print("Benchmark results:")
     print("Confusion matrix (video-level):")
-    print(confusion_matrix(labs,np.round(prds),labels=[1, 0]))
+    # get confusion matrix in correct order
+    print(confusion_matrix(np.round(prds),labs,labels=[1,0]))
     tn, fp, fn, tp = confusion_matrix(labs,np.round(prds)).ravel()
     print(f"Loss: {loss}")
     print(f"Acc: {acc}")
@@ -176,7 +177,7 @@ def inference(model, test_df, img_size, normalization,dataset, method, sequence_
     print(f"AP: {auc}")
     if not sequence_model:
         print("Confusion matrix (frame-level):")
-        print(confusion_matrix(frame_level_labs,np.round(frame_level_prds),labels=[1, 0]))
+        print(confusion_matrix(np.round(frame_level_prds),frame_level_labs,labels=[1, 0]))
         print(f"Frame-level AUC: {frame_level_auc}")
         print(f"Frame-level ACC: {frame_level_acc}")
     print()
