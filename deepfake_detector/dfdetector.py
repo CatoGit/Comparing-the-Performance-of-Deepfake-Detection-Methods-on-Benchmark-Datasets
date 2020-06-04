@@ -34,6 +34,7 @@ from pretrained_mods import efficientnetb1lstm
 from pretrained_mods import mesonet
 from pretrained_mods import resnetlstm
 
+
 class DFDetector():
     """
     The Deepfake Detector. 
@@ -46,41 +47,42 @@ class DFDetector():
         self.facedetector = facedetector
 
     @classmethod
-    def detect_single(cls, video_path=None,image_path=None, label=None, method="xception_uadfv"):
+    def detect_single(cls, video_path=None, image_path=None, label=None, method="xception_uadfv"):
         """Perform deepfake detection on a single video or image with a chosen method."""
         # prepare the method of choice
         if method == "xception_uadfv":
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
 
-        
-        ##video 
+        # video
         # apply facedetector
         # predict on 20 images
         # result
-        #if input is single image
+        # if input is single image
         if image_path:
             # read image in
             img = os.path.join(image_path)
             try:
                 img = cv2.imread(img)
-            
+
             except:
                 print(img)
-            #turn img to rgb color
+            # turn img to rgb color
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            augmentations = Resize(width=img_size,height=img_size)
+            augmentations = Resize(width=img_size, height=img_size)
             img = augmentations(image=img)['image']
             img = torch.tensor(img).permute(2, 0, 1)
             # turn dtype from uint8 to float and normalize to [0,1] range
             img = img.float() / 255.0
-            # normalize 
+            # normalize
             if normalization == "xception":
                 # normalize by xception stats
-                transform = transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+                transform = transforms.Normalize(
+                    [0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
             elif normalization == "imagenet":
                 # normalize by imagenet stats
-                transform = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                transform = transforms.Normalize(
+                    [0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             img = transform(img)
             # load model for prediction
             # add batch dimension
@@ -91,27 +93,29 @@ class DFDetector():
             preds = round(preds[0])
             if preds == 1:
                 if label == 0 and preds == 1:
-                    print("False Positive: Thought it's a deepfake, but the image is real.")
+                    print(
+                        "False Positive: Thought it's a deepfake, but the image is real.")
                     result = "False Positive."
                 else:
-                    img=mpimg.imread(image_path)
+                    img = mpimg.imread(image_path)
                     imgplot = plt.imshow(img)
-                    plt.text(50, 50, "Deepfake detected.", color="red",fontsize=25, bbox=dict(fill=False, edgecolor='red',linewidth=2))
+                    plt.text(50, 50, "Deepfake detected.", color="red", fontsize=25, bbox=dict(
+                        fill=False, edgecolor='red', linewidth=2))
                     plt.show()
                     result = "Deepfake detected."
             else:
                 if label == 1 and preds == 0:
-                    print("False Negative: Thought it is a real image, but it is actually a deepfake.")
+                    print(
+                        "False Negative: Thought it is a real image, but it is actually a deepfake.")
                     result = "False Negative."
                 else:
-                    img=mpimg.imread(image_path)
+                    img = mpimg.imread(image_path)
                     imgplot = plt.imshow(img)
-                    plt.text(50, 50, "This is a real image.", color="green",fontsize=25, bbox=dict(fill=False, edgecolor='green',linewidth=2))
+                    plt.text(50, 50, "This is a real image.", color="green", fontsize=25, bbox=dict(
+                        fill=False, edgecolor='green', linewidth=2))
                     plt.show()
                     result = "This is a real image."
             return result
-            
-        
 
     @classmethod
     def benchmark(cls, dataset=None, data_path=None, method="xception_celebdf", seed=24):
@@ -126,7 +130,7 @@ class DFDetector():
         """
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        if method not in ['xception_uadfv','xception_celebdf', 'efficientnetb7_uadfv','efficientnetb7_celebdf', 'mesonet_uadfv', 'resnet_lstm_uadfv', 'efficientnetb1_lstm_uadfv', 'dfdcrank90_uadfv', 'five_methods_ensemble']:
+        if method not in ['xception_uadfv', 'xception_celebdf', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'mesonet_uadfv', 'resnet_lstm_uadfv', 'efficientnetb1_lstm_uadfv', 'dfdcrank90_uadfv', 'five_methods_ensemble']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             # method exists
@@ -150,7 +154,7 @@ class DFDetector():
         elif cls.method == 'xception_celebdf':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == "efficientnetb7_uadfv":
+        elif cls.method == "efficientnetb7_uadfv" or cls.method == 'efficientnetb7_celebdf':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
         elif cls.method == 'mesonet_uadfv':
@@ -166,15 +170,18 @@ class DFDetector():
             # evaluate dfdcrank90 ensemble
             auc, ap, loss, acc = prepare_dfdc_rank90(method, cls.dataset, df)
             return [auc, ap, loss, acc]
-        elif cls.method == 'five_methods_ensemble':
-            pass
+        elif cls.method == 'six_method_ensemble':
+            # evaluate six method ensemble
+            auc, ap, loss, acc = prepare_six_method_ensemble(
+                method, cls.dataset, df)
+            return [auc, ap, loss, acc]
 
         print(f"Detecting deepfakes with \033[1m{cls.method}\033[0m ...")
         # benchmarking
         if method == 'resnet_lstm_uadfv' or method == 'efficientnetb1_lstm_uadfv':
             # inference for sequence models
             auc, ap, loss, acc = test.inference(
-                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method,sequence_model=True)
+                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method, sequence_model=True)
         else:
             auc, ap, loss, acc = test.inference(
                 model, df, img_size, normalization, dataset=cls.dataset, method=cls.method)
@@ -207,7 +214,7 @@ class DFDetector():
         reproducibility_seed(seed)
         _, img_size, normalization = prepare_method(
             cls.method, dataset=cls.dataset, mode='train')
-        # # get video train data and labels 
+        # # get video train data and labels
         df = label_data(dataset_path=cls.data_path,
                         dataset=cls.dataset, test_data=False)
         # detect and extract faces if they are not available already
@@ -248,7 +255,8 @@ class DFDetector():
 
             print("Detect and save 20 faces from each video for training.")
             if cls.face_margin > 0.0:
-                print(f"Apply {cls.face_margin*100}% margin to each side of the face crop.")
+                print(
+                    f"Apply {cls.face_margin*100}% margin to each side of the face crop.")
             else:
                 print("Apply no margin to the face crop.")
             # load retinaface face detector
@@ -282,14 +290,14 @@ class DFDetector():
                 # save frames to directory
                 vid_frames = df_retinaface.extract_frames(
                     faces, video, save_to=save_dir, face_margin=cls.face_margin, num_frames=20, test=False)
-                
+
         # put all face images in dataframe
         df_faces = label_data(dataset_path=cls.data_path,
                               dataset=cls.dataset, method=cls.method, face_crops=True, test_data=False)
         # choose augmentation strength
         augs = df_augmentations(img_size, strength=cls.augmentations)
         # start method training
-    
+
         model, average_auc, average_ap, average_acc, average_loss = train.train(dataset=cls.dataset, data=df_faces,
                                                                                 method=cls.method, img_size=img_size, normalization=normalization, augmentations=augs,
                                                                                 folds=cls.folds, epochs=cls.epochs, batch_size=cls.batch_size, lr=cls.lr, fulltrain=cls.fulltrain
@@ -322,14 +330,15 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'efficientnetb7' or method == 'efficientnetb7_uadfv':
+    elif method == 'efficientnetb7' or method == 'efficientnetb7_uadfv' or method == 'efficientnetb7_celebdf':
         # 380 image size as introduced here https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
         img_size = 380
         normalization = 'imagenet'
         if mode == 'test':
-            if method == 'efficientnetb7_uadfv':
+            if method == 'efficientnetb7_uadfv' or method == 'efficientnetb7_celebdf':
                 # successfully used by https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721 (noisy student weights)
-                model = timm.create_model('tf_efficientnet_b7_ns', pretrained=True)
+                model = timm.create_model(
+                    'tf_efficientnet_b7_ns', pretrained=True)
                 model.classifier = nn.Linear(2560, 1)
                 # load the efficientnet model that was pretrained on the uadfv training data
                 model_params = torch.load(
@@ -340,7 +349,7 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'mesonet' or method =='mesonet_uadfv':
+    elif method == 'mesonet' or method == 'mesonet_uadfv':
         # 256 image size as proposed in the MesoNet paper (https://arxiv.org/abs/1809.00888)
         img_size = 256
         # use [0.5,0.5,0.5] normalization scheme, because no imagenet pretraining
@@ -445,10 +454,9 @@ def prepare_dfdc_rank90(method, dataset, df):
     # average predictions of all three models
     df1['Prediction'] = (df1['Prediction'] +
                          df2['Prediction'] + df3['Prediction'])/3
-
     labs = list(df1['Label'])
     prds = list(df1['Prediction'])
-
+    df1.to_csv(f'{method}_predictions_on_{dataset}.csv', index=False)
     running_corrects = 0
     running_false = 0
     running_corrects += np.sum(np.round(prds) == labs)
@@ -697,7 +705,7 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                     data_list.append(
                         {'label': 1, 'video': video_path_test_fake + video})
         elif dataset == 'celebdf':
-            # reading in the celebdf testing data 
+            # reading in the celebdf testing data
             df_test = pd.read_csv(
                 dataset_path + '/List_of_testing_videos.txt', sep=" ", header=None)
             df_test.columns = ["label", "video"]
@@ -897,3 +905,65 @@ def setup_celebdf_benchmark(data_path, method):
                                     YouTube-real/
                                     List_of_testing_videos.txt
                         """)
+
+
+def prepare_six_method_ensemble(method, dataset, df):
+    """Calculates the metrics for the six method ensemble."""
+    six_method_ens = pd.read_csv(
+        f"efficientnetb1_lstm_{dataset}_predictions_on_{dataset}.csv")
+    six_method_ens['Prediction'] = 0
+    # read predictions of all six methods
+    effb1lstm = pd.read_csv(
+        f"efficientnetb1_lstm_{dataset}_predictions_on_{dataset}.csv")
+    resnetlstm = pd.read_csv(
+        f"resnet_lstm_{dataset}_predictions_on_{dataset}.csv")
+    meso = pd.read_csv(f"mesonet_{dataset}_predictions_on_{dataset}.csv")
+    effb7 = pd.read_csv(
+        f"efficientnetb7_{dataset}_predictions_on_{dataset}.csv")
+    xcep = pd.read_csv(f"xception_{dataset}_predictions_on_{dataset}.csv")
+    rank90ens = pd.read_csv(
+        f"dfdcrank90_{dataset}_predictios_on_{dataset}.csv")
+    # calculate the average of the prediction
+    six_method_ens['Prediction'] = (effb1lstm['Prediction'] + resnetlstm['Prediction'] +
+                                    meso['Prediction'] + effb7['Prediction'] + xcep['Prediction'] + rank90ens['Prediction'])/6
+    # calculate metrics for ensemble
+    labs = list(six_method_ens['Label'])
+    prds = list(six_method_ens['Prediction'])
+    running_corrects = 0
+    running_false = 0
+    running_corrects += np.sum(np.round(prds) == labs)
+    running_false += np.sum(np.round(prds) != labs)
+
+    loss_func = nn.BCEWithLogitsLoss()
+    loss = loss_func(torch.Tensor(prds), torch.Tensor(labs))
+    # calculate metrics
+    one_rec, five_rec, nine_rec = metrics.prec_rec(
+        labs, prds, method, alpha=100, plot=False)
+    auc = round(roc_auc_score(labs, prds), 5)
+    ap = round(average_precision_score(labs, prds), 5)
+    loss = round(loss.numpy().tolist(), 5)
+    acc = round(running_corrects / len(labs), 5)
+    print("Benchmark results:")
+    print("Confusion matrix:")
+    print(confusion_matrix(labs, np.round(prds)))
+    tn, fp, fn, tp = confusion_matrix(labs, np.round(prds)).ravel()
+    print(f"Loss: {loss}")
+    print(f"Acc: {acc}")
+    print(f"AUC: {auc}")
+    print(f"AP: {auc}")
+    print()
+    print("Cost (best possible cost is 0.0):")
+    print(f"{one_rec} cost for 0.1 recall.")
+    print(f"{five_rec} cost for 0.5 recall.")
+    print(f"{nine_rec} cost for 0.9 recall.")
+    print(
+        f"Duration: {(time.time() - inference_time) // 60} min and {(time.time() - inference_time) % 60} sec.")
+    print()
+    print(
+        f"Detected \033[1m {tp}\033[0m true deepfake videos and correctly classified \033[1m {tn}\033[0m real videos.")
+    print(
+        f"Mistook \033[1m {fp}\033[0m real videos for deepfakes and \033[1m {fn}\033[0m deepfakes went by undetected by the method.")
+    if fn == 0 and fp == 0:
+        print("Wow! A perfect classifier!")
+
+    return auc, ap, loss, acc

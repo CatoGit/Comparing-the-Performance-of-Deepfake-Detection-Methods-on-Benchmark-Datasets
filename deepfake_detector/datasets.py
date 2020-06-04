@@ -127,6 +127,7 @@ class CelebDFDataset(Dataset):
         """Dataset constructor."""
         self.data = data
         self.img_size = img_size
+        self.method = method
         self.augmentations = augmentations
         self.normalization = normalization
         
