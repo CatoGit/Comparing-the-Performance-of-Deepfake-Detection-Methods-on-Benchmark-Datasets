@@ -56,7 +56,7 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
                 frame = transform(frame)
             all_vid_frames.append(frame.unsqueeze(0).cpu().numpy())
         all_vid_frames = torch.from_numpy(np.array(all_vid_frames).transpose(1,0,2,3,4)).float().to(device)
-       
+
         prediction = model(all_vid_frames)
 
         # get probabilitiy for frame from logits
@@ -66,7 +66,7 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
         loss = loss_func(prediction.squeeze(1), torch.tensor(label).unsqueeze(0).type_as(prediction))
        
         # return the prediction for the video as average of the predictions over all frames
-        return np.mean(preds.cpu().numpy()), np.mean(loss.cpu().numpy())
+        return np.mean(preds.cpu().numpy()), np.mean(loss.cpu().numpy()), frame_level_preds
     else:
         for frame in video_frames:   
             # turn image to rgb color
@@ -94,10 +94,7 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
                 # get probabilitiy for frame from logits
                 preds = torch.sigmoid(predictions)
                 avg_preds.append(preds.cpu().numpy())
-                if not sequence_model:
-                    frame_level_preds.extend(preds.cpu().numpy()[-1])
-                else:
-                    frame_level_preds = []
+                frame_level_preds.extend(preds.cpu().numpy()[-1])
                 # calculate loss from logits
                 loss = loss_func(predictions.squeeze(1), torch.tensor(label).unsqueeze(0).type_as(predictions))
                 avg_loss.append(loss.cpu().numpy())
@@ -143,6 +140,7 @@ def inference(model, test_df, img_size, normalization,dataset, method, sequence_
             running_false_frame_level += np.sum(np.round(frame_level_preds) != np.array([label]*len(frame_level_preds)))
         else:
             # only video level
+          
             vid_pred, vid_loss, _ = vid_inference(model,vid_frames, label, img_size, normalization, sequence_model)
         ids.append(video)
         labs.append(label)
@@ -161,11 +159,13 @@ def inference(model, test_df, img_size, normalization,dataset, method, sequence_
     # get metrics
     one_rec, five_rec, nine_rec = metrics.prec_rec(labs, prds, method, alpha=100, plot=False)
     auc = round(roc_auc_score(labs, prds),5)
-    frame_level_auc = round(roc_auc_score(frame_level_labs,frame_level_prds),5)
+    if not sequence_model:
+        frame_level_auc = round(roc_auc_score(frame_level_labs,frame_level_prds),5)
+        frame_level_acc = round(running_corrects_frame_level/ (running_corrects_frame_level + running_false_frame_level),5)
     ap = round(average_precision_score(labs, prds),5)
     loss = round(running_loss / len(test_df), 5)
     acc = round(running_corrects / len(test_df),5)
-    frame_level_acc = round(running_corrects_frame_level/ (running_corrects_frame_level + running_false_frame_level),5)
+    
     print("Benchmark results:")
     print("Confusion matrix (video-level):")
     # get confusion matrix in correct order

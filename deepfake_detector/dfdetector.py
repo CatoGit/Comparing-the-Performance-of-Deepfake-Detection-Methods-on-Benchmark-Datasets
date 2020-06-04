@@ -31,7 +31,8 @@ from sklearn.metrics import confusion_matrix
 from tqdm import tqdm
 from facedetector.retinaface import df_retinaface
 from pretrained_mods import efficientnetb1lstm
-
+from pretrained_mods import mesonet
+from pretrained_mods import resnetlstm
 
 class DFDetector():
     """
@@ -125,7 +126,7 @@ class DFDetector():
         """
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        if method not in ['xception_uadfv','xception_celebdf', 'efficientnetb7_uadfv','efficientnetb7_celebdf', 'mesonet', 'resnetlstm', 'efficientnetb1_lstm', 'dfdcrank90', 'five_methods_ensemble']:
+        if method not in ['xception_uadfv','xception_celebdf', 'efficientnetb7_uadfv','efficientnetb7_celebdf', 'mesonet_uadfv', 'resnet_lstm_uadfv', 'efficientnetb1_lstm_uadfv', 'dfdcrank90_uadfv', 'five_methods_ensemble']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             # method exists
@@ -152,13 +153,16 @@ class DFDetector():
         elif cls.method == "efficientnetb7_uadfv":
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'mesonet':
-            pass
-        elif cls.method == 'resnetlstm':
-            pass
-        elif cls.method == 'efficientnetb1_lstm':
-            pass
-        elif cls.method == 'dfdcrank90':
+        elif cls.method == 'mesonet_uadfv':
+            model, img_size, normalization = prepare_method(
+                method=cls.method, dataset=cls.dataset, mode='test')
+        elif cls.method == 'resnet_lstm_uadfv':
+            model, img_size, normalization = prepare_method(
+                method=cls.method, dataset=cls.dataset, mode='test')
+        elif cls.method == 'efficientnetb1_lstm_uadfv':
+            model, img_size, normalization = prepare_method(
+                method=cls.method, dataset=cls.dataset, mode='test')
+        elif cls.method == 'dfdcrank90_uadfv':
             # evaluate dfdcrank90 ensemble
             auc, ap, loss, acc = prepare_dfdc_rank90(method, cls.dataset, df)
             return [auc, ap, loss, acc]
@@ -167,8 +171,13 @@ class DFDetector():
 
         print(f"Detecting deepfakes with \033[1m{cls.method}\033[0m ...")
         # benchmarking
-        auc, ap, loss, acc = test.inference(
-            model, df, img_size, normalization, dataset=cls.dataset, method=cls.method)
+        if method == 'resnet_lstm_uadfv' or method == 'efficientnetb1_lstm_uadfv':
+            # inference for sequence models
+            auc, ap, loss, acc = test.inference(
+                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method,sequence_model=True)
+        else:
+            auc, ap, loss, acc = test.inference(
+                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method)
 
         return [auc, ap, loss, acc]
 
@@ -331,37 +340,58 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'mesonet':
+    elif method == 'mesonet' or method =='mesonet_uadfv':
         # 256 image size as proposed in the MesoNet paper (https://arxiv.org/abs/1809.00888)
         img_size = 256
         # use [0.5,0.5,0.5] normalization scheme, because no imagenet pretraining
         normalization = 'xception'
         if mode == 'test':
-            # load the mesonet model that was pretrained on the uadfv training data
-            model_params = torch.load(
-                os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}_best_fulltrain_{dataset}.pth')
-            print(os.getcwd(
-            ) + f'/deepfake_detector/pretrained_mods/weights/{method}_best_fulltrain_{dataset}.pth')
-            model.load_state_dict(model_params)
-            return model, img_size, normalization
+            if method == 'mesonet_uadfv':
+                # load MesoInception4 model
+                model = mesonet.MesoInception4()
+                # load the mesonet model that was pretrained on the uadfv training data
+                model_params = torch.load(
+                    os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                print(os.getcwd(
+                ) + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                model.load_state_dict(model_params)
+                return model, img_size, normalization
         elif mode == 'train':
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'resnetlstm':
+    elif method == 'resnet_lstm' or method == 'resnet_lstm_uadfv':
         img_size = 224
         normalization = 'imagenet'
         if mode == 'test':
-            pass
+            if method == 'resnet_lstm_uadfv':
+                # load MesoInception4 model
+                model = resnetlstm.ResNetLSTM()
+                # load the mesonet model that was pretrained on the uadfv training data
+                model_params = torch.load(
+                    os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                print(os.getcwd(
+                ) + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                model.load_state_dict(model_params)
+                return model, img_size, normalization
         elif mode == 'train':
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'efficientnetb1_lstm':
+    elif method == 'efficientnetb1_lstm' or method == 'efficientnetb1_lstm_uadfv':
         img_size = 240
         normalization = 'imagenet'
         if mode == 'test':
-            pass
+            if method == 'efficientnetb1_lstm_uadfv':
+                # load EfficientNetB1+LSTM
+                model = efficientnetb1lstm.EfficientNetB1LSTM()
+                # load the mesonet model that was pretrained on the uadfv training data
+                model_params = torch.load(
+                    os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                print(os.getcwd(
+                ) + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
+                model.load_state_dict(model_params)
+                return model, img_size, normalization
         elif mode == 'train':
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
@@ -379,11 +409,15 @@ def prepare_dfdc_rank90(method, dataset, df):
     normalization_xception = 'xception'
     normalization_b1 = 'imagenet'
     inference_time = time.time()
+    if method == 'dfdcrank90_uadfv':
+        mod1 = 'efficientnetb1_lstm_uadfv'
+        mod2 = 'xception_uadfv'
+        mod3 = 'xception_uadfv_seed25'
     model3 = efficientnetb1lstm.EfficientNetB1LSTM()
     # load the xception model that was pretrained on the uadfv training data
-    # model_params3 = torch.load(
-    #     os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_uadfv.pth')
-    # model3.load_state_dict(model_params)
+    model_params3 = torch.load(
+        os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{mod1}.pth')
+    model3.load_state_dict(model_params3)
     print("Inference EfficientNetB1 + LSTM")
     df3 = test.inference(
         model3, df, img_size_b1, normalization_b1, dataset=dataset, method=method, sequence_model=True, ensemble=True)
@@ -391,7 +425,7 @@ def prepare_dfdc_rank90(method, dataset, df):
     model1 = xception.imagenet_pretrained_xception()
     # load the xception model that was pretrained on the uadfv training data
     model_params1 = torch.load(
-        os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_uadfv.pth')
+        os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{mod2}.pth')
     model1.load_state_dict(model_params1)
 
     print("Inference Xception One")
@@ -401,7 +435,7 @@ def prepare_dfdc_rank90(method, dataset, df):
     model2 = xception.imagenet_pretrained_xception()
     # load the xception model that was pretrained on the uadfv training data
     model_params2 = torch.load(
-        os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/xception_best_fulltrain_uadfv.pth')
+        os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{mod3}.pth')
     model2.load_state_dict(model_params2)
 
     print("Inference Xception Two")
@@ -519,7 +553,7 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
 
             else:
                 # if sequence, prepare sequence dataframe
-                if method == 'resnetlstm' or method == 'efficientnetb1_lstm':
+                if method == 'resnet_lstm' or method == 'efficientnetb1_lstm':
                     # prepare dataframe for sequence model
                     video_path_real = os.path.join(
                         dataset_path + "/train_imgs/real/")

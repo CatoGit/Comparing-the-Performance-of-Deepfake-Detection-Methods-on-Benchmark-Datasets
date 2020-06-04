@@ -90,7 +90,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                 # load mesonet weights that were pretrained on the mesonet dataset from https://github.com/DariusAf/MesoNet
                 model.load_state_dict(torch.load(
                     "./deepfake_detector/pretrained_mods/weights/mesonet_pretrain.pth"))
-            elif method == 'resnetlstm':
+            elif method == 'resnet_lstm':
                 model = resnetlstm.ResNetLSTM()
             elif method == 'efficientnetb1_lstm':
                 model = efficientnetb1lstm.EfficientNetB1LSTM()
@@ -319,7 +319,7 @@ def kfold_cross_val(method, fold, df):
     """
     Return train and val indices for 5 folds of 5-fold cross validation.
     """
-    if method == 'resnetlstm' or method == 'efficientnetb1_lstm':
+    if method == 'resnet_lstm' or method == 'efficientnetb1_lstm':
         X = df['original'].values
         y = df['label'].values
     else:
@@ -339,7 +339,7 @@ def holdout_val(method,fold,df):
     """
         Return training and validation data in a holdout split.
     """
-    if method == 'resnetlstm' or method == 'efficientnetb1_lstm':
+    if method == 'resnet_lstm' or method == 'efficientnetb1_lstm':
         X = df['original'].values
         y = df['label'].values
         indices = df.index.values.tolist()
