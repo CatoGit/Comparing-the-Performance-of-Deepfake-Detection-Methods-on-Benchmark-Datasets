@@ -2,22 +2,20 @@ import argparse
 import copy
 import os
 import time
-
 import numpy as np
 import torch
 import torch.nn as nn
-from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
-from sklearn.model_selection import KFold,train_test_split
-from torch.optim import Adam, lr_scheduler
-from torch.utils.data import DataLoader, Dataset
-
-
 import datasets
 import timm
 import metrics
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
+
+from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
+from sklearn.model_selection import KFold, train_test_split
+from torch.optim import Adam, lr_scheduler
+from torch.utils.data import DataLoader, Dataset
 from facedetector.retinaface import df_retinaface
 from pretrained_mods import xception
 from pretrained_mods import mesonet
@@ -27,7 +25,7 @@ from tqdm import tqdm
 
 
 def train(dataset, data, method, normalization, augmentations, img_size,
-          folds=1, epochs=1, batch_size=32, lr=0.001, fulltrain=False, load_model_path=None
+          folds=1, epochs=1, batch_size=32, lr=0.001, fulltrain=False, load_model_path=None, return_best=False
           ):
     """
     Train a DNN for a number of epochs.
@@ -65,15 +63,16 @@ def train(dataset, data, method, normalization, augmentations, img_size,
             if folds > 1:
                 # cross validation
                 train_idx, val_idx = kfold_cross_val(method, fold, data)
-            else: 
-                _, _, _, _, train_idx,val_idx = holdout_val(method,fold,data)
+            else:
+                _, _, _, _, train_idx, val_idx = holdout_val(
+                    method, fold, data)
         # prepare training and validation data
         if fulltrain == True:
             train_dataset, train_loader = prepare_fulltrain_datasets(
                 dataset, method, data, img_size, normalization, augmentations, batch_size)
         else:
             train_dataset, train_loader, val_dataset, val_loader = prepare_train_val(
-                dataset, method, data, img_size, normalization, augmentations, batch_size, train_idx,val_idx)
+                dataset, method, data, img_size, normalization, augmentations, batch_size, train_idx, val_idx)
         if load_model_path is None:
             # train model from pretrained imagenet or mesonet or noisy student weights
             if method == 'xception':
@@ -102,8 +101,8 @@ def train(dataset, data, method, normalization, augmentations, img_size,
             # continue to train model from custom checkpoint
             model = torch.load(load_model_path)
 
-        if fold == 0:
-            best_model = copy.deepcopy(model.state_dict())
+        if return_best:
+            best_model_state = copy.deepcopy(model.state_dict())
 
         # put model on gpu
         model = model.cuda()
@@ -220,7 +219,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         running_ap_labels.extend(labels.detach().cpu().numpy())
                         running_ap_preds.extend(
                             sig.detach().cpu().numpy().flatten().tolist())
-                    
+
                     epoch_loss = running_loss / len(val_dataset)
                     epoch_acc = running_corrects / len(val_dataset)
                     epoch_auc = roc_auc_score(
@@ -242,9 +241,15 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         if folds > 1:
                             torch.save(
                                 model.state_dict(), os.getcwd() + f'/{method}_best_acc_model_fold{fold}.pth')
+                            if return_best:
+                                best_model_state = copy.deepcopy(
+                                    model.state_dict())
                         else:
                             torch.save(
                                 model.state_dict(), os.getcwd() + f'/{method}_best_acc_model.pth')
+                            if return_best:
+                                best_model_state = copy.deepcopy(
+                                    model.state_dict())
                     # if loss is lower, but accuracy equal, take that model as best new model
                     # e.g. used with small datasets when accuracy goes to 1.0 quickly
                     elif epoch_acc == best_acc and epoch_loss < best_loss:
@@ -258,10 +263,15 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         if folds > 1:
                             torch.save(
                                 model.state_dict(), os.getcwd() + f'/{method}_best_acc_model_fold{fold}.pth')
+                            if return_best:
+                                best_model_state = copy.deepcopy(
+                                    model.state_dict())
                         else:
                             torch.save(
                                 model.state_dict(), os.getcwd() + f'/{method}_best_acc_model.pth')
-
+                            if return_best:
+                                best_model_state = copy.deepcopy(
+                                    model.state_dict())
 
         average_auc.append(best_auc)
         average_ap.append(best_ap)
@@ -273,7 +283,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
     if fulltrain == True:
         # only saved model is returned
         return model, 0, 0, 0, 0
-    # average the best results of all folds                          
+    # average the best results of all folds
     average_auc = np.array(average_auc).mean()
     average_ap = np.array(average_ap).mean()
     average_acc = np.mean(np.asarray(
@@ -310,8 +320,9 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         print(
             f"Duration: {(time.time() - training_time) // 60} min and {(time.time() - training_time) % 60} sec.")
 
-    # load best model params
-    # model.load_state_dict(best_model)
+    if return_best:
+        # load best model params
+        model.load_state_dict(best_model_state)
     return model, average_auc, average_ap, average_acc, average_loss
 
 
@@ -335,7 +346,8 @@ def kfold_cross_val(method, fold, df):
     # return indices for fold
     return list(train[fold]), list(val[fold])
 
-def holdout_val(method,fold,df):
+
+def holdout_val(method, fold, df):
     """
         Return training and validation data in a holdout split.
     """
@@ -347,9 +359,11 @@ def holdout_val(method,fold,df):
         X = df['video'].values
         y = df['label'].values
         indices = df.index.values.tolist()
-      
-    X_train, X_test, y_train, y_test, train_idx,val_idx = train_test_split(X, y,indices, test_size=0.2, random_state=24)
-    return X_train, X_test, y_train, y_test, train_idx,val_idx
+
+    X_train, X_test, y_train, y_test, train_idx, val_idx = train_test_split(
+        X, y, indices, test_size=0.2, random_state=24)
+    return X_train, X_test, y_train, y_test, train_idx, val_idx
+
 
 def prepare_fulltrain_datasets(dataset, method, data, img_size, normalization, augmentations, batch_size):
     """
@@ -357,38 +371,38 @@ def prepare_fulltrain_datasets(dataset, method, data, img_size, normalization, a
     """
     if dataset == 'uadfv':
         train_dataset = datasets.UADFVDataset(
-            data, img_size,method=method,  normalization=normalization, augmentations=augmentations)
+            data, img_size, method=method,  normalization=normalization, augmentations=augmentations)
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True)
     elif dataset == 'celebdf':
         train_dataset = datasets.CelebDFDataset(
-                data, img_size,method=method,  normalization=normalization, augmentations=augmentations)
+            data, img_size, method=method,  normalization=normalization, augmentations=augmentations)
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True)
     return train_dataset, train_loader
 
 
-def prepare_train_val(dataset, method, data, img_size, normalization, augmentations, batch_size,train_idx,val_idx):
+def prepare_train_val(dataset, method, data, img_size, normalization, augmentations, batch_size, train_idx, val_idx):
     """
     Prepare training and validation dataset.
     """
     if dataset == 'uadfv':
         train_dataset = datasets.UADFVDataset(
-            data.iloc[train_idx], img_size,method=method, normalization=normalization, augmentations=augmentations)
+            data.iloc[train_idx], img_size, method=method, normalization=normalization, augmentations=augmentations)
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True)
         val_dataset = datasets.UADFVDataset(
-            data.iloc[val_idx], img_size,method=method, normalization=normalization, augmentations=None)
+            data.iloc[val_idx], img_size, method=method, normalization=normalization, augmentations=None)
         val_loader = DataLoader(
             val_dataset, batch_size=batch_size, shuffle=False)
 
     elif dataset == 'celebdf':
         train_dataset = datasets.CelebDFDataset(
-            data.iloc[train_idx], img_size,method=method, normalization=normalization, augmentations=augmentations)
+            data.iloc[train_idx], img_size, method=method, normalization=normalization, augmentations=augmentations)
         train_loader = DataLoader(
-            train_dataset, batch_size=batch_size, shuffle=True)
+            train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
         val_dataset = datasets.CelebDFDataset(
-            data.iloc[val_idx], img_size,method=method, normalization=normalization, augmentations=None)
+            data.iloc[val_idx], img_size, method=method, normalization=normalization, augmentations=None)
         val_loader = DataLoader(
-            val_dataset, batch_size=batch_size, shuffle=False)
+            val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     return train_dataset, train_loader, val_dataset, val_loader

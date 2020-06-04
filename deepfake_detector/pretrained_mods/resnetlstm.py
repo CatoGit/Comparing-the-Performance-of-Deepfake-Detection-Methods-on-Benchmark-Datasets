@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 
+
 class ResNetLSTM(nn.Module):
     """
     Implementation of a Resnet50 + LSTM with 512 hidden units as it was described in the paper
@@ -16,7 +17,7 @@ class ResNetLSTM(nn.Module):
         hidden_size = 512  # as described in the Deeperforensics-1.0 paper
     """
 
-    def __init__(self, input_size=128,hidden_size=512, num_layers=2, num_classes=1):
+    def __init__(self, input_size=128, hidden_size=512, num_layers=2, num_classes=1):
         super(ResNetLSTM, self).__init__()
         self.resnet = models.resnet50(pretrained=True)
         self.resnet.conv1 = nn.Conv2d(3, 64, kernel_size=(
@@ -41,7 +42,7 @@ class ResNetLSTM(nn.Module):
         # combine batch and frame dimensions for 2d cnn
         c_in = x.reshape(batch_size * num_frames, channels, height, width)
         c_out = self.resnet(c_in)
-        # separate batch and frame dimensions for lstm 
+        # separate batch and frame dimensions for lstm
         c_out = c_out.view(batch_size, num_frames, -1)
         r_out, _ = self.lstm(c_out)
         # get last hidden state
