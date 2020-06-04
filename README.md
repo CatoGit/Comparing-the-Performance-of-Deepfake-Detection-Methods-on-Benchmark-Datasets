@@ -22,8 +22,8 @@ data_path takes arguments in the following way: your_path/datasetfolder
 | uadfv  | your_path/fake_videos   | https://github.com/danmohaha/WIFS2018_In_Ictu_Oculi |
 | celebdf  | your_path/celebdf  |https://github.com/danmohaha/celeb-deepfakeforensics|
 | dfdc  | your_path/   |https://www.kaggle.com/c/deepfake-detection-challenge/data|
-| dftimithq | your_path/  |https://www.idiap.ch/dataset/deepfaketimit|
-| dftimitlq  | your_path/  |https://www.idiap.ch/dataset/deepfaketimit|
+| dftimithq | your_path/  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
+| dftimitlq  | your_path/  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
 | dfd  | your_path/ |https://github.com/ondyari/FaceForensics/|
 | faceforensics++  | your_path/   |https://github.com/ondyari/FaceForensics/|
 
