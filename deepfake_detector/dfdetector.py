@@ -130,7 +130,7 @@ class DFDetector():
         """
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        if method not in ['xception_uadfv', 'xception_celebdf', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'mesonet_uadfv', 'mesonet_celebdf', 'resnet_lstm_uadfv', 'efficientnetb1_lstm_uadfv', 'dfdcrank90_uadfv', 'five_methods_ensemble']:
+        if method not in ['xception_uadfv', 'xception_celebdf', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'mesonet_uadfv', 'mesonet_celebdf', 'resnet_lstm_uadfv', 'efficientnetb1_lstm_uadfv', 'dfdcrank90_uadfv', 'six_method_ensemble_uadfv','six_method_ensemble_celebdf']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             # method exists
@@ -167,7 +167,7 @@ class DFDetector():
             # evaluate dfdcrank90 ensemble
             auc, ap, loss, acc = prepare_dfdc_rank90(method, cls.dataset, df)
             return [auc, ap, loss, acc]
-        elif cls.method == 'six_method_ensemble':
+        elif cls.method == 'six_method_ensemble_uadfv' or cls.method == 'six_method_ensemble_celebdf':
             # evaluate six method ensemble
             auc, ap, loss, acc = prepare_six_method_ensemble(
                 method, cls.dataset, df)
@@ -903,23 +903,28 @@ def setup_celebdf_benchmark(data_path, method):
                                     List_of_testing_videos.txt
                         """)
 
-
+        
 def prepare_six_method_ensemble(method, dataset, df):
     """Calculates the metrics for the six method ensemble."""
+    
+    if method == 'six_method_ensemble_uadfv':
+        ens = 'uadfv'
+    elif method == 'six_method_ensemble_celebdf':
+        ens = 'celebdf'
     six_method_ens = pd.read_csv(
-        f"efficientnetb1_lstm_{dataset}_predictions_on_{dataset}.csv")
+        f"efficientnetb1_lstm_{ens}_predictions_on_{dataset}.csv")
     six_method_ens['Prediction'] = 0
     # read predictions of all six methods
     effb1lstm = pd.read_csv(
-        f"efficientnetb1_lstm_{dataset}_predictions_on_{dataset}.csv")
+        f"efficientnetb1_lstm_{ens}_predictions_on_{dataset}.csv")
     resnetlstm = pd.read_csv(
-        f"resnet_lstm_{dataset}_predictions_on_{dataset}.csv")
-    meso = pd.read_csv(f"mesonet_{dataset}_predictions_on_{dataset}.csv")
+        f"resnet_lstm_{ens}_predictions_on_{dataset}.csv")
+    meso = pd.read_csv(f"mesonet_{ens}_predictions_on_{dataset}.csv")
     effb7 = pd.read_csv(
-        f"efficientnetb7_{dataset}_predictions_on_{dataset}.csv")
-    xcep = pd.read_csv(f"xception_{dataset}_predictions_on_{dataset}.csv")
+        f"efficientnetb7_{ens}_predictions_on_{dataset}.csv")
+    xcep = pd.read_csv(f"xception_{ens}_predictions_on_{dataset}.csv")
     rank90ens = pd.read_csv(
-        f"dfdcrank90_{dataset}_predictios_on_{dataset}.csv")
+        f"dfdcrank90_{ens}_predictions_on_{dataset}.csv")
     # calculate the average of the prediction
     six_method_ens['Prediction'] = (effb1lstm['Prediction'] + resnetlstm['Prediction'] +
                                     meso['Prediction'] + effb7['Prediction'] + xcep['Prediction'] + rank90ens['Prediction'])/6
@@ -953,8 +958,6 @@ def prepare_six_method_ensemble(method, dataset, df):
     print(f"{one_rec} cost for 0.1 recall.")
     print(f"{five_rec} cost for 0.5 recall.")
     print(f"{nine_rec} cost for 0.9 recall.")
-    print(
-        f"Duration: {(time.time() - inference_time) // 60} min and {(time.time() - inference_time) % 60} sec.")
     print()
     print(
         f"Detected \033[1m {tp}\033[0m true deepfake videos and correctly classified \033[1m {tn}\033[0m real videos.")

@@ -427,5 +427,3 @@ def prepare_train_val(dataset, method, data, img_size, normalization, augmentati
         val_loader = DataLoader(
             val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     return train_dataset, train_loader, val_dataset, val_loader
-
-
