@@ -660,29 +660,62 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                 # concatenate both dataframes to get full training data (964 training videos with 50/50 class balance)
                 df = pd.concat([df_real, df_fake_sample], ignore_index=True)
             else:
-                # if face crops available go to path with face crops
-                video_path_crops_real = os.path.join(
-                    dataset_path + "/facecrops/real/")
-                video_path_crops_fake = os.path.join(
-                    dataset_path + "/facecrops/fake/")
-                # add labels to videos
-                data_list = []
-                for _, _, videos in os.walk(video_path_crops_real):
-                    for video in tqdm(videos):
-                        # label 0 for real video
-                        data_list.append(
-                            {'label': 0, 'video': video_path_crops_real + video})
+                # if sequence, prepare sequence dataframe
+                if method == 'resnet_lstm' or method == 'efficientnetb1_lstm':
+                    # prepare dataframe for sequence model
+                    video_path_crops_real = os.path.join(
+                        dataset_path + "/facecrops/real/")
+                    video_path_crops_fake = os.path.join(
+                        dataset_path + "/facecrops/fake/")
 
-                for _, _, videos in os.walk(video_path_crops_fake):
-                    for video in tqdm(videos):
-                        # label 1 for deepfake video
-                        data_list.append(
-                            {'label': 1, 'video': video_path_crops_fake + video})
-                # put data into dataframe
-                df = pd.DataFrame(data=data_list)
-                if len(df) == 0:
-                    raise ValueError(
-                        "No faces available. Please set faces_available=False.")
+                    data_list = []
+                    for _, _, videos in os.walk(video_path_crops_real):
+                        for video in tqdm(videos):
+                            # label 0 for real video
+                            data_list.append(
+                                {'label': 0, 'video': video})
+
+                    for _, _, videos in os.walk(video_path_crops_fake):
+                        for video in tqdm(videos):
+                            # label 1 for deepfake video
+                            data_list.append(
+                                {'label': 1, 'video': video})
+
+                    # put data into dataframe
+                    df = pd.DataFrame(data=data_list)
+                    df = prepare_sequence_data(dataset, df)
+                    # add path to data
+                    for idx, row in df.iterrows():
+                        if row['label'] == 0:
+                            df.loc[idx, 'original'] = str(
+                                video_path_crops_real) + str(row['original'])
+                        elif row['label'] == 1:
+                            df.loc[idx, 'original'] = str(
+                                video_path_crops_fake) + str(row['original'])
+                else:
+                    # if face crops available go to path with face crops
+                    video_path_crops_real = os.path.join(
+                        dataset_path + "/facecrops/real/")
+                    video_path_crops_fake = os.path.join(
+                        dataset_path + "/facecrops/fake/")
+                    # add labels to videos
+                    data_list = []
+                    for _, _, videos in os.walk(video_path_crops_real):
+                        for video in tqdm(videos):
+                            # label 0 for real video
+                            data_list.append(
+                                {'label': 0, 'video': video_path_crops_real + video})
+
+                    for _, _, videos in os.walk(video_path_crops_fake):
+                        for video in tqdm(videos):
+                            # label 1 for deepfake video
+                            data_list.append(
+                                {'label': 1, 'video': video_path_crops_fake + video})
+                    # put data into dataframe
+                    df = pd.DataFrame(data=data_list)
+                    if len(df) == 0:
+                        raise ValueError(
+                            "No faces available. Please set faces_available=False.")
 
     else:
         # prepare test data
@@ -818,11 +851,17 @@ def prepare_sequence_data(dataset, df):
     df['original'] = ""
     if dataset == 'uadfv':
         # label data
-        for idx, row in df.iterrows():
+        print("Preparing sequence data.")
+        for idx, row in tqdm(df.iterrows(), total=len(df)):
             if row.loc['label'] == 0:
                 df.loc[idx, 'original'] = row.loc['video'][:4]
             elif row.loc['label'] == 1:
                 df.loc[idx, 'original'] = row.loc['video'][:9]
+    elif dataset == 'celebdf':
+        print("Preparing sequence data.")
+        for idx, row in tqdm(df.iterrows(), total=len(df)):
+            # remove everything after last underscore
+            df.loc[idx, 'original'] = row.loc['video'].rpartition("_")[0]
     # count frames per video
     df1 = df.groupby(['original']).size().reset_index(name='count')
     df = pd.merge(df, df1, on='original')
