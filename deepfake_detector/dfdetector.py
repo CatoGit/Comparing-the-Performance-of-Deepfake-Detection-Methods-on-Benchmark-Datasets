@@ -20,7 +20,6 @@ import torchvision.transforms as transforms
 import train
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-
 from albumentations import (
     Compose, FancyPCA, GaussianBlur, GaussNoise, HorizontalFlip,
     HueSaturationValue, ImageCompression, OneOf, PadIfNeeded,
@@ -131,7 +130,7 @@ class DFDetector():
         """
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        if method not in ['xception_uadfv', 'xception_celebdf', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'mesonet_uadfv', 'resnet_lstm_uadfv', 'efficientnetb1_lstm_uadfv', 'dfdcrank90_uadfv', 'five_methods_ensemble']:
+        if method not in ['xception_uadfv', 'xception_celebdf', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'mesonet_uadfv', 'mesonet_celebdf', 'resnet_lstm_uadfv', 'efficientnetb1_lstm_uadfv', 'dfdcrank90_uadfv', 'five_methods_ensemble']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             # method exists
@@ -149,16 +148,13 @@ class DFDetector():
         df = label_data(dataset_path=cls.data_path,
                         dataset=cls.dataset, test_data=True)
         # prepare the method of choice
-        if cls.method == "xception_uadfv":
-            model, img_size, normalization = prepare_method(
-                method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'xception_celebdf':
+        if cls.method == "xception_uadfv" or cls.method == 'xception_celebdf':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
         elif cls.method == "efficientnetb7_uadfv" or cls.method == 'efficientnetb7_celebdf':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'mesonet_uadfv':
+        elif cls.method == 'mesonet_uadfv' or cls.method == 'mesonet_celebdf':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
         elif cls.method == 'resnet_lstm_uadfv':
@@ -350,13 +346,13 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'mesonet' or method == 'mesonet_uadfv':
+    elif method == 'mesonet' or method == 'mesonet_uadfv' or method == 'mesonet_celebdf':
         # 256 image size as proposed in the MesoNet paper (https://arxiv.org/abs/1809.00888)
         img_size = 256
         # use [0.5,0.5,0.5] normalization scheme, because no imagenet pretraining
         normalization = 'xception'
         if mode == 'test':
-            if method == 'mesonet_uadfv':
+            if method == 'mesonet_uadfv' or method == 'mesonet_celebdf':
                 # load MesoInception4 model
                 model = mesonet.MesoInception4()
                 # load the mesonet model that was pretrained on the uadfv training data

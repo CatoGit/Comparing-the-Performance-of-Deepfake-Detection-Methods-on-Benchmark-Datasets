@@ -2,20 +2,22 @@ import argparse
 import copy
 import os
 import time
+import gc
 import numpy as np
 import torch
 import torch.nn as nn
+from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
+from sklearn.model_selection import KFold, train_test_split
+from torch.optim import Adam, lr_scheduler
+from torch.utils.data import DataLoader, Dataset
+
+
 import datasets
 import timm
 import metrics
 import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
-
-from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
-from sklearn.model_selection import KFold, train_test_split
-from torch.optim import Adam, lr_scheduler
-from torch.utils.data import DataLoader, Dataset
 from facedetector.retinaface import df_retinaface
 from pretrained_mods import xception
 from pretrained_mods import mesonet
@@ -127,7 +129,8 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                 else:
                     # turn batchnorm and dropout layers to eval mode
                     model.eval()
-
+                print(torch.cuda.memory_summary(
+                    device=device, abbreviated=False))
                 running_loss = 0.0
                 running_corrects = 0.0
                 running_auc_labels = []
@@ -183,6 +186,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         f"{phase} Loss: {epoch_loss}, Acc: {epoch_acc}, AUC: {epoch_auc}, AP: {epoch_ap}")
                     if fulltrain == True and e+1 == epochs:
                         # save model if epochs reached
+                        print("Save fulltrain model.")
                         torch.save(
                             model.state_dict(), os.getcwd() + f'/{method}_{dataset}.pth')
 
@@ -245,8 +249,18 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                                 best_model_state = copy.deepcopy(
                                     model.state_dict())
                         else:
-                            torch.save(
-                                model.state_dict(), os.getcwd() + f'/{method}_best_acc_model.pth')
+                            print(best_acc)
+                            print(best_auc)
+                            print(best_loss)
+                            print(best_ap)
+                            with open("Output.txt", "w") as text_file:
+                                print(f"Acc: {best_acc}", file=text_file)
+                                print(f"AUC: {best_auc}", file=text_file)
+                                print(f"Loss: {best_loss}", file=text_file)
+                                print(f"AP: {best_ap}", file=text_file)
+                                print(f"Epoch: {e}", file=text_file)
+#                             torch.save(
+#                                 model.state_dict(), os.getcwd() + f'/{method}_ep{e}_{best_acc}_{best_auc}_{best_ap}_{best_loss}.pth')
                             if return_best:
                                 best_model_state = copy.deepcopy(
                                     model.state_dict())
@@ -267,22 +281,29 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                                 best_model_state = copy.deepcopy(
                                     model.state_dict())
                         else:
-                            torch.save(
-                                model.state_dict(), os.getcwd() + f'/{method}_best_acc_model.pth')
+                            print(best_acc)
+                            print(best_auc)
+                            print(best_loss)
+                            print(best_ap)
+#                             torch.save(
+#                                 model.state_dict(), os.getcwd() + f'/{method}_ep{e}_{best_acc}_{best_auc}_{best_ap}_{best_loss}.pth')
                             if return_best:
                                 best_model_state = copy.deepcopy(
                                     model.state_dict())
 
+            gc.collect()
+            torch.cuda.empty_cache()
         average_auc.append(best_auc)
         average_ap.append(best_ap)
         average_acc.append(best_acc)
         average_loss.append(best_loss)
-        average_one_rec.append(one_rec)
-        average_five_rec.append(five_rec)
-        average_nine_rec.append(nine_rec)
-    if fulltrain == True:
-        # only saved model is returned
-        return model, 0, 0, 0, 0
+        if not fulltrain:
+            average_one_rec.append(one_rec)
+            average_five_rec.append(five_rec)
+            average_nine_rec.append(nine_rec)
+        else:
+            # only saved model is returned
+            return model, 0, 0, 0, 0
     # average the best results of all folds
     average_auc = np.array(average_auc).mean()
     average_ap = np.array(average_ap).mean()
@@ -406,3 +427,5 @@ def prepare_train_val(dataset, method, data, img_size, normalization, augmentati
         val_loader = DataLoader(
             val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     return train_dataset, train_loader, val_dataset, val_loader
+
+
