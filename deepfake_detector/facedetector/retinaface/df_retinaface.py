@@ -157,6 +157,7 @@ def detect_faces(net, video, cfg, num_frames):
     cap = cv2.VideoCapture(video)
     # get frames in video
     frame_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # choose num frames (20) equally spaced from video
     search_frames = np.linspace(
         0, frame_len, num_frames, endpoint=False, dtype=np.int64)
     frames = []
