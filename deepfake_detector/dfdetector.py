@@ -130,7 +130,7 @@ class DFDetector():
         """
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        if method not in ['xception_uadfv', 'xception_celebdf', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'mesonet_uadfv', 'mesonet_celebdf', 'resnet_lstm_uadfv','resnet_lstm_celebdf', 'efficientnetb1_lstm_uadfv','efficientnetb1_lstm_celebdf', 'dfdcrank90_uadfv', 'six_method_ensemble_uadfv','six_method_ensemble_celebdf']:
+        if method not in ['xception_uadfv', 'xception_celebdf', 'xception_dftimit_lq', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'mesonet_uadfv', 'mesonet_celebdf', 'resnet_lstm_uadfv', 'resnet_lstm_celebdf', 'efficientnetb1_lstm_uadfv', 'efficientnetb1_lstm_celebdf', 'dfdcrank90_uadfv', 'dfdcrank90_celebdf', 'six_method_ensemble_uadfv', 'six_method_ensemble_celebdf']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             # method exists
@@ -148,7 +148,7 @@ class DFDetector():
         df = label_data(dataset_path=cls.data_path,
                         dataset=cls.dataset, test_data=True)
         # prepare the method of choice
-        if cls.method == "xception_uadfv" or cls.method == 'xception_celebdf':
+        if cls.method == "xception_uadfv" or cls.method == 'xception_celebdf' or cls.method == 'xception_dftimit_lq':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
         elif cls.method == "efficientnetb7_uadfv" or cls.method == 'efficientnetb7_celebdf':
@@ -160,10 +160,10 @@ class DFDetector():
         elif cls.method == 'resnet_lstm_uadfv' or cls.method == 'resnet_lstm_celebdf':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'efficientnetb1_lstm_uadfv' or cls.method== 'efficientnetb1_lstm_celebdf':
+        elif cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_celebdf':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'dfdcrank90_uadfv':
+        elif cls.method == 'dfdcrank90_uadfv' or cls.method == 'dfdcrank90_celebdf':
             # evaluate dfdcrank90 ensemble
             auc, ap, loss, acc = prepare_dfdc_rank90(method, cls.dataset, df)
             return [auc, ap, loss, acc]
@@ -175,7 +175,7 @@ class DFDetector():
 
         print(f"Detecting deepfakes with \033[1m{cls.method}\033[0m ...")
         # benchmarking
-        if cls.method == 'resnet_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'resnet_lstm_celebdf' or cls.method== 'efficientnetb1_lstm_celebdf':
+        if cls.method == 'resnet_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'resnet_lstm_celebdf' or cls.method == 'efficientnetb1_lstm_celebdf':
             # inference for sequence models
             auc, ap, loss, acc = test.inference(
                 model, df, img_size, normalization, dataset=cls.dataset, method=cls.method, sequence_model=True)
@@ -249,6 +249,30 @@ class DFDetector():
                     os.mkdir(img_save_path + addon_path)
                     os.mkdir(img_save_path + '/facecrops/real/')
                     os.mkdir(img_save_path + '/facecrops/fake/')
+            elif cls.dataset == 'dftimit_lq':
+                addon_path = '/facecrops/'
+                # check if all folders are available
+                if not os.path.exists(img_save_path + '/higher_quality/'):
+                    raise ValueError(
+                        "Please unpack the dataset again. The \"higher_quality\" folder is missing.")
+                if not os.path.exists(img_save_path + '/dftimitreal/'):
+                    raise ValueError(
+                        """Please put the real videos into the \'/dftimitreal\' folder. Please organize the folder as follows:
+                        ./DeepfakeTIMIT
+                            /higher_quality/
+                            /dftimitreal/"""
+                    )
+                if not os.path.exists(img_save_path + '/facecrops/'):
+                    # create directory in save path for face crops
+                    os.mkdir(img_save_path + addon_path)
+                    os.mkdir(img_save_path + '/facecrops/real/')
+                    os.mkdir(img_save_path + '/facecrops/fake/')
+                else:
+                    # delete create again if it already exists with old files
+                    shutil.rmtree(img_save_path + '/facecrops/')
+                    os.mkdir(img_save_path + addon_path)
+                    os.mkdir(img_save_path + '/facecrops/real/')
+                    os.mkdir(img_save_path + '/facecrops/fake/')
 
             print("Detect and save 20 faces from each video for training.")
             if cls.face_margin > 0.0:
@@ -281,9 +305,19 @@ class DFDetector():
                         video = vid_name
                         save_dir = os.path.join(
                             img_save_path + '/facecrops/real/')
+                elif cls.dataset == 'dftimit_lq':
+                    vid_name = row.loc['videoname']
+                    video = vid_name
+                    if label == 1:
+                        save_dir = os.path.join(
+                            img_save_path + '/facecrops/fake/')
+                    else:
+                        save_dir = os.path.join(
+                            img_save_path + '/facecrops/real/')
                     # detect faces, add margin, crop, upsample to same size, save to images
                 faces = df_retinaface.detect_faces(
                     net, vid, cfg, num_frames=20)
+
                 # save frames to directory
                 vid_frames = df_retinaface.extract_frames(
                     faces, video, save_to=save_dir, face_margin=cls.face_margin, num_frames=20, test=False)
@@ -304,19 +338,13 @@ class DFDetector():
 
 def prepare_method(method, dataset, mode='train'):
     """Prepares the method that will be used for training or benchmarking."""
-    if method == 'xception' or method == 'xception_uadfv' or method == 'xception_celebdf':
+    if method == 'xception' or method == 'xception_uadfv' or method == 'xception_celebdf' or method == 'xception_dftimit_lq':
         img_size = 299
         normalization = 'xception'
         if mode == 'test':
             model = xception.imagenet_pretrained_xception()
             # load the xception model that was pretrained on the respective datasets training data
-            if method == 'xception_uadfv':
-                model_params = torch.load(
-                    os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
-                print(os.getcwd(
-                ) + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
-                model.load_state_dict(model_params)
-            elif method == 'xception_celebdf':
+            if method == 'xception_uadfv' or method == 'xception_celebdf' or method == 'xception_dftimit_lq':
                 model_params = torch.load(
                     os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
                 print(os.getcwd(
@@ -384,11 +412,11 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'efficientnetb1_lstm' or method == 'efficientnetb1_lstm_uadfv' or method =='efficientnetb1_lstm_celebdf':
+    elif method == 'efficientnetb1_lstm' or method == 'efficientnetb1_lstm_uadfv' or method == 'efficientnetb1_lstm_celebdf':
         img_size = 240
         normalization = 'imagenet'
         if mode == 'test':
-            if method == 'efficientnetb1_lstm_uadfv' or method== 'efficientnetb1_lstm_celebdf':
+            if method == 'efficientnetb1_lstm_uadfv' or method == 'efficientnetb1_lstm_celebdf':
                 # load EfficientNetB1+LSTM
                 model = efficientnetb1lstm.EfficientNetB1LSTM()
                 # load the mesonet model that was pretrained on the uadfv training data
@@ -419,6 +447,10 @@ def prepare_dfdc_rank90(method, dataset, df):
         mod1 = 'efficientnetb1_lstm_uadfv'
         mod2 = 'xception_uadfv'
         mod3 = 'xception_uadfv_seed25'
+    elif method == 'dfdcrank90_celebdf':
+        mod1 = 'efficientnetb1_lstm_celebdf'
+        mod2 = 'xception_celebdf'
+        mod3 = 'xception_celebdf_seed25'
     model3 = efficientnetb1lstm.EfficientNetB1LSTM()
     # load the xception model that was pretrained on the uadfv training data
     model_params3 = torch.load(
@@ -716,6 +748,92 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                     if len(df) == 0:
                         raise ValueError(
                             "No faces available. Please set faces_available=False.")
+        elif dataset == 'dftimit_lq':
+            # prepare dftimit_lq training data by
+            # structure data from folder in data frame for loading
+            if not face_crops:
+                # read in the reals
+                reals = pd.read_csv(
+                    os.getcwd() + "/deepfake_detector/data/dftimit_reals.csv")
+                reals['path'] = reals['path'] + reals['videofolder'] + \
+                    '/' + reals['videoname'] + '.avi'
+                reals['videoname'] = reals['videoname'] + '.avi'
+                del reals['videofolder']
+                reals['label'] = 0
+                reals['path'] = dataset_path + '/dftimitreal/' + reals['path']
+                fake_path = os.path.join(dataset_path, 'higher_quality')
+                # get list of fakes
+                data_list = []
+                data_list_name = []
+                for path, dirs, files in os.walk(fake_path):
+                    for filename in files:
+                        if filename.endswith(".avi"):
+                            data_list.append(os.path.join(path, filename))
+                            data_list_name.append(filename)
+                fakes = pd.DataFrame(list(zip(data_list, data_list_name)), columns=[
+                                     'path', 'videoname'])
+                fakes['label'] = 1
+                # put fakes and reals in one dataframe
+                df = pd.concat([reals, fakes])
+                df = df.rename(columns={"path": "video"})
+
+            else:
+                # if sequence, prepare sequence dataframe
+                if method == 'resnet_lstm' or method == 'efficientnetb1_lstm':
+                    # prepare dataframe for sequence model
+                    video_path_crops_real = os.path.join(
+                        dataset_path + "/facecrops/real/")
+                    video_path_crops_fake = os.path.join(
+                        dataset_path + "/facecrops/fake/")
+
+                    data_list = []
+                    for _, _, videos in os.walk(video_path_crops_real):
+                        for video in tqdm(videos):
+                            # label 0 for real video
+                            data_list.append(
+                                {'label': 0, 'video': video})
+
+                    for _, _, videos in os.walk(video_path_crops_fake):
+                        for video in tqdm(videos):
+                            # label 1 for deepfake video
+                            data_list.append(
+                                {'label': 1, 'video': video})
+
+                    # put data into dataframe
+                    df = pd.DataFrame(data=data_list)
+                    df = prepare_sequence_data(dataset, df)
+                    # add path to data
+                    for idx, row in df.iterrows():
+                        if row['label'] == 0:
+                            df.loc[idx, 'original'] = str(
+                                video_path_crops_real) + str(row['original'])
+                        elif row['label'] == 1:
+                            df.loc[idx, 'original'] = str(
+                                video_path_crops_fake) + str(row['original'])
+                else:
+                    # if face crops available go to path with face crops
+                    video_path_crops_real = os.path.join(
+                        dataset_path + "/facecrops/real/")
+                    video_path_crops_fake = os.path.join(
+                        dataset_path + "/facecrops/fake/")
+                    # add labels to videos
+                    data_list = []
+                    for _, _, videos in os.walk(video_path_crops_real):
+                        for video in tqdm(videos):
+                            # label 0 for real video
+                            data_list.append(
+                                {'label': 0, 'video': video_path_crops_real + video})
+
+                    for _, _, videos in os.walk(video_path_crops_fake):
+                        for video in tqdm(videos):
+                            # label 1 for deepfake video
+                            data_list.append(
+                                {'label': 1, 'video': video_path_crops_fake + video})
+                    # put data into dataframe
+                    df = pd.DataFrame(data=data_list)
+                    if len(df) == 0:
+                        raise ValueError(
+                            "No faces available. Please set faces_available=False.")
 
     else:
         # prepare test data
@@ -942,10 +1060,10 @@ def setup_celebdf_benchmark(data_path, method):
                                     List_of_testing_videos.txt
                         """)
 
-        
+
 def prepare_six_method_ensemble(method, dataset, df):
     """Calculates the metrics for the six method ensemble."""
-    
+
     if method == 'six_method_ensemble_uadfv':
         ens = 'uadfv'
     elif method == 'six_method_ensemble_celebdf':

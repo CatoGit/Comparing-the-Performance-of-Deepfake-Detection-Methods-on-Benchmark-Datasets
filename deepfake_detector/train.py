@@ -95,10 +95,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                 model = resnetlstm.ResNetLSTM()
             elif method == 'efficientnetb1_lstm':
                 model = efficientnetb1lstm.EfficientNetB1LSTM()
-            elif method == 'dfdc_rank90_ensemble':
-                model = dfdcrank90.Rank90DFDC()
-            elif method == 'all_methods_ensemble':
-                pass
+
         else:
             # continue to train model from custom checkpoint
             model = torch.load(load_model_path)
@@ -258,7 +255,7 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                                 print(f"AUC: {best_auc}", file=text_file)
                                 print(f"Loss: {best_loss}", file=text_file)
                                 print(f"AP: {best_ap}", file=text_file)
-                                print(f"Epoch: {e}", file=text_file)
+                                print(f"Epoch: {e+1}", file=text_file)
 #                             torch.save(
 #                                 model.state_dict(), os.getcwd() + f'/{method}_ep{e}_{best_acc}_{best_auc}_{best_ap}_{best_loss}.pth')
                             if return_best:
@@ -423,6 +420,16 @@ def prepare_train_val(dataset, method, data, img_size, normalization, augmentati
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
         val_dataset = datasets.CelebDFDataset(
+            data.iloc[val_idx], img_size, method=method, normalization=normalization, augmentations=None)
+        val_loader = DataLoader(
+            val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+        
+    elif dataset == 'dftimit_lq':
+        train_dataset = datasets.DFTIMITLQDataset(
+            data.iloc[train_idx], img_size, method=method, normalization=normalization, augmentations=augmentations)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+        val_dataset = datasets.DFTIMITLQDataset(
             data.iloc[val_idx], img_size, method=method, normalization=normalization, augmentations=None)
         val_loader = DataLoader(
             val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
