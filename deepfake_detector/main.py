@@ -18,9 +18,9 @@ if __name__ == "__main__":
     # result = metrics.weighted_precision(y_true, y_pred)
     # print(result)
     model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
-        dataset="dftimit_lq", data_path="C:/Users/Chris/Desktop/DeepfakeTIMIT", method="xception",
+        dataset="dftimit_hq", data_path="C:/Users/Chris/Desktop/DeepfakeTIMIT", method="xception",
         img_save_path="C:/Users/Chris/Desktop/DeepfakeTIMIT", epochs=1, batch_size=32, lr=0.0001, 
-        folds=1, augmentation_strength="weak", fulltrain=False, faces_available=False, face_margin=0.0, seed=24)
+        folds=1, augmentation_strength="weak", fulltrain=False, faces_available=True, face_margin=0.0, seed=24)
 
     # model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
     # dataset="celebdf", data_path='C:/Users/Chris/Desktop/Celeb-DF-v2', method="xception",

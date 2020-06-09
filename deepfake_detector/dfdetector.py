@@ -751,12 +751,25 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
         elif dataset == 'dftimit_hq':
             # prepare dftimit_lq training data by
             # structure data from folder in data frame for loading
+            test_df_real = pd.read_csv(
+                    os.getcwd() + "/deepfake_detector/data/dftimit_test_real.csv")
+            test_df_real['testlist'] = test_df_real['path'].str[:5] + test_df_real['videoname']
+            testing_vids_real = test_df_real['testlist'].tolist()
+            test_df_fake = pd.read_csv(
+                    os.getcwd() + "/deepfake_detector/data/dftimit_test_fake.csv")
+            test_df_fake['testlist'] = test_df_fake['videoname']
+            testing_vids_fake = test_df_fake['testlist'].tolist()
+            # join test vids in list
+            test_vids = testing_vids_real + testing_vids_fake
             if not face_crops:
                 # read in the reals
                 reals = pd.read_csv(
                     os.getcwd() + "/deepfake_detector/data/dftimit_reals.csv")
+                reals['testlist'] = reals['path'].str[:5] + reals['videoname']
                 reals['path'] = reals['path'] + reals['videofolder'] + \
                     '/' + reals['videoname'] + '.avi'
+                # remove testing videos from training videos
+                reals = reals[~reals['testlist'].isin(test_vids)]
                 reals['videoname'] = reals['videoname'] + '.avi'
                 del reals['videofolder']
                 reals['label'] = 0
@@ -772,6 +785,9 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                             data_list_name.append(filename)
                 fakes = pd.DataFrame(list(zip(data_list, data_list_name)), columns=[
                                      'path', 'videoname'])
+                
+                fakes['testlist'] = fakes['videoname'].str[:-4]
+                fakes = fakes[~fakes['testlist'].isin(test_vids)]
                 fakes['label'] = 1
                 # put fakes and reals in one dataframe
                 df = pd.concat([reals, fakes])
