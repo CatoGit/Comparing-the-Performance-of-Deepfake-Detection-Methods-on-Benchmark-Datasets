@@ -224,9 +224,9 @@ class CelebDFDataset(Dataset):
         return len(self.data)
 
 
-class DFTIMITLQDataset(Dataset):
+class DFTIMITHQDataset(Dataset):
     """
-       Deepfake Timit LQ dataset from P. Korshunov and S. Marcel,
+       Deepfake Timit HQ dataset from P. Korshunov and S. Marcel,
        DeepFakes: a New Threat to Face Recognition? Assessment and Detection.
        (https://arxiv.org/abs/1812.08685)
 

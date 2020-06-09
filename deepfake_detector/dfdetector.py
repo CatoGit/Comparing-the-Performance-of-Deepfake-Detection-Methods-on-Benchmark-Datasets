@@ -130,7 +130,7 @@ class DFDetector():
         """
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        if method not in ['xception_uadfv', 'xception_celebdf', 'xception_dftimit_lq', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'mesonet_uadfv', 'mesonet_celebdf', 'resnet_lstm_uadfv', 'resnet_lstm_celebdf', 'efficientnetb1_lstm_uadfv', 'efficientnetb1_lstm_celebdf', 'dfdcrank90_uadfv', 'dfdcrank90_celebdf', 'six_method_ensemble_uadfv', 'six_method_ensemble_celebdf']:
+        if method not in ['xception_uadfv', 'xception_celebdf','xception_dftimit_hq', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'mesonet_uadfv', 'mesonet_celebdf', 'resnet_lstm_uadfv', 'resnet_lstm_celebdf', 'efficientnetb1_lstm_uadfv', 'efficientnetb1_lstm_celebdf', 'dfdcrank90_uadfv', 'dfdcrank90_celebdf', 'six_method_ensemble_uadfv', 'six_method_ensemble_celebdf']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             # method exists
@@ -148,7 +148,7 @@ class DFDetector():
         df = label_data(dataset_path=cls.data_path,
                         dataset=cls.dataset, test_data=True)
         # prepare the method of choice
-        if cls.method == "xception_uadfv" or cls.method == 'xception_celebdf' or cls.method == 'xception_dftimit_lq':
+        if cls.method == "xception_uadfv" or cls.method == 'xception_celebdf' or cls.method == 'xception_dftimit_hq':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
         elif cls.method == "efficientnetb7_uadfv" or cls.method == 'efficientnetb7_celebdf':
@@ -249,7 +249,7 @@ class DFDetector():
                     os.mkdir(img_save_path + addon_path)
                     os.mkdir(img_save_path + '/facecrops/real/')
                     os.mkdir(img_save_path + '/facecrops/fake/')
-            elif cls.dataset == 'dftimit_lq':
+            elif cls.dataset == 'dftimit_hq':
                 addon_path = '/facecrops/'
                 # check if all folders are available
                 if not os.path.exists(img_save_path + '/higher_quality/'):
@@ -338,13 +338,13 @@ class DFDetector():
 
 def prepare_method(method, dataset, mode='train'):
     """Prepares the method that will be used for training or benchmarking."""
-    if method == 'xception' or method == 'xception_uadfv' or method == 'xception_celebdf' or method == 'xception_dftimit_lq':
+    if method == 'xception' or method == 'xception_uadfv' or method == 'xception_celebdf' or method =='xception_dftimit_hq':
         img_size = 299
         normalization = 'xception'
         if mode == 'test':
             model = xception.imagenet_pretrained_xception()
             # load the xception model that was pretrained on the respective datasets training data
-            if method == 'xception_uadfv' or method == 'xception_celebdf' or method == 'xception_dftimit_lq':
+            if method == 'xception_uadfv' or method == 'xception_celebdf' or method =='xception_dftimit_hq':
                 model_params = torch.load(
                     os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
                 print(os.getcwd(
@@ -748,7 +748,7 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                     if len(df) == 0:
                         raise ValueError(
                             "No faces available. Please set faces_available=False.")
-        elif dataset == 'dftimit_lq':
+        elif dataset == 'dftimit_hq':
             # prepare dftimit_lq training data by
             # structure data from folder in data frame for loading
             if not face_crops:
@@ -1063,7 +1063,7 @@ def setup_celebdf_benchmark(data_path, method):
 
 def prepare_six_method_ensemble(method, dataset, df):
     """Calculates the metrics for the six method ensemble."""
-
+    
     if method == 'six_method_ensemble_uadfv':
         ens = 'uadfv'
     elif method == 'six_method_ensemble_celebdf':
