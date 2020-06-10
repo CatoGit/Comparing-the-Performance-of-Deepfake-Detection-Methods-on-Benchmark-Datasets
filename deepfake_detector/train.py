@@ -126,8 +126,6 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                 else:
                     # turn batchnorm and dropout layers to eval mode
                     model.eval()
-                print(torch.cuda.memory_summary(
-                    device=device, abbreviated=False))
                 running_loss = 0.0
                 running_corrects = 0.0
                 running_auc_labels = []
@@ -397,7 +395,13 @@ def prepare_fulltrain_datasets(dataset, method, data, img_size, normalization, a
             data, img_size, method=method,  normalization=normalization, augmentations=augmentations)
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True)
+    elif dataset == 'dftimit_hq':
+        train_dataset = datasets.DFTIMITHQDataset(
+            data.iloc[train_idx], img_size, method=method, normalization=normalization, augmentations=augmentations)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
     return train_dataset, train_loader
+    
 
 
 def prepare_train_val(dataset, method, data, img_size, normalization, augmentations, batch_size, train_idx, val_idx):

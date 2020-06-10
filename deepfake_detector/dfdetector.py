@@ -142,6 +142,8 @@ class DFDetector():
             setup_uadfv_benchmark(cls.data_path, cls.method)
         elif cls.dataset == 'celebdf':
             setup_celebdf_benchmark(cls.data_path, cls.method)
+        elif cls.dataset == 'dftimit_hq':
+            setup_dftimit_hq_benchmark(cls.data_path, cls.method)
         else:
             raise ValueError(f"{cls.dataset} does not exist.")
         # get test labels for metric evaluation
@@ -785,7 +787,6 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
             # structure data from folder in data frame for loading
             test_df_real = pd.read_csv(
                     os.getcwd() + "/deepfake_detector/data/dftimit_test_real.csv")
-            print(test_df_real)
             test_df_real['testlist'] = test_df_real['path'].str[:5] + test_df_real['videoname'].apply(str)
             testing_vids_real = test_df_real['testlist'].tolist()
             test_df_fake = pd.read_csv(
@@ -919,7 +920,52 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
             df_test['video'] = dataset_path + '/' + df_test['video']
             print(f"{len(df_test)} test videos.")
             return df_test
-
+        elif dataset == 'dftimit_hq' or dataset == 'dftimit_lq':
+            test_df_real = pd.read_csv(
+                    os.getcwd() + "/deepfake_detector/data/dftimit_test_real.csv")
+            test_df_real['testlist'] = test_df_real['path'].str[:5] + test_df_real['videoname'].apply(str)
+            testing_vids_real = test_df_real['testlist'].tolist()
+            test_df_fake = pd.read_csv(
+                    os.getcwd() + "/deepfake_detector/data/dftimit_test_fake.csv")
+            test_df_fake['testlist'] = test_df_fake['videoname'].apply(str)
+            testing_vids_fake = test_df_fake['testlist'].tolist()
+            # join test vids in list
+            test_vids = testing_vids_real + testing_vids_fake
+            # read in the reals
+            reals = pd.read_csv(
+                os.getcwd() + "/deepfake_detector/data/dftimit_reals.csv")
+            reals['testlist'] = reals['path'].str[:5] + reals['videoname'].apply(str)
+            reals['path'] = reals['path'] + reals['videofolder'] + \
+                '/' + reals['videoname'].apply(str) + '.avi'
+            # remove testing videos from training videos
+            reals = reals[reals['testlist'].isin(test_vids)]
+            reals['videoname'] = reals['videoname'].apply(str) + '.avi'
+            del reals['videofolder']
+            reals['label'] = 0
+            reals['path'] = dataset_path + '/dftimitreal/' + reals['path']
+            if dataset == 'dftimit_hq':
+                fake_path = os.path.join(dataset_path, 'higher_quality')
+            elif dataset == 'dftimit_lq':
+                fake_path = os.path.join(dataset_path, 'lower_quality')
+            # get list of fakes
+            data_list = []
+            data_list_name = []
+            for path, dirs, files in os.walk(fake_path):
+                for filename in files:
+                    if filename.endswith(".avi"):
+                        data_list.append(os.path.join(path, filename))
+                        data_list_name.append(filename)
+            fakes = pd.DataFrame(list(zip(data_list, data_list_name)), columns=[
+                                 'path', 'videoname'])
+            fakes['testlist'] = fakes['videoname'].str[:-4]
+            fakes = fakes[fakes['testlist'].isin(test_vids)]
+            fakes['label'] = 1
+                # put fakes and reals in one dataframe
+            df_test = pd.concat([reals, fakes], ignore_index=True)
+            del df_test['testlist']
+            del df_test['videoname']
+            df_test = df_test.rename(columns={'path': 'video'})
+            return df_test
         # put data into dataframe
         df = pd.DataFrame(data=data_list)
 
@@ -1116,6 +1162,32 @@ def setup_celebdf_benchmark(data_path, method):
                                     YouTube-real/
                                     List_of_testing_videos.txt
                         """)
+        
+        
+def setup_dftimit_hq_benchmark(data_path, method):
+    """
+    Setup the folder structure of the DFTIMIT HQ Dataset.
+    """
+    if data_path is None:
+        raise ValueError("""Please go to http://conradsanderson.id.au/vidtimit/ to download the real videos and to
+                                https://www.idiap.ch/dataset/deepfaketimit to download the deepfake videos.
+                                Extract the files and organize the folders follwing this folder structure:
+                                ./DeepfakeTIMIT
+                                    /lower_quality/
+                                    /higher_quality/
+                                    /dftimitreal/
+                                """)
+    if data_path.endswith("DeepfakeTIMIT"):
+        print(
+            f"Benchmarking \033[1m{method}\033[0m on the \033[1m DF-TIMIT-HQ \033[0m dataset with ...")
+    else:
+        raise ValueError("""Make sure your data_path argument ends with \"DeepfakeTIMIT\" and organize the dataset directory in this way:
+                            ./DeepfakeTIMIT
+                                    /lower_quality/
+                                    /higher_quality/
+                                    /dftimitreal/
+                        """)
+    
 
 
 def prepare_six_method_ensemble(method, dataset, df):
