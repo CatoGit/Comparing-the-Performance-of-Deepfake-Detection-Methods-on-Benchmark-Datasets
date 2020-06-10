@@ -250,7 +250,7 @@ class DFDetector():
                     os.mkdir(img_save_path + '/facecrops/real/')
                     os.mkdir(img_save_path + '/facecrops/fake/')
             elif cls.dataset == 'dftimit_hq':
-                addon_path = '/facecrops/'
+                addon_path = '/facecrops_hq/'
                 # check if all folders are available
                 if not os.path.exists(img_save_path + '/higher_quality/'):
                     raise ValueError(
@@ -260,19 +260,43 @@ class DFDetector():
                         """Please put the real videos into the \'/dftimitreal\' folder. Please organize the folder as follows:
                         ./DeepfakeTIMIT
                             /higher_quality/
-                            /dftimitreal/"""
+                            /dftimitreal/ """
                     )
-                if not os.path.exists(img_save_path + '/facecrops/'):
+                if not os.path.exists(img_save_path + '/facecrops_hq/'):
                     # create directory in save path for face crops
                     os.mkdir(img_save_path + addon_path)
-                    os.mkdir(img_save_path + '/facecrops/real/')
-                    os.mkdir(img_save_path + '/facecrops/fake/')
+                    os.mkdir(img_save_path + '/facecrops_hq/real/')
+                    os.mkdir(img_save_path + '/facecrops_hq/fake/')
                 else:
                     # delete create again if it already exists with old files
-                    shutil.rmtree(img_save_path + '/facecrops/')
+                    shutil.rmtree(img_save_path + '/facecrops_hq/')
                     os.mkdir(img_save_path + addon_path)
-                    os.mkdir(img_save_path + '/facecrops/real/')
-                    os.mkdir(img_save_path + '/facecrops/fake/')
+                    os.mkdir(img_save_path + '/facecrops_hq/real/')
+                    os.mkdir(img_save_path + '/facecrops_hq/fake/')
+            elif cls.dataset == 'dftimit_lq':
+                addon_path = '/facecrops_lq/'
+                # check if all folders are available
+                if not os.path.exists(img_save_path + '/lower_quality/'):
+                    raise ValueError(
+                        "Please unpack the dataset again. The \"lower_quality\" folder is missing.")
+                if not os.path.exists(img_save_path + '/dftimitreal/'):
+                    raise ValueError(
+                        """Please put the real videos into the \'/dftimitreal\' folder. Please organize the folder as follows:
+                        ./DeepfakeTIMIT
+                            /lower_quality/
+                            /dftimitreal/"""
+                    )
+                if not os.path.exists(img_save_path + '/facecrops_lq/'):
+                    # create directory in save path for face crops
+                    os.mkdir(img_save_path + addon_path)
+                    os.mkdir(img_save_path + '/facecrops_lq/real/')
+                    os.mkdir(img_save_path + '/facecrops_lq/fake/')
+                else:
+                    # delete create again if it already exists with old files
+                    shutil.rmtree(img_save_path + '/facecrops_lq/')
+                    os.mkdir(img_save_path + addon_path)
+                    os.mkdir(img_save_path + '/facecrops_lq/real/')
+                    os.mkdir(img_save_path + '/facecrops_lq/fake/')
 
             print("Detect and save 20 faces from each video for training.")
             if cls.face_margin > 0.0:
@@ -305,16 +329,26 @@ class DFDetector():
                         video = vid_name
                         save_dir = os.path.join(
                             img_save_path + '/facecrops/real/')
+                elif cls.dataset == 'dftimit_hq':
+                    vid_name = row.loc['videoname']
+                    video = vid_name
+                    if label == 1:
+                        save_dir = os.path.join(
+                            img_save_path + '/facecrops_hq/fake/')
+                    else:
+                        save_dir = os.path.join(
+                            img_save_path + '/facecrops_hq/real/')
                 elif cls.dataset == 'dftimit_lq':
                     vid_name = row.loc['videoname']
                     video = vid_name
                     if label == 1:
                         save_dir = os.path.join(
-                            img_save_path + '/facecrops/fake/')
+                            img_save_path + '/facecrops_lq/fake/')
                     else:
                         save_dir = os.path.join(
-                            img_save_path + '/facecrops/real/')
-                    # detect faces, add margin, crop, upsample to same size, save to images
+                            img_save_path + '/facecrops_lq/real/')
+                        
+                # detect faces, add margin, crop, upsample to same size, save to images
                 faces = df_retinaface.detect_faces(
                     net, vid, cfg, num_frames=20)
 
@@ -537,9 +571,7 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
     """
     # structure data from folder in data frame for loading
     if dataset_path is None:
-        # TEST
         raise ValueError("Please specify a dataset path.")
-    # TEST
     if not test_data:
         if dataset == 'uadfv':
             # prepare training data
@@ -748,16 +780,17 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                     if len(df) == 0:
                         raise ValueError(
                             "No faces available. Please set faces_available=False.")
-        elif dataset == 'dftimit_hq':
+        elif dataset == 'dftimit_hq' or dataset == 'dftimit_lq':
             # prepare dftimit_lq training data by
             # structure data from folder in data frame for loading
             test_df_real = pd.read_csv(
                     os.getcwd() + "/deepfake_detector/data/dftimit_test_real.csv")
-            test_df_real['testlist'] = test_df_real['path'].str[:5] + test_df_real['videoname']
+            print(test_df_real)
+            test_df_real['testlist'] = test_df_real['path'].str[:5] + test_df_real['videoname'].apply(str)
             testing_vids_real = test_df_real['testlist'].tolist()
             test_df_fake = pd.read_csv(
                     os.getcwd() + "/deepfake_detector/data/dftimit_test_fake.csv")
-            test_df_fake['testlist'] = test_df_fake['videoname']
+            test_df_fake['testlist'] = test_df_fake['videoname'].apply(str)
             testing_vids_fake = test_df_fake['testlist'].tolist()
             # join test vids in list
             test_vids = testing_vids_real + testing_vids_fake
@@ -765,16 +798,19 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                 # read in the reals
                 reals = pd.read_csv(
                     os.getcwd() + "/deepfake_detector/data/dftimit_reals.csv")
-                reals['testlist'] = reals['path'].str[:5] + reals['videoname']
+                reals['testlist'] = reals['path'].str[:5] + reals['videoname'].apply(str)
                 reals['path'] = reals['path'] + reals['videofolder'] + \
-                    '/' + reals['videoname'] + '.avi'
+                    '/' + reals['videoname'].apply(str) + '.avi'
                 # remove testing videos from training videos
                 reals = reals[~reals['testlist'].isin(test_vids)]
-                reals['videoname'] = reals['videoname'] + '.avi'
+                reals['videoname'] = reals['videoname'].apply(str) + '.avi'
                 del reals['videofolder']
                 reals['label'] = 0
                 reals['path'] = dataset_path + '/dftimitreal/' + reals['path']
-                fake_path = os.path.join(dataset_path, 'higher_quality')
+                if dataset == 'dftimit_hq':
+                    fake_path = os.path.join(dataset_path, 'higher_quality')
+                elif dataset == 'dftimit_lq':
+                    fake_path = os.path.join(dataset_path, 'lower_quality')
                 # get list of fakes
                 data_list = []
                 data_list_name = []
@@ -828,10 +864,16 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                                 video_path_crops_fake) + str(row['original'])
                 else:
                     # if face crops available go to path with face crops
-                    video_path_crops_real = os.path.join(
-                        dataset_path + "/facecrops/real/")
-                    video_path_crops_fake = os.path.join(
-                        dataset_path + "/facecrops/fake/")
+                    if dataset == 'dftimit_hq':
+                        video_path_crops_real = os.path.join(
+                            dataset_path + "/facecrops_hq/real/")
+                        video_path_crops_fake = os.path.join(
+                            dataset_path + "/facecrops_hq/fake/")
+                    elif dataset == 'dftimit_lq':
+                        video_path_crops_real = os.path.join(
+                            dataset_path + "/facecrops_lq/real/")
+                        video_path_crops_fake = os.path.join(
+                            dataset_path + "/facecrops_lq/fake/")
                     # add labels to videos
                     data_list = []
                     for _, _, videos in os.walk(video_path_crops_real):
@@ -850,7 +892,6 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                     if len(df) == 0:
                         raise ValueError(
                             "No faces available. Please set faces_available=False.")
-
     else:
         # prepare test data
         if dataset == 'uadfv':
