@@ -144,6 +144,8 @@ class DFDetector():
             setup_celebdf_benchmark(cls.data_path, cls.method)
         elif cls.dataset == 'dftimit_hq':
             setup_dftimit_hq_benchmark(cls.data_path, cls.method)
+        elif cls.dataset == 'dftimit_lq':
+            setup_dftimit_lq_benchmark(cls.data_path, cls.method)
         else:
             raise ValueError(f"{cls.dataset} does not exist.")
         # get test labels for metric evaluation
@@ -1180,6 +1182,31 @@ def setup_dftimit_hq_benchmark(data_path, method):
     if data_path.endswith("DeepfakeTIMIT"):
         print(
             f"Benchmarking \033[1m{method}\033[0m on the \033[1m DF-TIMIT-HQ \033[0m dataset with ...")
+    else:
+        raise ValueError("""Make sure your data_path argument ends with \"DeepfakeTIMIT\" and organize the dataset directory in this way:
+                            ./DeepfakeTIMIT
+                                    /lower_quality/
+                                    /higher_quality/
+                                    /dftimitreal/
+                        """)
+        
+
+def setup_dftimit_lq_benchmark(data_path, method):
+    """
+    Setup the folder structure of the DFTIMIT HQ Dataset.
+    """
+    if data_path is None:
+        raise ValueError("""Please go to http://conradsanderson.id.au/vidtimit/ to download the real videos and to
+                                https://www.idiap.ch/dataset/deepfaketimit to download the deepfake videos.
+                                Extract the files and organize the folders follwing this folder structure:
+                                ./DeepfakeTIMIT
+                                    /lower_quality/
+                                    /higher_quality/
+                                    /dftimitreal/
+                                """)
+    if data_path.endswith("DeepfakeTIMIT"):
+        print(
+            f"Benchmarking \033[1m{method}\033[0m on the \033[1m DF-TIMIT-LQ \033[0m dataset with ...")
     else:
         raise ValueError("""Make sure your data_path argument ends with \"DeepfakeTIMIT\" and organize the dataset directory in this way:
                             ./DeepfakeTIMIT
