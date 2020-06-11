@@ -130,7 +130,7 @@ class DFDetector():
         """
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        if method not in ['xception_uadfv', 'xception_celebdf','xception_dftimit_hq', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'efficientnetb7_dftimit_hq', 'mesonet_uadfv', 'mesonet_celebdf', 'mesonet_dftimit_hq','resnet_lstm_uadfv', 'resnet_lstm_celebdf', 'resnet_lstm_dftimit_hq','efficientnetb1_lstm_uadfv', 'efficientnetb1_lstm_celebdf','efficientnetb1_lstm_dftimit_hq', 'dfdcrank90_uadfv', 'dfdcrank90_celebdf', 'six_method_ensemble_uadfv', 'six_method_ensemble_celebdf']:
+        if method not in ['xception_uadfv', 'xception_celebdf','xception_dftimit_hq', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'efficientnetb7_dftimit_hq', 'mesonet_uadfv', 'mesonet_celebdf', 'mesonet_dftimit_hq','resnet_lstm_uadfv', 'resnet_lstm_celebdf', 'resnet_lstm_dftimit_hq','efficientnetb1_lstm_uadfv', 'efficientnetb1_lstm_celebdf','efficientnetb1_lstm_dftimit_hq', 'dfdcrank90_uadfv', 'dfdcrank90_celebdf','dfdcrank90_dftimit_hq', 'six_method_ensemble_uadfv', 'six_method_ensemble_celebdf','six_method_ensemble_dftimit_hq']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             # method exists
@@ -167,11 +167,11 @@ class DFDetector():
         elif cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_celebdf' or cls.method == 'efficientnetb1_lstm_dftimit_hq':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'dfdcrank90_uadfv' or cls.method == 'dfdcrank90_celebdf':
+        elif cls.method == 'dfdcrank90_uadfv' or cls.method == 'dfdcrank90_celebdf' or cls.method == 'dfdcrank90_dftimit_hq':
             # evaluate dfdcrank90 ensemble
             auc, ap, loss, acc = prepare_dfdc_rank90(method, cls.dataset, df)
             return [auc, ap, loss, acc]
-        elif cls.method == 'six_method_ensemble_uadfv' or cls.method == 'six_method_ensemble_celebdf':
+        elif cls.method == 'six_method_ensemble_uadfv' or cls.method == 'six_method_ensemble_celebdf' or cls.method == 'six_method_ensemble_dftimit_hq':
             # evaluate six method ensemble
             auc, ap, loss, acc = prepare_six_method_ensemble(
                 method, cls.dataset, df)
@@ -489,6 +489,10 @@ def prepare_dfdc_rank90(method, dataset, df):
         mod1 = 'efficientnetb1_lstm_celebdf'
         mod2 = 'xception_celebdf'
         mod3 = 'xception_celebdf_seed25'
+    elif method == 'dfdcrank90_dftimit_hq':
+        mod1 = 'efficientnetb1_lstm_dftimit_hq'
+        mod2 = 'xception_dftimit_hq'
+        mod3 = 'xception_dftimit_hq_seed25'
     model3 = efficientnetb1lstm.EfficientNetB1LSTM()
     # load the xception model that was pretrained on the uadfv training data
     model_params3 = torch.load(
@@ -1227,6 +1231,8 @@ def prepare_six_method_ensemble(method, dataset, df):
         ens = 'uadfv'
     elif method == 'six_method_ensemble_celebdf':
         ens = 'celebdf'
+    elif method == 'six_method_ensemble_dftimit_hq':
+        ens = 'dftimit_hq'
     six_method_ens = pd.read_csv(
         f"efficientnetb1_lstm_{ens}_predictions_on_{dataset}.csv")
     six_method_ens['Prediction'] = 0
