@@ -109,7 +109,7 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
         return np.mean(avg_preds), np.mean(avg_loss), frame_level_preds
 
 
-def inference(model, test_df, img_size, normalization, dataset, method, sequence_model=False, ensemble=False):
+def inference(model, test_df, img_size, normalization, dataset, method, sequence_model=False, ensemble=False, num_frames=None):
     running_loss = 0.0
     running_corrects = 0.0
     running_false = 0.0
@@ -123,7 +123,7 @@ def inference(model, test_df, img_size, normalization, dataset, method, sequence
     running_corrects_frame_level = 0.0
     running_false_frame_level = 0.0
     # load retinaface face detector
-    net, cfg = df_retinaface.detect()
+    net, cfg = df_retinaface.load_face_detector()
     inference_time = time.time()
     for idx, row in tqdm(test_df.iterrows(), total=test_df.shape[0]):
         video = row.loc['video']
@@ -131,11 +131,12 @@ def inference(model, test_df, img_size, normalization, dataset, method, sequence
         vid = os.path.join(video)
         # inference (no saving of images inbetween to make it faster)
         # detect faces, add margin, crop, upsample to same size, save to images
-        faces = df_retinaface.detect_faces(net, vid, cfg, num_frames=20)
+        print(f"Inference using {num_frames} per video.")
+        faces = df_retinaface.detect_faces(net, vid, cfg, num_frames=num_frames)
         # save frames to images
         # try:
         vid_frames = df_retinaface.extract_frames(
-            faces, video, save_to=None, face_margin=0, num_frames=20, test=True)
+            faces, video, save_to=None, face_margin=0, num_frames=num_frames, test=True)
         # except:
         #print("Error: Video frames.")
         # inference for each frame

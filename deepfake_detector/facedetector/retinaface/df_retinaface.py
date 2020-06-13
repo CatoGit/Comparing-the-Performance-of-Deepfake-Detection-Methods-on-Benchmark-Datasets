@@ -17,6 +17,7 @@ from tqdm import tqdm
 # from https://github.com/biubug6/Pytorch_Retinaface
 # MIT License
 
+
 def check_keys(model, pretrained_state_dict):
     ckpt_keys = set(pretrained_state_dict.keys())
     model_keys = set(model.state_dict().keys())
@@ -187,7 +188,7 @@ def extract_frames(faces, video, save_to, face_margin, num_frames, test=False):
     Extract frames from video and save image with frames.
 
     # parts from https://github.com/biubug6/Pytorch_Retinaface
-    
+
     # adapted by Christopher Otto
     """
     # threshold for confidence in face that is required to confirm it as face
@@ -209,12 +210,14 @@ def extract_frames(faces, video, save_to, face_margin, num_frames, test=False):
                 old_length_width = b[2] - b[0]
                 new_length_height = (b[3] - b[1])*(1+face_margin)
                 new_length_width = (b[2] - b[0])*(1+face_margin)
-                pixel_add_sub_height = int((new_length_height - old_length_height) / 2) 
-                pixel_add_sub_width = int((new_length_width - old_length_width) / 2) 
-        
+                pixel_add_sub_height = int(
+                    (new_length_height - old_length_height) / 2)
+                pixel_add_sub_width = int(
+                    (new_length_width - old_length_width) / 2)
+
                 b = [b[0]-pixel_add_sub_width, b[1]-pixel_add_sub_height,
-                    b[2]+pixel_add_sub_width, b[3]+pixel_add_sub_height]
-            else:           
+                     b[2]+pixel_add_sub_width, b[3]+pixel_add_sub_height]
+            else:
                 b = [b[0], b[1],
                      b[2], b[3]]
         try:
@@ -250,35 +253,15 @@ def extract_frames(faces, video, save_to, face_margin, num_frames, test=False):
     return len(imgs_same_size)
 
 
-def detect(video_path=None, saveimgs_path=None, face_margin=20, backbone="resnet50",
-                backbone_path=os.getcwd() + "/deepfake_detector/facedetector/retinaface/Resnet50_Final.pth"):
+def load_face_detector(backbone="resnet50", backbone_path=os.getcwd() + "/deepfake_detector/facedetector/retinaface/Resnet50_Final.pth"):
     """
     Detect faces from video frames.
     # Arguments:
-        video_path: Path to the videos.
-        saveimgs_path: If specified, extracted faces are saved to that path as jpg's.
-        face_margin: Pixel margin that is added around the extracted face.
         backbone: Backbone of the face detector.
         backbone_path: Weights for face detector model.
 
     # Implementation: Christopher Otto
     """
-    if saveimgs_path:
-        # load pretrained resnet backbone detector
-        net, cfg = my_detector(
-            cfg_mnet, cfg_re50, inp=backbone, model_path=backbone_path, cpu=False)
-
-        video_path = os.path.join(video_path)
-        save_path = os.path.join(saveimgs_path)
-        # detect faces, add margin, crop, upsample to same size, save to images
-        for _, _, videos in os.walk(video_path):
-            for video in tqdm(videos):
-                vid = video_path + video
-                faces = detect_faces(net, vid, cfg, num_frames=20)
-                # save frames to images
-                extract_frames(faces, video, save_to=save_path,
-                               face_margin=face_margin, num_frames=20, test=False)
-    else:
-        # load face detector for testing
-        detector, config = my_detector(cfg_mnet, cfg_re50, inp=backbone, model_path=backbone_path, cpu=False)
-        return detector, config
+    detector, config = my_detector(
+        cfg_mnet, cfg_re50, inp=backbone, model_path=backbone_path, cpu=False)
+    return detector, config

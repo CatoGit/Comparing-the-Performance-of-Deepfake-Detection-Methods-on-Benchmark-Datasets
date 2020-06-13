@@ -138,14 +138,21 @@ class DFDetector():
             cls.data_path = data_path
             cls.method = method
         if cls.dataset == 'uadfv':
+            num_frames = 20
             # setup the dataset folders
             setup_uadfv_benchmark(cls.data_path, cls.method)
         elif cls.dataset == 'celebdf':
+            num_frames = 20
             setup_celebdf_benchmark(cls.data_path, cls.method)
         elif cls.dataset == 'dftimit_hq':
+            num_frames = 20
             setup_dftimit_hq_benchmark(cls.data_path, cls.method)
         elif cls.dataset == 'dftimit_lq':
+            num_frames = 20
             setup_dftimit_lq_benchmark(cls.data_path, cls.method)
+        elif cls.dataset == 'dfdc':
+            # benchmark on only 10 frames per video, because of dataset size
+            num_frames = 10
         else:
             raise ValueError(f"{cls.dataset} does not exist.")
         # get test labels for metric evaluation
@@ -182,10 +189,10 @@ class DFDetector():
         if cls.method == 'resnet_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'resnet_lstm_celebdf' or cls.method == 'efficientnetb1_lstm_celebdf' or cls.method == 'resnet_lstm_dftimit_hq' or cls.method == 'efficientnetb1_lstm_dftimit_hq':
             # inference for sequence models
             auc, ap, loss, acc = test.inference(
-                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method, sequence_model=True)
+                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method, sequence_model=True, num_frames=num_frames)
         else:
             auc, ap, loss, acc = test.inference(
-                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method)
+                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method, num_frames=num_frames)
 
         return [auc, ap, loss, acc]
 
@@ -309,12 +316,13 @@ class DFDetector():
             else:
                 print("Apply no margin to the face crop.")
             # load retinaface face detector
-            net, cfg = df_retinaface.detect()
+            net, cfg = df_retinaface.load_face_detector()
             for idx, row in tqdm(df.iterrows(), total=df.shape[0]):
                 video = row.loc['video']
                 label = row.loc['label']
                 vid = os.path.join(video)
                 if cls.dataset == 'uadfv':
+                    num_frames = 20
                     if label == 1:
                         video = video[-14:]
                         save_dir = os.path.join(
@@ -324,6 +332,7 @@ class DFDetector():
                         save_dir = os.path.join(
                             img_save_path + '/train_imgs/real/')
                 elif cls.dataset == 'celebdf':
+                    num_frames = 20
                     vid_name = row.loc['video_name']
                     if label == 1:
                         video = vid_name
@@ -334,6 +343,7 @@ class DFDetector():
                         save_dir = os.path.join(
                             img_save_path + '/facecrops/real/')
                 elif cls.dataset == 'dftimit_hq':
+                    num_frames = 20
                     vid_name = row.loc['videoname']
                     video = vid_name
                     if label == 1:
@@ -343,6 +353,7 @@ class DFDetector():
                         save_dir = os.path.join(
                             img_save_path + '/facecrops_hq/real/')
                 elif cls.dataset == 'dftimit_lq':
+                    num_frames = 20
                     vid_name = row.loc['videoname']
                     video = vid_name
                     if label == 1:
@@ -351,14 +362,17 @@ class DFDetector():
                     else:
                         save_dir = os.path.join(
                             img_save_path + '/facecrops_lq/real/')
+                elif cls.dataset == 'dfdc':
+                    # extract only 10 frames because of dataset size
+                    num_frames = 10
                         
                 # detect faces, add margin, crop, upsample to same size, save to images
                 faces = df_retinaface.detect_faces(
-                    net, vid, cfg, num_frames=20)
+                    net, vid, cfg, num_frames=num_frames)
 
                 # save frames to directory
                 vid_frames = df_retinaface.extract_frames(
-                    faces, video, save_to=save_dir, face_margin=cls.face_margin, num_frames=20, test=False)
+                    faces, video, save_to=save_dir, face_margin=cls.face_margin, num_frames=num_frames, test=False)
 
         # put all face images in dataframe
         df_faces = label_data(dataset_path=cls.data_path,
