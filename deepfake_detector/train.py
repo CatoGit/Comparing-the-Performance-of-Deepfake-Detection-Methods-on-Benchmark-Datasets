@@ -437,4 +437,13 @@ def prepare_train_val(dataset, method, data, img_size, normalization, augmentati
             data.iloc[val_idx], img_size, method=method, normalization=normalization, augmentations=None)
         val_loader = DataLoader(
             val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+    elif dataset == 'dfdc':
+        train_dataset = datasets.DFDCDataset(
+            data.iloc[train_idx], img_size, method=method, normalization=normalization, augmentations=augmentations)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+        val_dataset = datasets.DFDCDataset(
+            data.iloc[val_idx], img_size, method=method, normalization=normalization, augmentations=None)
+        val_loader = DataLoader(
+            val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     return train_dataset, train_loader, val_dataset, val_loader

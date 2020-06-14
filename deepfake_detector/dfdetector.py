@@ -983,16 +983,21 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                 else:
                     print("Validation DFDC data.")
                     full_margin_aug_val['videoname'] = full_margin_aug_val['video']
-                    full_margin_aug_val['video'] = dataset_path + '/train/' + full_margin_aug_val['videoname']
+                    full_margin_aug_val['video'] = dataset_path + '/val/' + full_margin_aug_val['videoname']
                     df = full_margin_aug_val
-                    print(df)
             else:
                 #if face crops available
                 # if sequence and if face crops available go to path with face crops and prepare sequence data
                 if method == 'resnet_lstm' or method == 'efficientnetb1_lstm':
                     # prepare dataframe for sequence model
-                    video_path_crops_real = os.path.join(dataset_path + "/facecrops/real/")
-                    video_path_crops_fake = os.path.join(dataset_path + "/facecrops/fake/")
+                    if fulltrain:
+                        video_path_crops_real = os.path.join(dataset_path + "/train/facecrops/real/")
+                        video_path_crops_fake = os.path.join(dataset_path + "/train/facecrops/fake/")
+                    else:
+                        video_path_crops_real = os.path.join(
+                            dataset_path + "/val/facecrops/real/")
+                        video_path_crops_fake = os.path.join(
+                            dataset_path + "/val/facecrops/fake/")
 
                     data_list = []
                     for _, _, videos in os.walk(video_path_crops_real):
@@ -1020,10 +1025,17 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                                 video_path_crops_fake) + str(row['original'])
                 else:
                     # if face crops available and not a sequence model go to path with face crops
-                    video_path_crops_real = os.path.join(
-                        dataset_path + "/facecrops/real/")
-                    video_path_crops_fake = os.path.join(
-                        dataset_path + "/facecrops/fake/")
+                    if fulltrain:
+                        video_path_crops_real = os.path.join(
+                            dataset_path + "/train/facecrops/real/")
+                        video_path_crops_fake = os.path.join(
+                            dataset_path + "/train/facecrops/fake/")
+                    else:
+                        video_path_crops_real = os.path.join(
+                            dataset_path + "/val/facecrops/real/")
+                        video_path_crops_fake = os.path.join(
+                            dataset_path + "/val/facecrops/fake/")
+                        
                     # add labels to videos
                     data_list = []
                     for _, _, videos in os.walk(video_path_crops_real):
