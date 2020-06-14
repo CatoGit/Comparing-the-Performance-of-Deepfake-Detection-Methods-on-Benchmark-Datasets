@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import os
 import subprocess
+import pandas as pd
 
 
 def vidtimit_setup_real_videos(path_to_dataset):
@@ -39,6 +40,7 @@ def vidtimit_setup_real_videos(path_to_dataset):
 
 
 def dfdc_metadata_setup():
+    """Returns training, testing and validation video meta data frames for the DFDC dataset."""
     #read in metadata
     df_train0 = pd.read_json(os.getcwd() + '/data/metadata0.json')
     df_train0.loc[df_train0.shape[0]] = 0
@@ -190,19 +192,53 @@ def dfdc_metadata_setup():
     df_train49 = pd.read_json(os.getcwd() + '/data/metadata48.json')
     df_train49.loc[df_train49.shape[0]] = 48
     df_train49.rename({3: 'folder'}, axis='index', inplace=True)
-    #combine metadata
-    df_train = [df_train0, df_train1, df_train2, df_train3, df_train4, 
-                df_train5, df_train6, df_train7, df_train8, df_train9, df_train10, 
+    # combine metadata
+    df_train = [df_train0, df_train1, df_train2, df_train3, df_train4,
+                df_train5, df_train6, df_train7, df_train8, df_train9, df_train10,
                 df_train11, df_train12, df_train13, df_train14, df_train15,
                 df_train16, df_train17, df_train18, df_train19, df_train20, df_train21,
                 df_train22, df_train23, df_train24, df_train25, df_train26,
                 df_train27, df_train28, df_train29, df_train30, df_train31, df_train32,
-            df_train33, df_train34, df_train35, df_train36, df_train37,
+                df_train33, df_train34, df_train35, df_train36, df_train37,
                 df_train38, df_train39, df_train40, df_train41, df_train42, df_train43, df_train44,
-            df_train45, df_train46, df_train47, df_train48, df_train49]
+                df_train45, df_train46, df_train47, df_train48, df_train49]
     all_meta = pd.concat(df_train, axis=1)
-    all_meta = all_meta.T #transpose
-    all_meta['video'] = all_meta.index #create video column from index
-    all_meta.reset_index(drop=True, inplace=True) #drop index
+    all_meta = all_meta.T  # transpose
+    all_meta['video'] = all_meta.index  # create video column from index
+    all_meta.reset_index(drop=True, inplace=True)  # drop index
     del all_meta['split']
-    return all_meta
+    # recode labels
+    all_meta['label'] = all_meta['label'].apply(
+        lambda x: 0 if x == 'REAL' else 1)
+    del all_meta['original']
+    # sample 16974 fakes from 45 folders -> that's approx. 378 fakes per folder
+    train_df = all_meta[all_meta['folder'] < 45]
+    # 16974 reals in train data and 89629 fakes
+    reals = train_df[train_df['label'] == 0]
+    del reals['folder']
+    fakes = train_df[train_df['label'] == 1]
+    fakes_sampled = fakes[fakes['folder'] == 0].sample(378, random_state=24)
+    # sample the same number of fake videos from every folder
+    for num in range(45):
+        if num == 0:
+            continue
+        sample = fakes[fakes['folder'] == num].sample(378, random_state=24)
+        fakes_sampled = fakes_sampled.append(sample, ignore_index=True)
+    # drop 36 videos randomly to have exactly 16974 fakes
+    np.random.seed(24)
+    drop_indices = np.random.choice(fakes_sampled.index, 36, replace=False)
+    fakes_sampled = fakes_sampled.drop(drop_indices)
+    del fakes_sampled['folder']
+    all_meta_train = pd.concat([reals, fakes_sampled], ignore_index=True)
+    # get 1000 samples from training data that are used for margin and augmentation validation
+    real_sample = all_meta_train[all_meta_train['label'] == 0].sample(
+        500, random_state=24)
+    fake_sample = all_meta_train[all_meta_train['label'] == 1].sample(
+        500, random_state=24)
+    full_margin_aug_val = real_sample.append(fake_sample, ignore_index=True)
+    # create test set
+    test_df = all_meta[all_meta['folder'] > 44]
+    del test_df['folder']
+    all_meta_test = test_df.reset_index(drop=True)
+
+    return all_meta_train, all_meta_test, full_margin_aug_val
