@@ -18,6 +18,7 @@ import torchvision
 import torchvision.models as models
 import torchvision.transforms as transforms
 import train
+import utils
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from albumentations import (
@@ -224,7 +225,7 @@ class DFDetector():
             cls.method, dataset=cls.dataset, mode='train')
         # # get video train data and labels
         df = label_data(dataset_path=cls.data_path,
-                        dataset=cls.dataset, test_data=False)
+                        dataset=cls.dataset, test_data=False, fulltrain=cls.fulltrain)
         # detect and extract faces if they are not available already
         if not cls.faces_available:
             if cls.dataset == 'uadfv':
@@ -308,8 +309,49 @@ class DFDetector():
                     os.mkdir(img_save_path + addon_path)
                     os.mkdir(img_save_path + '/facecrops_lq/real/')
                     os.mkdir(img_save_path + '/facecrops_lq/fake/')
+            elif cls.dataset == 'dfdc':
+                addon_path = '/facecrops/'
+                val_path = '/val/'
+                # check if all folders are available
+                if not os.path.exists(img_save_path + '/train/'):
+                    raise ValueError(
+                        "Please prepare the dataset again. The \"train\" folder is missing.")
+                if not os.path.exists(img_save_path + '/test/') or not os.path.exists(img_save_path + '/val/'):
+                    raise ValueError(
+                        """Please organize the folder as follows:
+                        ./dfdcdataset
+                            /train/
+                            /test/ 
+                            /val/
+                    """
+                    )
+                if not os.path.exists(img_save_path + addon_path):
+                    # create directory in save path for face crops
+                    os.mkdir(img_save_path + addon_path)
+                    os.mkdir(img_save_path + '/facecrops/real/')
+                    os.mkdir(img_save_path + '/facecrops/fake/')
+                    os.mkdir(img_save_path + val_path)
+                    os.mkdir(img_save_path + '/val/facecrops/')
+                    os.mkdir(img_save_path + '/val/facecrops/real')
+                    os.mkdir(img_save_path + '/val/facecrops/fake/')
+                    
+                else:
+                    # delete create again if it already exists with old files
+                    shutil.rmtree(img_save_path + addon_path)
+                    os.mkdir(img_save_path + addon_path)
+                    os.mkdir(img_save_path + '/facecrops/real/')
+                    os.mkdir(img_save_path + '/facecrops/fake/')
+                    shutil.rmtree(img_save_path + val_path)
+                    os.mkdir(img_save_path + val_path)
+                    os.mkdir(img_save_path + '/val/facecrops/')
+                    os.mkdir(img_save_path + '/val/facecrops/real')
+                    os.mkdir(img_save_path + '/val/facecrops/fake/')
 
-            print("Detect and save 20 faces from each video for training.")
+            if cls.dataset == 'dfdc':
+                num_frames = 5
+            else:
+                num_frames = 20
+            print(f"Detect and save {num_frames} faces from each video for training.")
             if cls.face_margin > 0.0:
                 print(
                     f"Apply {cls.face_margin*100}% margin to each side of the face crop.")
@@ -322,7 +364,6 @@ class DFDetector():
                 label = row.loc['label']
                 vid = os.path.join(video)
                 if cls.dataset == 'uadfv':
-                    num_frames = 20
                     if label == 1:
                         video = video[-14:]
                         save_dir = os.path.join(
@@ -332,7 +373,6 @@ class DFDetector():
                         save_dir = os.path.join(
                             img_save_path + '/train_imgs/real/')
                 elif cls.dataset == 'celebdf':
-                    num_frames = 20
                     vid_name = row.loc['video_name']
                     if label == 1:
                         video = vid_name
@@ -343,7 +383,6 @@ class DFDetector():
                         save_dir = os.path.join(
                             img_save_path + '/facecrops/real/')
                 elif cls.dataset == 'dftimit_hq':
-                    num_frames = 20
                     vid_name = row.loc['videoname']
                     video = vid_name
                     if label == 1:
@@ -353,7 +392,6 @@ class DFDetector():
                         save_dir = os.path.join(
                             img_save_path + '/facecrops_hq/real/')
                 elif cls.dataset == 'dftimit_lq':
-                    num_frames = 20
                     vid_name = row.loc['videoname']
                     video = vid_name
                     if label == 1:
@@ -363,9 +401,25 @@ class DFDetector():
                         save_dir = os.path.join(
                             img_save_path + '/facecrops_lq/real/')
                 elif cls.dataset == 'dfdc':
-                    # extract only 10 frames because of dataset size
-                    num_frames = 10
+                    # extract only 5 frames because of dataset size
+                    vid_name = row.loc['videoname']
+                    video = vid_name
+                    if cls.fulltrain:
+                        if label == 1:
+                            save_dir = os.path.join(
+                                img_save_path + '/facecrops/fake/')
+                        else:
+                            save_dir = os.path.join(
+                                img_save_path + '/facecrops/real/')
+                    else:
+                        if label == 1:
+                            save_dir = os.path.join(
+                                img_save_path + '/val/facecrops/fake/')
+                        else:
+                            save_dir = os.path.join(
+                                img_save_path + '/val/facecrops/real/')
                         
+                
                 # detect faces, add margin, crop, upsample to same size, save to images
                 faces = df_retinaface.detect_faces(
                     net, vid, cfg, num_frames=num_frames)
@@ -583,7 +637,7 @@ def prepare_dfdc_rank90(method, dataset, df):
     return auc, ap, loss, acc
 
 
-def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops=False, test_data=False):
+def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops=False, test_data=False, fulltrain=False):
     """
     Label the data.
     # Arguments:
@@ -916,6 +970,79 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                     if len(df) == 0:
                         raise ValueError(
                             "No faces available. Please set faces_available=False.")
+        elif dataset == 'dfdc':
+            # prepare dfdc training data
+            # structure data from folder in data frame for loading
+            all_meta_train, all_meta_test, full_margin_aug_val = utils.dfdc_metadata_setup()
+            if not face_crops:
+                # read in the reals
+                if fulltrain:
+                    all_meta_train['videoname'] = all_meta_train['video']
+                    all_meta_train['video'] = dataset_path + '/train/' + all_meta_train['videoname']
+                    df = all_meta_train
+                else:
+                    print("Validation DFDC data.")
+                    full_margin_aug_val['videoname'] = full_margin_aug_val['video']
+                    full_margin_aug_val['video'] = dataset_path + '/train/' + full_margin_aug_val['videoname']
+                    df = full_margin_aug_val
+                    print(df)
+            else:
+                #if face crops available
+                # if sequence and if face crops available go to path with face crops and prepare sequence data
+                if method == 'resnet_lstm' or method == 'efficientnetb1_lstm':
+                    # prepare dataframe for sequence model
+                    video_path_crops_real = os.path.join(dataset_path + "/facecrops/real/")
+                    video_path_crops_fake = os.path.join(dataset_path + "/facecrops/fake/")
+
+                    data_list = []
+                    for _, _, videos in os.walk(video_path_crops_real):
+                        for video in tqdm(videos):
+                            # label 0 for real video
+                            data_list.append(
+                                {'label': 0, 'video': video})
+
+                    for _, _, videos in os.walk(video_path_crops_fake):
+                        for video in tqdm(videos):
+                            # label 1 for deepfake video
+                            data_list.append(
+                                {'label': 1, 'video': video})
+
+                    # put data into dataframe
+                    df = pd.DataFrame(data=data_list)
+                    df = prepare_sequence_data(dataset, df)
+                    # add path to data
+                    for idx, row in df.iterrows():
+                        if row['label'] == 0:
+                            df.loc[idx, 'original'] = str(
+                                video_path_crops_real) + str(row['original'])
+                        elif row['label'] == 1:
+                            df.loc[idx, 'original'] = str(
+                                video_path_crops_fake) + str(row['original'])
+                else:
+                    # if face crops available and not a sequence model go to path with face crops
+                    video_path_crops_real = os.path.join(
+                        dataset_path + "/facecrops/real/")
+                    video_path_crops_fake = os.path.join(
+                        dataset_path + "/facecrops/fake/")
+                    # add labels to videos
+                    data_list = []
+                    for _, _, videos in os.walk(video_path_crops_real):
+                        for video in tqdm(videos):
+                            # label 0 for real video
+                            data_list.append(
+                                {'label': 0, 'video': video_path_crops_real + video})
+
+                    for _, _, videos in os.walk(video_path_crops_fake):
+                        for video in tqdm(videos):
+                            # label 1 for deepfake video
+                            data_list.append(
+                                {'label': 1, 'video': video_path_crops_fake + video})
+                    # put data into dataframe
+                    df = pd.DataFrame(data=data_list)
+                    if len(df) == 0:
+                        raise ValueError(
+                            "No faces available. Please set faces_available=False.")
+
     else:
         # prepare test data
         if dataset == 'uadfv':
