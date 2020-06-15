@@ -419,7 +419,6 @@ class DFDetector():
                             save_dir = os.path.join(
                                 img_save_path + '/val/facecrops/real/')
                         
-                
                 # detect faces, add margin, crop, upsample to same size, save to images
                 faces = df_retinaface.detect_faces(
                     net, vid, cfg, num_frames=num_frames)
@@ -983,7 +982,7 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                 else:
                     print("Validation DFDC data.")
                     full_margin_aug_val['videoname'] = full_margin_aug_val['video']
-                    full_margin_aug_val['video'] = dataset_path + '/val/' + full_margin_aug_val['videoname']
+                    full_margin_aug_val['video'] = dataset_path + '/train/' + full_margin_aug_val['videoname']
                     df = full_margin_aug_val
             else:
                 #if face crops available
