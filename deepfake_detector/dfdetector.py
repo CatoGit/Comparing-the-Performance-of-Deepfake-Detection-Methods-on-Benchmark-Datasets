@@ -153,7 +153,7 @@ class DFDetector():
             setup_dftimit_lq_benchmark(cls.data_path, cls.method)
         elif cls.dataset == 'dfdc':
             # benchmark on only 10 frames per video, because of dataset size
-            num_frames = 10
+            num_frames = 5
         else:
             raise ValueError(f"{cls.dataset} does not exist.")
         # get test labels for metric evaluation
@@ -221,11 +221,13 @@ class DFDetector():
         print(f"Training on {cls.dataset} dataset with {cls.method}.")
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
+        folder_count = 7
         _, img_size, normalization = prepare_method(
             cls.method, dataset=cls.dataset, mode='train')
         # # get video train data and labels
         df = label_data(dataset_path=cls.data_path,
                         dataset=cls.dataset, test_data=False, fulltrain=cls.fulltrain)
+        print(df)
         # detect and extract faces if they are not available already
         if not cls.faces_available:
             if cls.dataset == 'uadfv':
@@ -325,27 +327,33 @@ class DFDetector():
                             /val/
                     """
                     )
-                if not os.path.exists(img_save_path + addon_path):
-                    # create directory in save path for face crops
-                    os.mkdir(img_save_path + addon_path)
-                    os.mkdir(img_save_path + '/facecrops/real/')
-                    os.mkdir(img_save_path + '/facecrops/fake/')
-                    os.mkdir(img_save_path + val_path)
-                    os.mkdir(img_save_path + '/val/facecrops/')
-                    os.mkdir(img_save_path + '/val/facecrops/real')
-                    os.mkdir(img_save_path + '/val/facecrops/fake/')
+#                 if not os.path.exists(img_save_path + addon_path):
+#                     # create directory in save path for face crops
+#                     os.mkdir(img_save_path + addon_path)
+#                     os.mkdir(img_save_path + '/facecrops/real/')
+#                     os.mkdir(img_save_path + '/facecrops/fake/')
+#                     for i in range(50):
+#                         os.mkdir(img_save_path + f'/facecrops/real/{i}/')
+#                         os.mkdir(img_save_path + f'/facecrops/fake/{i}/')
+#                     os.mkdir(img_save_path + val_path)
+#                     os.mkdir(img_save_path + '/val/facecrops/')
+#                     os.mkdir(img_save_path + '/val/facecrops/real')
+#                     os.mkdir(img_save_path + '/val/facecrops/fake/')
                     
-                else:
-                    # delete create again if it already exists with old files
-                    shutil.rmtree(img_save_path + addon_path)
-                    os.mkdir(img_save_path + addon_path)
-                    os.mkdir(img_save_path + '/facecrops/real/')
-                    os.mkdir(img_save_path + '/facecrops/fake/')
-                    shutil.rmtree(img_save_path + val_path)
-                    os.mkdir(img_save_path + val_path)
-                    os.mkdir(img_save_path + '/val/facecrops/')
-                    os.mkdir(img_save_path + '/val/facecrops/real')
-                    os.mkdir(img_save_path + '/val/facecrops/fake/')
+#                 else:
+#                     # delete create again if it already exists with old files
+#                     shutil.rmtree(img_save_path + addon_path)
+#                     os.mkdir(img_save_path + addon_path)
+#                     os.mkdir(img_save_path + '/facecrops/real/')
+#                     os.mkdir(img_save_path + '/facecrops/fake/')
+#                     shutil.rmtree(img_save_path + val_path)
+#                     for i in range(50):
+#                         os.mkdir(img_save_path + f'/facecrops/real/{i}/')
+#                         os.mkdir(img_save_path + f'/facecrops/fake/{i}/')
+#                     os.mkdir(img_save_path + val_path)
+#                     os.mkdir(img_save_path + '/val/facecrops/')
+#                     os.mkdir(img_save_path + '/val/facecrops/real')
+#                     os.mkdir(img_save_path + '/val/facecrops/fake/')
 
             if cls.dataset == 'dfdc':
                 num_frames = 5
@@ -404,13 +412,18 @@ class DFDetector():
                     # extract only 5 frames because of dataset size
                     vid_name = row.loc['videoname']
                     video = vid_name
+                    folder = row.loc['folder']
+                    if folder != folder_count:
+                        print(f"Finishing folder{folder_count}") 
+                        folder_count += 1
+                        print(f"Starting folder{folder_count}") 
                     if cls.fulltrain:
                         if label == 1:
                             save_dir = os.path.join(
-                                img_save_path + '/facecrops/fake/')
+                                img_save_path + f'/facecrops/fake/{folder}/')
                         else:
                             save_dir = os.path.join(
-                                img_save_path + '/facecrops/real/')
+                                img_save_path + f'/facecrops/real/{folder}/')
                     else:
                         if label == 1:
                             save_dir = os.path.join(
@@ -978,7 +991,9 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                 if fulltrain:
                     all_meta_train['videoname'] = all_meta_train['video']
                     all_meta_train['video'] = dataset_path + '/train/' + all_meta_train['videoname']
-                    df = all_meta_train
+                    all_meta_train = all_meta_train.sort_values('folder').reset_index(drop=True)
+                    df = all_meta_train[all_meta_train['folder'] > 8]
+                    print(df)
                 else:
                     print("Validation DFDC data.")
                     full_margin_aug_val['videoname'] = full_margin_aug_val['video']

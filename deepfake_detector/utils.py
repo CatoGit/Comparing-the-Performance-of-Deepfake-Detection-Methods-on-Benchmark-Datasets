@@ -218,7 +218,8 @@ def dfdc_metadata_setup():
     train_df = all_meta[all_meta['folder'] < 45]
     # 16974 reals in train data and 89629 fakes
     reals = train_df[train_df['label'] == 0]
-    del reals['folder']
+    #del reals['folder']
+    reals['folder']
     fakes = train_df[train_df['label'] == 1]
     fakes_sampled = fakes[fakes['folder'] == 0].sample(378, random_state=24)
     # sample the same number of fake videos from every folder
@@ -231,7 +232,8 @@ def dfdc_metadata_setup():
     np.random.seed(24)
     drop_indices = np.random.choice(fakes_sampled.index, 36, replace=False)
     fakes_sampled = fakes_sampled.drop(drop_indices)
-    del fakes_sampled['folder']
+    #del fakes_sampled['folder']
+    fakes_sampled['folder']
     all_meta_train = pd.concat([reals, fakes_sampled], ignore_index=True)
     # get 1000 samples from training data that are used for margin and augmentation validation
     real_sample = all_meta_train[all_meta_train['label'] == 0].sample(
