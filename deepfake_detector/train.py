@@ -400,6 +400,11 @@ def prepare_fulltrain_datasets(dataset, method, data, img_size, normalization, a
             data.iloc[train_idx], img_size, method=method, normalization=normalization, augmentations=augmentations)
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+    elif dataset == 'dfdc':
+        train_dataset = datasets.DFDCDataset(
+            data, img_size, method=method, normalization=normalization, augmentations=augmentations)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
     return train_dataset, train_loader
     
 

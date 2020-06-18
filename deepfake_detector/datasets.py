@@ -351,7 +351,6 @@ class DFDCDataset(Dataset):
     def __getitem__(self, idx):
         """Load and return item and label by index."""
         image_row = self.data.iloc[idx]
-
         label = image_row.loc['label']
         if self.method == 'resnet_lstm' or self.method == 'efficientnetb1_lstm':
             imgs = []

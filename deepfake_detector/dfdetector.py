@@ -221,7 +221,7 @@ class DFDetector():
         print(f"Training on {cls.dataset} dataset with {cls.method}.")
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        folder_count = 7
+        folder_count = 35
         _, img_size, normalization = prepare_method(
             cls.method, dataset=cls.dataset, mode='train')
         # # get video train data and labels
@@ -442,7 +442,7 @@ class DFDetector():
 
         # put all face images in dataframe
         df_faces = label_data(dataset_path=cls.data_path,
-                              dataset=cls.dataset, method=cls.method, face_crops=True, test_data=False)
+                              dataset=cls.dataset, method=cls.method, face_crops=True, test_data=False, fulltrain=cls.fulltrain)
         # choose augmentation strength
         augs = df_augmentations(img_size, strength=cls.augmentations)
         # start method training
@@ -992,7 +992,7 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                     all_meta_train['videoname'] = all_meta_train['video']
                     all_meta_train['video'] = dataset_path + '/train/' + all_meta_train['videoname']
                     all_meta_train = all_meta_train.sort_values('folder').reset_index(drop=True)
-                    df = all_meta_train[all_meta_train['folder'] > 8]
+                    df = all_meta_train[all_meta_train['folder'] > 35]
                     print(df)
                 else:
                     print("Validation DFDC data.")
@@ -1005,8 +1005,8 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                 if method == 'resnet_lstm' or method == 'efficientnetb1_lstm':
                     # prepare dataframe for sequence model
                     if fulltrain:
-                        video_path_crops_real = os.path.join(dataset_path + "/train/facecrops/real/")
-                        video_path_crops_fake = os.path.join(dataset_path + "/train/facecrops/fake/")
+                        video_path_crops_real = os.path.join(dataset_path + "/facecrops/real/all/")
+                        video_path_crops_fake = os.path.join(dataset_path + "/facecrops/fake/all/")
                     else:
                         video_path_crops_real = os.path.join(
                             dataset_path + "/val/facecrops/real/")
@@ -1041,30 +1041,30 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                     # if face crops available and not a sequence model go to path with face crops
                     if fulltrain:
                         video_path_crops_real = os.path.join(
-                            dataset_path + "/train/facecrops/real/")
+                            dataset_path + "/facecrops/real/all/")
                         video_path_crops_fake = os.path.join(
-                            dataset_path + "/train/facecrops/fake/")
+                            dataset_path + "/facecrops/fake/all/")
                     else:
                         video_path_crops_real = os.path.join(
                             dataset_path + "/val/facecrops/real/")
                         video_path_crops_fake = os.path.join(
                             dataset_path + "/val/facecrops/fake/")
-                        
                     # add labels to videos
                     data_list = []
                     for _, _, videos in os.walk(video_path_crops_real):
                         for video in tqdm(videos):
                             # label 0 for real video
                             data_list.append(
-                                {'label': 0, 'video': video_path_crops_real + video})
+                                {'label': 0, 'video': os.path.join(video_path_crops_real,video)})
 
                     for _, _, videos in os.walk(video_path_crops_fake):
                         for video in tqdm(videos):
                             # label 1 for deepfake video
                             data_list.append(
-                                {'label': 1, 'video': video_path_crops_fake + video})
+                                {'label': 1, 'video':  os.path.join(video_path_crops_fake,video)})
                     # put data into dataframe
                     df = pd.DataFrame(data=data_list)
+                    print(df)
                     if len(df) == 0:
                         raise ValueError(
                             "No faces available. Please set faces_available=False.")
