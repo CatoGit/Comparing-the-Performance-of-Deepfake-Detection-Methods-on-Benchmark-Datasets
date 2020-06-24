@@ -125,13 +125,13 @@ def inference(model, test_df, img_size, normalization, dataset, method, sequence
     # load retinaface face detector
     net, cfg = df_retinaface.load_face_detector()
     inference_time = time.time()
+    print(f"Inference using {num_frames} frames per video.")
     for idx, row in tqdm(test_df.iterrows(), total=test_df.shape[0]):
         video = row.loc['video']
         label = row.loc['label']
         vid = os.path.join(video)
         # inference (no saving of images inbetween to make it faster)
         # detect faces, add margin, crop, upsample to same size, save to images
-        print(f"Inference using {num_frames} per video.")
         faces = df_retinaface.detect_faces(net, vid, cfg, num_frames=num_frames)
         # save frames to images
         # try:

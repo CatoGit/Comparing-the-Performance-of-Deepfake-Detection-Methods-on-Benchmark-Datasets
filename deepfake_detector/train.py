@@ -110,11 +110,20 @@ def train(dataset, data, method, normalization, augmentations, img_size,
         lr = lr
         # adam optimizer
         optimizer = Adam(model.parameters(), lr=lr)
+        
+        checkpoint = torch.load("/home/jupyter/xception_dfdc_0.pth")
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        eps = checkpoint['epoch']
+        epoch_loss = checkpoint['loss']
+        
         # cosine annealing scheduler
         scheduler = lr_scheduler.CosineAnnealingLR(
             optimizer, epochs, eta_min=0.000001, last_epoch=-1)
 
         for e in range(epochs):
+            if e == 0:
+                continue
             print('#' * 20)
             print(f"Epoch {e}/{epochs}")
             print('#' * 20)
@@ -179,6 +188,18 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         running_ap_labels, running_ap_preds)
                     print(
                         f"{phase} Loss: {epoch_loss}, Acc: {epoch_acc}, AUC: {epoch_auc}, AP: {epoch_ap}")
+                    if fulltrain == True and e == 0:
+                        try:
+                            print("Save for first epoch.")
+                            torch.save({
+                                'epoch': e,
+                                'model_state_dict': model.state_dict(),
+                                'optimizer_state_dict': optimizer.state_dict(),
+                                'loss': epoch_loss
+                                }, os.getcwd() + f'/{method}_{dataset}_{e}.pth')
+                        except:
+                            print("Didn't work.")
+                        
                     if fulltrain == True and e+1 == epochs:
                         # save model if epochs reached
                         print("Save fulltrain model.")
