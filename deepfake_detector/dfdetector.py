@@ -138,6 +138,10 @@ class DFDetector():
             cls.dataset = dataset
             cls.data_path = data_path
             cls.method = method
+            if method in []:
+                face_margin = 0.0
+            else:
+                face_margin = 0.3
         if cls.dataset == 'uadfv':
             num_frames = 20
             # setup the dataset folders
@@ -190,10 +194,10 @@ class DFDetector():
         if cls.method == 'resnet_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'resnet_lstm_celebdf' or cls.method == 'resnet_lstm_dfdc' or cls.method == 'efficientnetb1_lstm_celebdf' or cls.method == 'resnet_lstm_dftimit_hq' or cls.method == 'efficientnetb1_lstm_dftimit_hq' or cls.method == 'efficientnetb1_lstm_dfdc':
             # inference for sequence models
             auc, ap, loss, acc = test.inference(
-                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method, sequence_model=True, num_frames=num_frames)
+                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method,face_margin=face_margin, sequence_model=True, num_frames=num_frames)
         else:
             auc, ap, loss, acc = test.inference(
-                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method, num_frames=num_frames)
+                model, df, img_size, normalization, dataset=cls.dataset, method=cls.method,face_margin=face_margin, num_frames=num_frames)
 
         return [auc, ap, loss, acc]
 
@@ -1153,7 +1157,9 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
             all_meta_train, all_meta_test, full_margin_aug_val = utils.dfdc_metadata_setup()
             all_meta_test['videoname'] = all_meta_test['video']
             all_meta_test['video'] = dataset_path + '/test/' + all_meta_test['videoname']
-            df_test = all_meta_test
+            # randomly sample 1000 test videos
+            df_test = all_meta_test.sample(n=1000,replace = False,random_state=24)
+            print(df_test)
             return df_test
         # put data into dataframe
         df = pd.DataFrame(data=data_list)
