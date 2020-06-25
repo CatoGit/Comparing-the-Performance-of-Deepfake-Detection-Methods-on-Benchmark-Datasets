@@ -126,7 +126,7 @@ def inference(model, test_df, img_size, normalization, dataset, method,face_marg
     net, cfg = df_retinaface.load_face_detector()
     inference_time = time.time()
     print(f"Inference using {num_frames} frames per video.")
-    print(f"Use face margin of {face_margin * 100} \%") 
+    print(f"Use face margin of {face_margin * 100} %") 
     for idx, row in tqdm(test_df.iterrows(), total=test_df.shape[0]):
         video = row.loc['video']
         label = row.loc['label']
@@ -138,6 +138,10 @@ def inference(model, test_df, img_size, normalization, dataset, method,face_marg
         # try:
         vid_frames = df_retinaface.extract_frames(
             faces, video, save_to=None, face_margin=face_margin, num_frames=num_frames, test=True)
+        # if no face detected continue to next video
+        if not vid_frames:
+            print("No face detected.")
+            continue
         # except:
         #print("Error: Video frames.")
         # inference for each frame

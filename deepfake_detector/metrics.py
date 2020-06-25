@@ -1,15 +1,13 @@
+from sklearn.metrics import multilabel_confusion_matrix
 import math
 import numpy as np
-import matplotlib.pyplot as plt
-
-from sklearn.metrics import multilabel_confusion_matrix
 from sklearn.metrics import _ranking
 from sklearn.utils import multiclass
 from sklearn.metrics._plot import precision_recall_curve
+import matplotlib.pyplot as plt
 from sklearn.metrics import average_precision_score
 
-
-def prec_rec(y_true, y_pred, method, alpha=100, plot=False):
+def prec_rec(y_true, y_pred, method, alpha=100, plot = False):
     """
     Calculates the weighted precision metric at recall levels 0.1, 0.5 and 0.9 as proposed in:
     The Deepfake Detection Challenge (DFDC) Preview Dataset (https://arxiv.org/abs/1910.08854)
@@ -18,15 +16,13 @@ def prec_rec(y_true, y_pred, method, alpha=100, plot=False):
 
     alpha = 100 as suggested in the paper.
     """
-
     fps, tps, thresholds = _ranking._binary_clf_curve(
         y_true, y_pred, pos_label=None, sample_weight=None)
 
     weighted_precision = tps / (tps + alpha*fps)
     weighted_precision[np.isnan(weighted_precision)] = 0
     # take log of weighted precision similar to The Deepfake Detection Challenge (DFDC) Preview Dataset (https://arxiv.org/abs/1910.08854)
-    weighted_precision = [
-        math.log(entry) if entry > 0 else 0 for entry in weighted_precision]
+    weighted_precision = [math.log(entry) if entry > 0 else 0 for entry in weighted_precision]
     recall = tps / tps[-1]
 
     # stop when full recall attained
@@ -46,8 +42,8 @@ def prec_rec(y_true, y_pred, method, alpha=100, plot=False):
     weighted_precision_at_point_five_rec = prec[threshold_index_point_five]
     # first precision entry for recall level at 0.1
     threshold_index_point_one = len([entry for entry in rec if entry >= 0.1])-1
-    weigthed_precision_at_point_one_rec = prec[threshold_index_point_one]
-
+    weigthed_precision_at_point_one_rec = prec[threshold_index_point_one] 
+    
     if plot:
         average_precision = average_precision_score(y_true, y_pred)
         viz = precision_recall_curve.PrecisionRecallDisplay(
@@ -61,4 +57,4 @@ def prec_rec(y_true, y_pred, method, alpha=100, plot=False):
         plt.savefig('w_prec_recall_curve.png')
         plt.show()
 
-    return weigthed_precision_at_point_one_rec, weighted_precision_at_point_five_rec, weighted_precision_at_point_nine_rec
+    return weigthed_precision_at_point_one_rec,weighted_precision_at_point_five_rec,weighted_precision_at_point_nine_rec

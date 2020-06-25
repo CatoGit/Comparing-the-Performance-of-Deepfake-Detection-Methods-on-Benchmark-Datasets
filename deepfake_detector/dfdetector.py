@@ -1158,7 +1158,11 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
             all_meta_test['videoname'] = all_meta_test['video']
             all_meta_test['video'] = dataset_path + '/test/' + all_meta_test['videoname']
             # randomly sample 1000 test videos
-            df_test = all_meta_test.sample(n=1000,replace = False,random_state=24)
+            df_test_reals = all_meta_test[all_meta_test['label'] == 0]
+            df_test_fakes = all_meta_test[all_meta_test['label'] == 1]
+            df_test_reals = df_test_reals.sample(n=500,replace = False,random_state=24)
+            df_test_fakes = df_test_fakes.sample(n=500,replace = False,random_state=24)
+            df_test = pd.concat([df_test_reals, df_test_fakes], ignore_index=True)
             print(df_test)
             return df_test
         # put data into dataframe
