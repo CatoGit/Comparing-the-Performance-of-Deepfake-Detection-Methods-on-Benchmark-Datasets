@@ -181,7 +181,7 @@ class DFDetector():
                 method=cls.method, dataset=cls.dataset, mode='test')
         elif cls.method == 'dfdcrank90_uadfv' or cls.method == 'dfdcrank90_celebdf' or cls.method == 'dfdcrank90_dftimit_hq' or cls.method == 'dfdcrank90_dfdc':
             # evaluate dfdcrank90 ensemble
-            auc, ap, loss, acc = prepare_dfdc_rank90(method, cls.dataset, df)
+            auc, ap, loss, acc = prepare_dfdc_rank90(method, cls.dataset, df, face_margin,num_frames)
             return [auc, ap, loss, acc]
         elif cls.method == 'six_method_ensemble_uadfv' or cls.method == 'six_method_ensemble_celebdf' or cls.method == 'six_method_ensemble_dftimit_hq' or cls.method == 'six_method_ensemble_dfdc':
             # evaluate six method ensemble
@@ -557,7 +557,7 @@ def prepare_method(method, dataset, mode='train'):
             f"{method} is not available. Please use one of the available methods.")
 
 
-def prepare_dfdc_rank90(method, dataset, df):
+def prepare_dfdc_rank90(method, dataset, df, face_margin,num_frames):
     """Prepares the DFDC rank 90 ensemble."""
     img_size_xception = 299
     img_size_b1 = 240
@@ -587,7 +587,7 @@ def prepare_dfdc_rank90(method, dataset, df):
     model3.load_state_dict(model_params3)
     print("Inference EfficientNetB1 + LSTM")
     df3 = test.inference(
-        model3, df, img_size_b1, normalization_b1, dataset=dataset, method=method, sequence_model=True, ensemble=True)
+        model3, df, img_size_b1, normalization_b1, dataset=dataset, method=method,face_margin=face_margin, sequence_model=True, ensemble=True,num_frames=num_frames)
 
     model1 = xception.imagenet_pretrained_xception()
     # load the xception model that was pretrained on the uadfv training data
@@ -597,7 +597,7 @@ def prepare_dfdc_rank90(method, dataset, df):
 
     print("Inference Xception One")
     df1 = test.inference(
-        model1, df, img_size_xception, normalization_xception, dataset=dataset, method=method, ensemble=True)
+        model1, df, img_size_xception, normalization_xception, dataset=dataset, method=method, face_margin=face_margin, ensemble=True, num_frames=num_frames)
 
     model2 = xception.imagenet_pretrained_xception()
     # load the xception model that was pretrained on the uadfv training data
@@ -607,7 +607,7 @@ def prepare_dfdc_rank90(method, dataset, df):
 
     print("Inference Xception Two")
     df2 = test.inference(
-        model2, df, img_size_xception, normalization_xception, dataset=dataset, method=method, ensemble=True)
+        model2, df, img_size_xception, normalization_xception, dataset=dataset, method=method,face_margin=face_margin, ensemble=True, num_frames=num_frames)
 
     # average predictions of all three models
     df1['Prediction'] = (df1['Prediction'] +
