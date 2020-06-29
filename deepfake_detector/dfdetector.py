@@ -576,6 +576,10 @@ def prepare_dfdc_rank90(method, dataset, df, face_margin,num_frames):
         mod1 = 'efficientnetb1_lstm_dftimit_hq'
         mod2 = 'xception_dftimit_hq'
         mod3 = 'xception_dftimit_hq_seed25'
+    elif method == 'dfdcrank90_dftimit_lq':
+        mod1 = 'efficientnetb1_lstm_dftimit_lq'
+        mod2 = 'xception_dftimit_lq'
+        mod3 = 'xception_dftimit_lq_seed25'
     elif method == 'dfdcrank90_dfdc':
         mod1 = 'efficientnetb1_lstm_dfdc'
         mod2 = 'xception_dfdc'
