@@ -938,14 +938,13 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
                         video_path_crops_real = os.path.join(dataset_path + "/facecrops_lq/real/")
                         video_path_crops_fake = os.path.join(dataset_path + "/facecrops_lq/fake/")
                     
-
                     data_list = []
                     for _, _, videos in os.walk(video_path_crops_real):
                         for video in tqdm(videos):
                             # label 0 for real video
                             data_list.append(
                                 {'label': 0, 'video': video})
-
+                    
                     for _, _, videos in os.walk(video_path_crops_fake):
                         for video in tqdm(videos):
                             # label 1 for deepfake video
@@ -1282,7 +1281,12 @@ def prepare_sequence_data(dataset, df):
                 df.loc[idx, 'original'] = row.loc['video'][:4]
             elif row.loc['label'] == 1:
                 df.loc[idx, 'original'] = row.loc['video'][:9]
-    elif dataset == 'celebdf' or dataset == 'dftimit_hq' or dataset == 'dftimit_lq' or dataset == 'dfdc':
+    elif dataset == 'celebdf' or dataset == 'dftimit_hq' or dataset == 'dftimit_lq':
+        print("Preparing sequence data.")
+        for idx, row in tqdm(df.iterrows(), total=len(df)):
+            # remove everything after last underscore
+            df.loc[idx, 'original'] = row.loc['video'].rpartition("_")[0]
+    elif dataset == 'dfdc':
         print("Preparing sequence data.")
         for idx, row in tqdm(df.iterrows(), total=len(df)):
             # remove everything after last underscore
