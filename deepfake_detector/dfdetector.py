@@ -54,7 +54,15 @@ class DFDetector():
         if method == "xception_uadfv":
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-
+            used = "Xception_UADFV"
+        elif method == "xception_celebdf":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "Xception_CELEBDF"
+        elif method == "xception_dfdc":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "Xception_DFDC"
         # video
         # apply facedetector
         # predict on 20 images
@@ -116,7 +124,7 @@ class DFDetector():
                         fill=False, edgecolor='green', linewidth=2))
                     plt.show()
                     result = "This is a real image."
-            return result
+            return used, result
 
     @classmethod
     def benchmark(cls, dataset=None, data_path=None, method="xception_celebdf", seed=24):

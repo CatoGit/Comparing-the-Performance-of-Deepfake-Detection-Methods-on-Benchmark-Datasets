@@ -12,7 +12,6 @@ import dfdetector
 app = Flask(__name__)
 UPLOAD_FOLDER = "./deepfake_detector/static/videos/"
 DEVICE = "cpu"
-MODEL = "xception_uadfv"
 
 
 
@@ -26,10 +25,12 @@ def upload_predict():
                 image_file.filename
             )
             image_file.save(image_location)
-            pred = dfdetector.DFDetector.detect_single(image_path=image_location, method=MODEL)
+            select = request.form.get('methodchoice')
+            method, pred = dfdetector.DFDetector.detect_single(image_path=image_location, method=select)
+            print(method)
             print(pred)
-            return render_template("index.html", prediction = pred, image_loc=image_file.filename)
-    return render_template("index.html", prediction = 0, image_loc = None)
+            return render_template("index.html", prediction = pred, method=method, image_loc=image_file.filename)
+    return render_template("index.html", prediction = 0, method=None,image_loc = None)
 
 
 if __name__ == "__main__":
