@@ -410,12 +410,12 @@ def prepare_fulltrain_datasets(dataset, method, data, img_size, normalization, a
             train_dataset, batch_size=batch_size, shuffle=True)
     elif dataset == 'dftimit_hq':
         train_dataset = datasets.DFTIMITHQDataset(
-            data.iloc[train_idx], img_size, method=method, normalization=normalization, augmentations=augmentations)
+            data, img_size, method=method, normalization=normalization, augmentations=augmentations)
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
     elif dataset == 'dftimit_lq':
         train_dataset = datasets.DFTIMITLQDataset(
-            data.iloc[train_idx], img_size, method=method, normalization=normalization, augmentations=augmentations)
+            data, img_size, method=method, normalization=normalization, augmentations=augmentations)
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
     elif dataset == 'dfdc':
