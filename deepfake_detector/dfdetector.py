@@ -1442,6 +1442,8 @@ def prepare_six_method_ensemble(method, dataset, df):
         ens = 'celebdf'
     elif method == 'six_method_ensemble_dftimit_hq':
         ens = 'dftimit_hq'
+    elif method == 'six_method_ensemble_dftimit_lq':
+        ens = 'dftimit_lq'
     elif method == 'six_method_ensemble_dfdc':
         ens = 'dfdc'
     six_method_ens = pd.read_csv(
