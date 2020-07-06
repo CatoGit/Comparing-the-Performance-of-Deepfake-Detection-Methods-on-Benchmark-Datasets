@@ -96,7 +96,6 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
                 frame = transform(frame)
                 # add batch dimension and input into model to get logits
                 predictions = model(frame.unsqueeze(0))
-
                 # get probabilitiy for frame from logits
                 preds = torch.sigmoid(predictions)
                 avg_preds.append(preds.cpu().numpy())
