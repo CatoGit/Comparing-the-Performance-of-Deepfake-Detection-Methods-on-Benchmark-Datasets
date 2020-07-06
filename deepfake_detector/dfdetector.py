@@ -139,7 +139,7 @@ class DFDetector():
         """
         # seed numpy and pytorch for reproducibility
         reproducibility_seed(seed)
-        if method not in ['xception_uadfv', 'xception_celebdf','xception_dftimit_hq','xception_dfdc', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'efficientnetb7_dftimit_hq','efficientnetb7_dfdc', 'mesonet_uadfv', 'mesonet_celebdf', 'mesonet_dftimit_hq','mesonet_dfdc','resnet_lstm_uadfv', 'resnet_lstm_celebdf', 'resnet_lstm_dftimit_hq','resnet_lstm_dfdc','efficientnetb1_lstm_uadfv', 'efficientnetb1_lstm_celebdf','efficientnetb1_lstm_dftimit_hq','efficientnetb1_lstm_dfdc', 'dfdcrank90_uadfv', 'dfdcrank90_celebdf','dfdcrank90_dftimit_hq','dfdcrank90_dfdc', 'six_method_ensemble_uadfv', 'six_method_ensemble_celebdf','six_method_ensemble_dftimit_hq', 'six_method_ensemble_dfdc']:
+        if method not in ['xception_uadfv', 'xception_celebdf','xception_dftimit_hq','xception_dftimit_lq','xception_dfdc', 'efficientnetb7_uadfv', 'efficientnetb7_celebdf', 'efficientnetb7_dftimit_hq', 'efficientnetb7_dftimit_lq','efficientnetb7_dfdc', 'mesonet_uadfv', 'mesonet_celebdf', 'mesonet_dftimit_hq','mesonet_dftimit_lq','mesonet_dfdc','resnet_lstm_uadfv', 'resnet_lstm_celebdf', 'resnet_lstm_dftimit_hq','resnet_lstm_dftimit_lq','resnet_lstm_dfdc','efficientnetb1_lstm_uadfv', 'efficientnetb1_lstm_celebdf','efficientnetb1_lstm_dftimit_hq','efficientnetb1_lstm_dftimit_lq','efficientnetb1_lstm_dfdc', 'dfdcrank90_uadfv', 'dfdcrank90_celebdf','dfdcrank90_dftimit_hq','dfdcrank90_dftimit_lq','dfdcrank90_dfdc', 'six_method_ensemble_uadfv', 'six_method_ensemble_celebdf','six_method_ensemble_dftimit_hq', 'six_method_ensemble_dftimit_lq','six_method_ensemble_dfdc']:
             raise ValueError("Method is not available for benchmarking.")
         else:
             # method exists
@@ -172,26 +172,26 @@ class DFDetector():
         df = label_data(dataset_path=cls.data_path,
                         dataset=cls.dataset, test_data=True)
         # prepare the method of choice
-        if cls.method == "xception_uadfv" or cls.method == 'xception_celebdf' or cls.method == 'xception_dftimit_hq' or cls.method == 'xception_dfdc':
+        if cls.method == "xception_uadfv" or cls.method == 'xception_celebdf' or cls.method == 'xception_dftimit_hq' or cls.method == 'xception_dftimit_lq' or cls.method == 'xception_dfdc':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == "efficientnetb7_uadfv" or cls.method == 'efficientnetb7_celebdf' or cls.method == 'efficientnetb7_dftimit_hq' or cls.method == 'efficientnetb7_dfdc':
+        elif cls.method == "efficientnetb7_uadfv" or cls.method == 'efficientnetb7_celebdf' or cls.method == 'efficientnetb7_dftimit_hq'  or cls.method == 'efficientnetb7_dftimit_lq' or cls.method == 'efficientnetb7_dfdc':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'mesonet_uadfv' or cls.method == 'mesonet_celebdf' or cls.method == 'mesonet_dftimit_hq' or cls.method == 'mesonet_dfdc':
+        elif cls.method == 'mesonet_uadfv' or cls.method == 'mesonet_celebdf' or cls.method == 'mesonet_dftimit_hq' or cls.method == 'mesonet_dftimit_lq' or cls.method == 'mesonet_dfdc':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'resnet_lstm_uadfv' or cls.method == 'resnet_lstm_celebdf' or cls.method == 'resnet_lstm_dftimit_hq' or cls.method == 'resnet_lstm_dfdc':
+        elif cls.method == 'resnet_lstm_uadfv' or cls.method == 'resnet_lstm_celebdf' or cls.method == 'resnet_lstm_dftimit_hq' or cls.method == 'resnet_lstm_dftimit_lq' or cls.method == 'resnet_lstm_dfdc':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_celebdf' or cls.method == 'efficientnetb1_lstm_dftimit_hq' or cls.method == 'efficientnetb1_lstm_dfdc':
+        elif cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_celebdf' or cls.method == 'efficientnetb1_lstm_dftimit_hq'or cls.method == 'efficientnetb1_lstm_dftimit_lq' or cls.method == 'efficientnetb1_lstm_dfdc':
             model, img_size, normalization = prepare_method(
                 method=cls.method, dataset=cls.dataset, mode='test')
-        elif cls.method == 'dfdcrank90_uadfv' or cls.method == 'dfdcrank90_celebdf' or cls.method == 'dfdcrank90_dftimit_hq' or cls.method == 'dfdcrank90_dfdc':
+        elif cls.method == 'dfdcrank90_uadfv' or cls.method == 'dfdcrank90_celebdf' or cls.method == 'dfdcrank90_dftimit_hq' or cls.method == 'dfdcrank90_dftimit_lq' or cls.method == 'dfdcrank90_dfdc':
             # evaluate dfdcrank90 ensemble
             auc, ap, loss, acc = prepare_dfdc_rank90(method, cls.dataset, df, face_margin,num_frames)
             return [auc, ap, loss, acc]
-        elif cls.method == 'six_method_ensemble_uadfv' or cls.method == 'six_method_ensemble_celebdf' or cls.method == 'six_method_ensemble_dftimit_hq' or cls.method == 'six_method_ensemble_dfdc':
+        elif cls.method == 'six_method_ensemble_uadfv' or cls.method == 'six_method_ensemble_celebdf' or cls.method == 'six_method_ensemble_dftimit_hq' or cls.method == 'six_method_ensemble_dftimit_lq'or cls.method == 'six_method_ensemble_dfdc':
             # evaluate six method ensemble
             auc, ap, loss, acc = prepare_six_method_ensemble(
                 method, cls.dataset, df)
@@ -199,7 +199,7 @@ class DFDetector():
 
         print(f"Detecting deepfakes with \033[1m{cls.method}\033[0m ...")
         # benchmarking
-        if cls.method == 'resnet_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'resnet_lstm_celebdf' or cls.method == 'resnet_lstm_dfdc' or cls.method == 'efficientnetb1_lstm_celebdf' or cls.method == 'resnet_lstm_dftimit_hq' or cls.method == 'efficientnetb1_lstm_dftimit_hq' or cls.method == 'efficientnetb1_lstm_dfdc':
+        if cls.method == 'resnet_lstm_uadfv' or cls.method == 'efficientnetb1_lstm_uadfv' or cls.method == 'resnet_lstm_celebdf' or cls.method == 'resnet_lstm_dfdc' or cls.method == 'efficientnetb1_lstm_celebdf' or cls.method == 'resnet_lstm_dftimit_hq' or cls.method == 'resnet_lstm_dftimit_lq' or cls.method == 'efficientnetb1_lstm_dftimit_hq' or cls.method == 'efficientnetb1_lstm_dftimit_lq' or cls.method == 'efficientnetb1_lstm_dfdc':
             # inference for sequence models
             auc, ap, loss, acc = test.inference(
                 model, df, img_size, normalization, dataset=cls.dataset, method=cls.method,face_margin=face_margin, sequence_model=True, num_frames=num_frames)
@@ -467,13 +467,13 @@ class DFDetector():
 
 def prepare_method(method, dataset, mode='train'):
     """Prepares the method that will be used for training or benchmarking."""
-    if method == 'xception' or method == 'xception_uadfv' or method == 'xception_celebdf' or method =='xception_dftimit_hq' or method == 'xception_dfdc':
+    if method == 'xception' or method == 'xception_uadfv' or method == 'xception_celebdf' or method =='xception_dftimit_hq'  or method =='xception_dftimit_lq' or method == 'xception_dfdc':
         img_size = 299
         normalization = 'xception'
         if mode == 'test':
             model = xception.imagenet_pretrained_xception()
             # load the xception model that was pretrained on the respective datasets training data
-            if method == 'xception_uadfv' or method == 'xception_celebdf' or method =='xception_dftimit_hq' or method == 'xception_dfdc':
+            if method == 'xception_uadfv' or method == 'xception_celebdf' or method =='xception_dftimit_hq' or method =='xception_dftimit_lq' or method == 'xception_dfdc':
                 model_params = torch.load(
                     os.getcwd() + f'/deepfake_detector/pretrained_mods/weights/{method}.pth')
                 print(os.getcwd(
@@ -484,12 +484,12 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'efficientnetb7' or method == 'efficientnetb7_uadfv' or method == 'efficientnetb7_celebdf' or method == 'efficientnetb7_dftimit_hq' or method == 'efficientnetb7_dfdc':
+    elif method == 'efficientnetb7' or method == 'efficientnetb7_uadfv' or method == 'efficientnetb7_celebdf' or method == 'efficientnetb7_dftimit_hq' or method == 'efficientnetb7_dftimit_lq' or method == 'efficientnetb7_dfdc':
         # 380 image size as introduced here https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721
         img_size = 380
         normalization = 'imagenet'
         if mode == 'test':
-            if method == 'efficientnetb7_uadfv' or method == 'efficientnetb7_celebdf' or method == 'efficientnetb7_dftimit_hq' or method == 'efficientnetb7_dfdc':
+            if method == 'efficientnetb7_uadfv' or method == 'efficientnetb7_celebdf' or method == 'efficientnetb7_dftimit_hq' or method == 'efficientnetb7_dftimit_lq' or method == 'efficientnetb7_dfdc':
                 # successfully used by https://www.kaggle.com/c/deepfake-detection-challenge/discussion/145721 (noisy student weights)
                 model = timm.create_model(
                     'tf_efficientnet_b7_ns', pretrained=True)
@@ -503,13 +503,13 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'mesonet' or method == 'mesonet_uadfv' or method == 'mesonet_celebdf' or method == 'mesonet_dftimit_hq' or method == 'mesonet_dfdc':
+    elif method == 'mesonet' or method == 'mesonet_uadfv' or method == 'mesonet_celebdf' or method == 'mesonet_dftimit_hq' or method == 'mesonet_dftimit_lq' or method == 'mesonet_dfdc':
         # 256 image size as proposed in the MesoNet paper (https://arxiv.org/abs/1809.00888)
         img_size = 256
         # use [0.5,0.5,0.5] normalization scheme, because no imagenet pretraining
         normalization = 'xception'
         if mode == 'test':
-            if method == 'mesonet_uadfv' or method == 'mesonet_celebdf' or method == 'mesonet_dftimit_hq' or method == 'mesonet_dfdc':
+            if method == 'mesonet_uadfv' or method == 'mesonet_celebdf' or method == 'mesonet_dftimit_hq' or method == 'mesonet_dftimit_lq' or method == 'mesonet_dfdc':
                 # load MesoInception4 model
                 model = mesonet.MesoInception4()
                 # load the mesonet model that was pretrained on the uadfv training data
@@ -523,11 +523,11 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'resnet_lstm' or method == 'resnet_lstm_uadfv' or method == 'resnet_lstm_celebdf' or method == 'resnet_lstm_dftimit_hq' or method == 'resnet_lstm_dfdc':
+    elif method == 'resnet_lstm' or method == 'resnet_lstm_uadfv' or method == 'resnet_lstm_celebdf' or method == 'resnet_lstm_dftimit_hq' or method == 'resnet_lstm_dftimit_lq' or method == 'resnet_lstm_dfdc':
         img_size = 224
         normalization = 'imagenet'
         if mode == 'test':
-            if method == 'resnet_lstm_uadfv' or method == 'resnet_lstm_celebdf' or method == 'resnet_lstm_dftimit_hq' or method == 'resnet_lstm_dfdc':
+            if method == 'resnet_lstm_uadfv' or method == 'resnet_lstm_celebdf' or method == 'resnet_lstm_dftimit_hq' or method == 'resnet_lstm_dftimit_lq' or method == 'resnet_lstm_dfdc':
                 # load MesoInception4 model
                 model = resnetlstm.ResNetLSTM()
                 # load the mesonet model that was pretrained on the uadfv training data
@@ -541,11 +541,11 @@ def prepare_method(method, dataset, mode='train'):
             # model is loaded in the train loop, because easier in case of k-fold cross val
             model = None
             return model, img_size, normalization
-    elif method == 'efficientnetb1_lstm' or method == 'efficientnetb1_lstm_uadfv' or method == 'efficientnetb1_lstm_celebdf' or method == 'efficientnetb1_lstm_dftimit_hq' or method == 'efficientnetb1_lstm_dfdc':
+    elif method == 'efficientnetb1_lstm' or method == 'efficientnetb1_lstm_uadfv' or method == 'efficientnetb1_lstm_celebdf' or method == 'efficientnetb1_lstm_dftimit_hq' or method == 'efficientnetb1_lstm_dftimit_lq' or method == 'efficientnetb1_lstm_dfdc':
         img_size = 240
         normalization = 'imagenet'
         if mode == 'test':
-            if method == 'efficientnetb1_lstm_uadfv' or method == 'efficientnetb1_lstm_celebdf' or method == 'efficientnetb1_lstm_dftimit_hq' or method == 'efficientnetb1_lstm_dfdc':
+            if method == 'efficientnetb1_lstm_uadfv' or method == 'efficientnetb1_lstm_celebdf' or method == 'efficientnetb1_lstm_dftimit_hq' or method == 'efficientnetb1_lstm_dftimit_lq' or method == 'efficientnetb1_lstm_dfdc':
                 # load EfficientNetB1+LSTM
                 model = efficientnetb1lstm.EfficientNetB1LSTM()
                 # load the mesonet model that was pretrained on the uadfv training data
@@ -1046,8 +1046,6 @@ def label_data(dataset_path=None, dataset='uadfv', method='xception', face_crops
         
                     # put data into dataframe
                     df = pd.DataFrame(data=data_list)
-                    print("df")
-                    print(df)
                     df = prepare_sequence_data(dataset, df)
                     # add path to data
                     for idx, row in df.iterrows():
