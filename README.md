@@ -1,6 +1,9 @@
 [//]: # (Image References)
 [webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/webapp.PNG "webapp"
 
+## Getting the models
+
+Before predicting singles or benchmarking, the model checkpoints need to be downloaded. All 35 models can be downloaded here: #TODO
 
 ## Predict on a single image or video
 
