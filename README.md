@@ -1,5 +1,5 @@
 [//]: # (Image References)
-[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/webapp.PNG
+[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/webapp.PNG "Web application"
 
 
 ## Predict on a single image or video
