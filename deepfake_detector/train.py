@@ -180,17 +180,17 @@ def train(dataset, data, method, normalization, augmentations, img_size,
                         running_ap_labels, running_ap_preds)
                     print(
                         f"{phase} Loss: {epoch_loss}, Acc: {epoch_acc}, AUC: {epoch_auc}, AP: {epoch_ap}")
-                    if fulltrain == True and e == 0:
-                        try:
-                            print("Save for first epoch.")
-                            torch.save({
-                                'epoch': e,
-                                'model_state_dict': model.state_dict(),
-                                'optimizer_state_dict': optimizer.state_dict(),
-                                'loss': epoch_loss
-                                }, os.getcwd() + f'/{method}_{dataset}_{e}.pth')
-                        except:
-                            print("Didn't work.")
+#                     if fulltrain == True and e == 0:
+#                         try:
+#                             print("Save for first epoch.")
+#                             torch.save({
+#                                 'epoch': e,
+#                                 'model_state_dict': model.state_dict(),
+#                                 'optimizer_state_dict': optimizer.state_dict(),
+#                                 'loss': epoch_loss
+#                                 }, os.getcwd() + f'/{method}_{dataset}_{e}.pth')
+#                         except:
+#                             print("Didn't work.")
                         
                     if fulltrain == True and e+1 == epochs:
                         # save model if epochs reached
