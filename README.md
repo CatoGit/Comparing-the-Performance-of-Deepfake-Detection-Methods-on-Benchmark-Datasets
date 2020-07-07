@@ -1,12 +1,12 @@
 [//]: # (Image References)
-[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/webapp.PNG "Web application"
+[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/webapp.PNG "webapp"
 
 
 ## Predict on a single image or video
 
 The best way to make predictions on a single image or video is to use the deepfake detection web application (api.py). 
 
-![webapp][Wep application]
+![Wep application][webapp]
 
 It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface. Alternatively the detect_single method can be used in code, for example:
 
