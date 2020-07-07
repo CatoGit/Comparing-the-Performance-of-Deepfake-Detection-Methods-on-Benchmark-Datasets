@@ -1,6 +1,10 @@
 ## Predict on a single image or video
 
-The best way to make predictions on a single image or video is to use the deepfake detection web application (api.py). It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface. Alternatively the detect_single method can be used in code, for example:
+The best way to make predictions on a single image or video is to use the deepfake detection web application (api.py). 
+
+
+
+It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface. Alternatively the detect_single method can be used in code, for example:
 
 ```method, result = DFDetector.detect_single(video_path="/example/path/video.mp4", image_path=None, method="xception_uadfv")```
 
@@ -28,12 +32,12 @@ data_path takes arguments in the following way: your_path/datasetfolder
 | uadfv  | your_path/fake_videos   | https://github.com/danmohaha/WIFS2018_In_Ictu_Oculi |
 | celebdf  | your_path/celebdf  |https://github.com/danmohaha/celeb-deepfakeforensics|
 | dfdc  | your_path/dfdcdataset   |https://www.kaggle.com/c/deepfake-detection-challenge/data|
-| dftimithq | your_path/DeepfakeTIMIT  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
-| dftimitlq  | your_path/DeepfakeTIMIT  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
+| dftimit_hq | your_path/DeepfakeTIMIT  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
+| dftimit_lq  | your_path/DeepfakeTIMIT  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
 
 Additional setup information:
 dfdc: The folder dfdcdataset contains the five video folders dfdc_train_part_45 up to part 49. They can be downloaded from Kaggle using the following command for each folder: !wget --load-cookies cookies.txt https://www.kaggle.com/c/16880/datadownload/dfdc_train_part_45.zip and the cookies.txt file.
-dftimithq & dftimitlq: The vidtimit dataset of real videos is only available in frame format. These frames need to be turned into videos. utils.py provides a method vidtimit_setup_real_videos(path_to_dataset) that turns the frames into the necessary videos. Alternatively the preprocessed dataset can be downloaded from: 
+dftimithq & dftimitlq: The vidtimit dataset of real videos is only available in frame format. These frames need to be turned into videos. utils.py provides a method vidtimit_setup_real_videos(path_to_dataset) that turns the frames into the necessary videos. 
 
 ### Choices for methods:
 
