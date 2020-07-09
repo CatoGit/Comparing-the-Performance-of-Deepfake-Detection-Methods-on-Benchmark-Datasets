@@ -3,7 +3,7 @@
 
 ## Getting the models
 
-Before predicting singles or benchmarking, the model checkpoints need to be downloaded. Then, they need to be added to the "weights" folder. All 35 models can be downloaded [here](https://drive.google.com/drive/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4?usp=sharing). 
+Before predicting singles or benchmarking, the model checkpoints need to be downloaded and added to the "weights" folder. All 35 models can be downloaded [here](https://drive.google.com/drive/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4?usp=sharing). 
 
 ## Predict on a single image or video
 
