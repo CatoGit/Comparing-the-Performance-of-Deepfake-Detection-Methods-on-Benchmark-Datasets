@@ -50,7 +50,7 @@ After extracting the fake_videos.zip folder, remove the file that are listed in 
 fake_videos/
 ├── fake
 ├── real
-├── test
+
 ```
 #### Celeb-DF:
 ```
