@@ -27,14 +27,14 @@ You can also benchmark from the command line by simply passing the three argumen
 
 What should you specify for dataset, data_path and method?
 
-### Data path setup:
+## Prepare the datasets
 
 Prior to benchmarking, you have to download the respective datasets and setup the path to each dataset. To get access to some of the datasets, the datasets' authors require you to fill out a form where you have to agree to their terms of use. After filling out the form, the datasets' authors will send you a dataset download link. Links to the authors repositories, where you can access datasets or forms are linked below.
 data_path takes arguments in the following way: your_path/datasetfolder
 "your_path" is the path to the dataset folder (e.g. /home/jupyter/) and "datasetfolder" is the (unzipped) folder that contains the dataset (e.g. fake_videos). Below are the examples with the correct dataset folder names given:
 
 
-| Benchmark dataset | Setup path | Download from |
+| Benchmark dataset keyword| Setup path | Download from |
 | ------------- | ------------- | ------------- |
 | uadfv  | your_path/fake_videos   | https://github.com/danmohaha/WIFS2018_In_Ictu_Oculi |
 | celebdf  | your_path/celebdf  |https://github.com/danmohaha/celeb-deepfakeforensics|
@@ -42,9 +42,41 @@ data_path takes arguments in the following way: your_path/datasetfolder
 | dftimit_hq | your_path/DeepfakeTIMIT  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
 | dftimit_lq  | your_path/DeepfakeTIMIT  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
 
-Additional setup information:
-dfdc: The folder dfdcdataset contains the five video folders dfdc_train_part_45 up to part 49. They can be downloaded from Kaggle using the following command for each folder: !wget --load-cookies cookies.txt https://www.kaggle.com/c/16880/datadownload/dfdc_train_part_45.zip and the cookies.txt file.
-dftimithq & dftimitlq: The vidtimit dataset of real videos is only available in frame format. These frames need to be turned into videos. utils.py provides a method vidtimit_setup_real_videos(path_to_dataset) that turns the frames into the necessary videos. 
+The datasets should be extracted to the folders in the following way.
+
+#### UADFV:
+After extracting the fake_videos.zip folder, remove the file that are listed in uadfv_test.csv from the "fake" and "real" folders.
+```
+fake_videos/
+├── fake
+├── real
+├── val
+```
+#### Celeb-DF:
+```
+celebdf/
+├── YouTube-real
+├── List_of_testing_videos.txt
+├── Celeb-synthesis
+├── Celeb-real
+```
+#### DF-TIMIT-LQ and DF-TIMIT-HQ:
+The vidtimit dataset of real videos is only available in frame format. These frames need to be turned into videos. utils.py provides a method vidtimit_setup_real_videos(path_to_dataset) that turns the frames into the necessary videos. Afterwards, the folders should be ordered like this:
+```
+DeepfakeTIMIT/
+├── lower_quality
+├── higher_quality
+├── dftimitreal
+```
+#### DFDC:
+Video files from folders 0 to 44 must be copied to the train folder. Video files from folders 45 to 49 must be copied to the test folder. They can be downloaded from Kaggle using the following command for each folder: !wget --load-cookies cookies.txt https://www.kaggle.com/c/16880/datadownload/dfdc_train_part_45.zip and the cookies.txt file.
+```
+dfdcdataset/
+├── train
+├── test
+├── val
+```
+
 
 ### Choices for methods:
 
@@ -113,6 +145,5 @@ Method arguments that can be used for training:
 ## Performance of Deepfake Detection Methods (Results)
 
 The accuracy of the examined methods is presented here. Further insights can be found in the "Experiments"-file where the performance of each method is evaluated on other metrics as well.
-
 
 
