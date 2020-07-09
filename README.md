@@ -101,7 +101,7 @@ If available, all methods made use of transfer learning (e.g. imagenet weights, 
 | six_method_ensemble_celebdf | 89.29 | **99.04** |  53.27 | 50.83 | 80.83 |
 | xception_dfdc | 78.57 | 55.99 | 90.50 |  72.50 | 95.00 |  
 | efficientnetb7_dfdc | 89.29 | 67.18 | **93.60** | 90.00 |  99.17 |
-| mesonet_dfdc | 63.13 | 58.40 | 47.50 | 48.33 |  
+| mesonet_dfdc |64.29 | 63.13 | 58.40 | 47.50 | 48.33 |  
 | resnet_lstm_dfdc | 50.00 | 66.41 | 70.80 | 55.83 |  55.83 |
 | efficientnetb1_lstm_dfdc | 78.57 | 67.18 | 87.90 | 96.68 |  99.17 |
 | dfdcrank90_dfdc| 82.14 | 59.14 | 91.94 | 77.50 |  **100.00** |
@@ -109,17 +109,17 @@ If available, all methods made use of transfer learning (e.g. imagenet weights, 
 | xception_dftimithq| 57.14 | 72.01 | 50.90 |  91.67 | 96.67 | 
 | efficientnetb7_dftimithq| 35.71 | 35.14 | 46.70 | **100.00** | **100.00** |
 | mesonet_dftimithq | 50.00 | 64.87 | 51.10 | 72.50 | 89.17 |
-| resnet_lstm_dftimithq | 46.43 | 64.87 | 51.10 | 72.50 |  
-| efficientnetb1_lstm_dftimithq | 32.14 | 35.33 | 50.40 | 99.17 |  
-| dfdcrank90_dftimithq | 25.00 | 37.84 | 53.68 | **100.00** | 
-| six_method_ensemble_dftimithq| 39.29 | 51.93 | 52.17 | 99.17 |
-| xception_dftimitlq| a | b | c |  d | e |   
-| efficientnetb7_dftimitlq|  |  |  |  | 
-| mesonet_dftimitlq |  |  |  |  |  
-| resnet_lstm_dftimitlq |  |  |  |  | 
-| efficientnetb1_lstm_dftimitlq |  |  |  |  |  
-| dfdcrank90_dftimitlq |  |  |  |  | 
-| six_method_ensemble_dftimitlq|  |  |  |  |  
+| resnet_lstm_dftimithq | 46.43 | 64.87 | 51.10 | 72.50 | 45.00
+| efficientnetb1_lstm_dftimithq | 32.14 | 35.33 | 50.40 | 99.17 |  99.17
+| dfdcrank90_dftimithq | 25.00 | 37.84 | 53.68 | **100.00** | **100.00** |
+| six_method_ensemble_dftimithq| 39.29 | 51.93 | 52.17 | 99.17 | 99.17 |
+| xception_dftimitlq| 50.00 | 36.29 | 57.80 | 70.00 | **100.00** |   
+| efficientnetb7_dftimitlq| 50.00 | 35.14 | 54.10 | 84.17 | **100.00**  | 
+| mesonet_dftimitlq | 64.29 | 50.00 | 58.60 | 61.67 |  97.50 |
+| resnet_lstm_dftimitlq | 67.86 | 51.93 | 55.60 | 59.17 | 94.17 |
+| efficientnetb1_lstm_dftimitlq | 35.71 | 51.54 | 52.90 | 99.17 |  99.17 |
+| dfdcrank90_dftimitlq | 50.00 | 36.68 | 56.60 | 95.83 | **100.00** |
+| six_method_ensemble_dftimitlq| 50.00 | 40.93 | 57.50 | 77.50 |  **100.00** |  
 
 ## Training
 
