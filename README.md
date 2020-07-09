@@ -106,13 +106,13 @@ If available, all methods made use of transfer learning (e.g. imagenet weights, 
 | efficientnetb1_lstm_dfdc | 78.57 | 67.18 | 87.90 | 96.68 |  99.17 |
 | dfdcrank90_dfdc| 82.14 | 59.14 | 91.94 | 77.50 |  **100.00** |
 |six_method_ensemble_dfdc | 82.14 | 58.98 | 92.95 | 94.17 |  **100.00** |
-| xception_dftimithq| a | b | c |  d | e | 
-| efficientnetb7_dftimithq|  |  |  |  | 
-| mesonet_dftimithq |  |  |  |  | 
-| resnet_lstm_dftimithq |  |  |  |  |  
-| efficientnetb1_lstm_dftimithq |  |  |  |  |  
-| dfdcrank90_dftimithq |  |  |  |  | 
-| six_method_ensemble_dftimithq|  |  |  |  |  
+| xception_dftimithq| 57.14 | 72.01 | 50.90 |  91.67 | 96.67 | 
+| efficientnetb7_dftimithq| 35.71 | 35.14 | 46.70 | **100.00** | **100.00** |
+| mesonet_dftimithq | 50.00 | 64.87 | 51.10 | 72.50 | 89.17 |
+| resnet_lstm_dftimithq | 46.43 | 64.87 | 51.10 | 72.50 |  
+| efficientnetb1_lstm_dftimithq | 32.14 | 35.33 | 50.40 | 99.17 |  
+| dfdcrank90_dftimithq | 25.00 | 37.84 | 53.68 | **100.00** | 
+| six_method_ensemble_dftimithq| 39.29 | 51.93 | 52.17 | 99.17 |
 | xception_dftimitlq| a | b | c |  d | e |   
 | efficientnetb7_dftimitlq|  |  |  |  | 
 | mesonet_dftimitlq |  |  |  |  |  
