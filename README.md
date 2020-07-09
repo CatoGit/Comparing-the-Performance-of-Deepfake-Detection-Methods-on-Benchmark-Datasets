@@ -83,22 +83,22 @@ dfdcdataset/
 There are 35 methods available for benchmarking. The dataset in the method name is the dataset that the method was fine-tuned on. 
 If available, all methods made use of transfer learning (e.g. imagenet weights, noisy student weights), before they were fine-tuned for additional epochs on the respective dataset (see Experiments section in the thesis for more information).
 
-| Deepfake detection methods | ACC on UADFV | ACC on Celeb-DF | ACC on DFDC| ACC on DF-Timit-HQ | ACC on DF-Timit-LQ|
+| Deepfake detection methods | ACC on UADFV | ACC on Celeb-DF | ACC on DFDC| ACC on DF-TIMIT-HQ | ACC on DF-TIMIT-LQ|
 | ------------- | ------------- | ------------- |------------- |------------- | ------------- |
-| xception_uadfv | a | b | c |  d | e | 
-| efficientnetb7_uadfv |  |  |  |  
-| mesonet_uadfv |  |  |  |  
-| resnet_lstm_uadfv |  |  |  |  
-| efficientnetb1_lstm_uadfv |  |  |  |  
-| dfdcrank90_uadfv |  |  |  | 
-| full_ensemble_uadfv |  |  |  |  
-| xception_celebdf | a | b | c |  d | e |  
-| efficientnetb7_celebdf |  |  |  | 
-| mesonet_celebdf |  |  |  |  |
-| resnet_lstm_celebdf |  |  |  |  | 
-| efficientnetb1_lstm_celebdf |  |  |  |  |  
-| dfdcrank90_celebdf |  |  |  |  |  
-| full_ensemble_celebdf |  |  |  |  | 
+| xception_uadfv | **100.00** | 37.07 | 50.00 |  44.17 | 45.83 | 
+| efficientnetb7_uadfv | **100.00** | 35.33 | 49.90 |  50.00 | 50.00 |
+| mesonet_uadfv | 89.29 | 65.25 | 55.70 |  70.00 | 77.50 |
+| resnet_lstm_uadfv | **100.00**  | 49.23 | 56.30 |  55.92 | 61.67 | 
+| efficientnetb1_lstm_uadfv | **100.00** | 38.03 | 55.10 |  41.67 | 51.67 |
+| dfdcrank90_uadfv | **100.00** | 35.52 | 50.45 | 49.17 | 47.50 |
+| six_method_ensemble_uadfv | **100.00** | 38.80 | 51.66 |  44.17 | 56.67 |
+| xception_celebdf | **100.00** | 98.07 | 53.80 |  51.67 | 83.33 |  
+| efficientnetb7_celebdf | **100.00** | 97.68 | 52.40 | 50.00 | 60.00 |
+| mesonet_celebdf | 64.29 | 78.19 | 54.50 | 65.00 | 87.50 |
+| resnet_lstm_celebdf | 71.43 | 95.37 | 56.10 | 50.83 | 70.00 |
+| efficientnetb1_lstm_celebdf | 78.57 | 97.68 | 54.00 | 61.67 | 80.00 | 
+| dfdcrank90_celebdf | 96.43 | 98.65 | 53.17 | 55.00 |  83.33 |
+| six_method_ensemble_celebdf | 89.29 | **99.04** |  53.27 | 50.83 | 80.83 |
 | xception_dfdc | a | b | c |  d | e |  
 | efficientnetb7_dfdc |  |  |  |  |  
 | mesonet_dfdc |  |  |  |  |  
