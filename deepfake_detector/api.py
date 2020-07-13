@@ -26,7 +26,10 @@ def upload_predict():
             )
             image_file.save(image_location)
             select = request.form.get('methodchoice')
-            method, pred = dfdetector.DFDetector.detect_single(image_path=image_location, method=select)
+            if image_file.filename.endswith(".jpg"):
+                method, pred = dfdetector.DFDetector.detect_single(image_path=image_location, method=select)
+            elif image_file.filename.endswith(".mp4"):
+                method, pred = dfdetector.DFDetector.detect_single(video_path=image_location, method=select)
             print(method)
             print(pred)
             return render_template("index.html", prediction = pred, method=method, image_loc=image_file.filename)
@@ -34,4 +37,4 @@ def upload_predict():
 
 
 if __name__ == "__main__":
-    app.run(port=12000, debug=True)
+    app.run(port=5000, debug=True)

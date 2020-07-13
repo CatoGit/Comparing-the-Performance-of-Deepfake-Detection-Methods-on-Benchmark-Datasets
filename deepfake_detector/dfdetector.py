@@ -125,7 +125,21 @@ class DFDetector():
                     plt.show()
                     result = "This is a real image."
             return used, result
-
+        elif video_path:
+            data = [[1, video_path]] 
+            df = pd.DataFrame(data, columns = ['label', 'video']) 
+            print(df)
+            loss = test.inference(
+                model, df, img_size, normalization, dataset=None, method=method,face_margin=0.3, sequence_model=False, num_frames=20, single=True)
+            print(loss)
+            if round(loss) == 1:
+                result = "Deepfake detected."
+                print("Deepfake detected.")
+                return used, result
+            else:
+                result = "This is a real."
+                print("This is a real video.")
+                return used, result
     @classmethod
     def benchmark(cls, dataset=None, data_path=None, method="xception_celebdf", seed=24):
         """Benchmark deepfake detection methods against popular deepfake datasets.

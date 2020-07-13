@@ -108,7 +108,7 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
         return np.mean(avg_preds), np.mean(avg_loss), frame_level_preds
 
 
-def inference(model, test_df, img_size, normalization, dataset, method,face_margin, sequence_model=False, ensemble=False, num_frames=None):
+def inference(model, test_df, img_size, normalization, dataset, method,face_margin, sequence_model=False, ensemble=False, num_frames=None, single=False):
     running_loss = 0.0
     running_corrects = 0.0
     running_false = 0.0
@@ -170,9 +170,13 @@ def inference(model, test_df, img_size, normalization, dataset, method,face_marg
     # save predictions to csv for ensembling
     df = pd.DataFrame(list(zip(ids, labs, prds)), columns=[
                       'Video', 'Label', 'Prediction'])
+    if single:
+        prd = np.round(prds)
+        return prd[0]
     if ensemble:
         return df
-    df.to_csv(f'{method}_predictions_on_{dataset}.csv', index=False)
+    if dataset is not None:
+        df.to_csv(f'{method}_predictions_on_{dataset}.csv', index=False)
     # get metrics
     one_rec, five_rec, nine_rec = metrics.prec_rec(
         labs, prds, method, alpha=100, plot=False)
