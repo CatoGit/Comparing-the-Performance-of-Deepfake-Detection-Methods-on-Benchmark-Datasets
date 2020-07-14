@@ -187,8 +187,8 @@ def inference(model, test_df, img_size, normalization, dataset, method,face_marg
         frame_level_acc = round(running_corrects_frame_level /
                                 (running_corrects_frame_level + running_false_frame_level), 5)
     ap = round(average_precision_score(labs, prds), 5)
-    loss = round(running_loss / len(test_df), 5)
-    acc = round(running_corrects / len(test_df), 5)
+    loss = round(running_loss / len(prds), 5)
+    acc = round(running_corrects / len(prds), 5)
 
     print("Benchmark results:")
     print("Confusion matrix (video-level):")
