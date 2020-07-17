@@ -51,6 +51,7 @@ class DFDetector():
     def detect_single(cls, video_path=None, image_path=None, label=None, method="xception_uadfv"):
         """Perform deepfake detection on a single video or image with a chosen method."""
         # prepare the method of choice
+        sequence_model = False
         if method == "xception_uadfv":
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
@@ -63,6 +64,105 @@ class DFDetector():
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
             used = "Xception_DFDC"
+        elif method == "xception_dftimit_hq":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "Xception_DF-TIMIT-HQ"
+        elif method == "xception_dftimit_lq":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "Xception_DF-TIMIT-LQ"   
+        elif method == "efficientnetb7_uadfv":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B7_UADFV"
+        elif method == "efficientnetb7_celebdf":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B7_CELEBDF"
+        elif method == "efficientnetb7_dfdc":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B7_DFDC"
+        elif method == "efficientnetb7_dftimit_hq":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B7_DF-TIMIT-HQ"
+        elif method == "efficientnetb7_dftimit_lq":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B7_DF-TIMIT-LQ"
+        elif method == "mesonet_uadfv":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "MesoNet_UADFV"
+        elif method == "mesonet_celebdf":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "MesoNet_CELEBDF"
+        elif method == "mesonet_dfdc":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "MesoNet_DFDC"
+        elif method == "mesonet_dftimit_hq":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "MesoNet_DF-TIMIT-HQ"
+        elif method == "mesonet_dftimit_lq":
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "MesoNet_DF-TIMIT-LQ"
+        elif method == "resnet_lstm_uadfv":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "ResNet+LSTM_UADFV"
+        elif method == "resnet_lstm_celebdf":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "ResNet+LSTM_CELEBDF"
+        elif method == "resnet_lstm_dfdc":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "ResNet+LSTM_DFDC"
+        elif method == "resnet_lstm_dftimit_hq":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "ResNet+LSTM_DF-TIMIT-HQ"
+        elif method == "resnet_lstm_dftimit_lq":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "ResNet+LSTM_DF-TIMIT-LQ"
+        elif method == "efficientnetb1_lstm_uadfv":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B1_LSTM_UADFV"
+        elif method == "efficientnetb1_lstm_celebdf":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B1_LSTM_CELEBDF"
+        elif method == "efficientnetb1_lstm_dfdc":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B1_LSTM_DFDC"
+        elif method == "efficientnetb1_lstm_dftimit_hq":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B1_LSTM_DF-TIMIT-HQ"
+        elif method == "efficientnetb1_lstm_dftimit_lq":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B1_LSTM_DF-TIMIT-LQ"
+    
         # video
         # apply facedetector
         # predict on 20 images
@@ -130,14 +230,14 @@ class DFDetector():
             df = pd.DataFrame(data, columns = ['label', 'video']) 
             print(df)
             loss = test.inference(
-                model, df, img_size, normalization, dataset=None, method=method,face_margin=0.3, sequence_model=False, num_frames=20, single=True)
+                model, df, img_size, normalization, dataset=None, method=method,face_margin=0.3, sequence_model=sequence_model, num_frames=20, single=True)
             print(loss)
             if round(loss) == 1:
                 result = "Deepfake detected."
                 print("Deepfake detected.")
                 return used, result
             else:
-                result = "This is a real."
+                result = "This is a real video."
                 print("This is a real video.")
                 return used, result
     @classmethod

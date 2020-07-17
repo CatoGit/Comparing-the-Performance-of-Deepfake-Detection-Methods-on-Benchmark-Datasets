@@ -41,7 +41,6 @@ class EfficientNetB1LSTM(nn.Module):
 
     def forward(self, x):
         # [32, 20, 3, 224, 224]
-     
         batch_size, num_frames, channels, height, width = x.size()
         # combine batch and frame dimensions for 2d cnn
         c_in = x.reshape(batch_size * num_frames, channels, height, width)

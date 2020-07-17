@@ -28,11 +28,11 @@ def upload_predict():
             select = request.form.get('methodchoice')
             if image_file.filename.endswith(".jpg"):
                 method, pred = dfdetector.DFDetector.detect_single(image_path=image_location, method=select)
-            elif image_file.filename.endswith(".mp4"):
+            elif image_file.filename.endswith(".mp4") or image_file.filename.endswith(".avi"):
                 method, pred = dfdetector.DFDetector.detect_single(video_path=image_location, method=select)
             print(method)
             print(pred)
-            return render_template("index.html", prediction = pred, method=method, image_loc=image_file.filename)
+            return render_template("index.html", prediction = pred, method=method, image_loc=image_file.filename[:-4] + '.jpg')
     return render_template("index.html", prediction = 0, method=None,image_loc = None)
 
 

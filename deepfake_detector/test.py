@@ -20,7 +20,7 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from facedetector.retinaface import df_retinaface
 
-def vid_inference(model, video_frames, label, img_size, normalization, sequence_model=False):
+def vid_inference(model, video_frames, label, img_size, normalization, sequence_model=False, single=False):
     # model evaluation mode
     model.cuda()
     model.eval()
@@ -59,7 +59,6 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
             all_vid_frames.append(frame.unsqueeze(0).cpu().numpy())
         all_vid_frames = torch.from_numpy(
             np.array(all_vid_frames).transpose(1, 0, 2, 3, 4)).float().to(device)
-
         prediction = model(all_vid_frames)
 
         # get probabilitiy for frame from logits
@@ -137,6 +136,9 @@ def inference(model, test_df, img_size, normalization, dataset, method,face_marg
         # try:
         vid_frames = df_retinaface.extract_frames(
             faces, video, save_to=None, face_margin=face_margin, num_frames=num_frames, test=True)
+        if single:
+            name = video[:-4] + ".jpg"
+            cv2.imwrite(name, vid_frames[0])
         # if no face detected continue to next video
         if not vid_frames:
             print("No face detected.")
@@ -156,9 +158,8 @@ def inference(model, test_df, img_size, normalization, dataset, method,face_marg
                 np.round(frame_level_preds) != np.array([label]*len(frame_level_preds)))
         else:
             # only video level
-
             vid_pred, vid_loss, _ = vid_inference(
-                model, vid_frames, label, img_size, normalization, sequence_model)
+                model, vid_frames, label, img_size, normalization, sequence_model, single = True)
         ids.append(video)
         labs.append(label)
         prds.append(vid_pred)
