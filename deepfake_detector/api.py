@@ -2,6 +2,7 @@
 # way to save the image 
 # function to make 
 import os
+import random
 from flask import Flask
 from flask import request
 from flask import render_template
@@ -32,8 +33,10 @@ def upload_predict():
                 method, pred = dfdetector.DFDetector.detect_single(video_path=image_location, method=select)
             print(method)
             print(pred)
-            return render_template("index.html", prediction = pred, method=method, image_loc=image_file.filename[:-4] + '.jpg')
-    return render_template("index.html", prediction = 0, method=None,image_loc = None)
+            # add random number to circumvent browser image caching of images with the same name
+            randn = random.randint(0, 1000)
+            return render_template("index.html", prediction = pred, method=method, image_loc=image_file.filename[:-4] + '.jpg', random_num = randn)
+    return render_template("index.html", prediction = 0, method=None,image_loc = None,random_num=None)
 
 
 if __name__ == "__main__":

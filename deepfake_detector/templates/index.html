@@ -36,7 +36,7 @@
       <h1 class="h3 mb-3 font-weight-normal">Please upload image or video.</h1>
       <input type="file" id="image" name="image" class="form-control" required autofocus>
       <br>
-      <h3 class="h3 mb-3 font-weight-normal">Choose model:</h3>
+      <h3 class="h3 mb-3 font-weight-normal">Choose a detection method:</h3>
       <select name=methodchoice class="selectpicker">
         <option value="xception_uadfv">Xception_UADFV</option>
         <option value="xception_celebdf">Xception_CELEBDF</option>
@@ -70,7 +70,7 @@
       <button class="btn btn-lg btn-primary btn-block" type="submit">Detect.</button>
       <br>
       {% if image_loc %}
-        <img class="mb-4" src="static/videos/{{image_loc}}" alt="" width="256" height="256">
+        <img class="mb-4" src="static/videos/{{image_loc}}?nocache={{random_num}}" alt="" width="256" height="256">
         <h3 class="h3 mb-3 font-weight-normal">{{method}} predicts:</h3>
         {% if prediction == "Deepfake detected."%}
           <h3 style = "color:red", class="h3 mb-3 font-weight-normal">{{prediction}}</h3>
