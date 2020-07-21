@@ -26,7 +26,6 @@ class EfficientNetB1LSTM(nn.Module):
     def __init__(self, input_size=128, hidden_size=512, num_layers=2, num_classes=1):
         super(EfficientNetB1LSTM, self).__init__()
         self.b1 =timm.create_model('efficientnet_b1', pretrained=True)
-        self.b1.conv_stem: nn.Conv2d(3, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
         # delete b1 fc layer
         self.b1 = nn.Sequential(*list(self.b1.children())[:-2],
                    nn.Conv2d(1280, 128, 1, bias=False),
