@@ -1,1 +1,10 @@
-All .py files were implemented by Christopher Otto, unless a specific reference to a source is given by a comment within the code.
+The following files were implemented by Christopher Otto, unless a specific reference to a source is given by a comment within the code:
+ ```dfdetector.py```
+ ```main.py```
+ ```test.py```
+ ```train.py```
+ ```datasets.py```
+ ```metrics.py```
+ ```utils.py```
+ ```api.py```
+
