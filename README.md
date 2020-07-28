@@ -1,5 +1,10 @@
 [//]: # (Image References)
 [webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/webapp.PNG "webapp"
+[dfdetect]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/efficientnetb7-on-all-datasets.png "dfdetect"
+
+## Comparing the Performance of Deepfake Detection Methods on Benchmark Datasets
+
+![Deepfake detection][dfdetect]
 
 ## Getting the models
 
