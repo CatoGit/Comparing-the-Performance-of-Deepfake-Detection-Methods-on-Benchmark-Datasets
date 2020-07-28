@@ -1,4 +1,4 @@
-The following files were implemented by Christopher Otto, unless a specific reference is given by a comment within the code
+The following files were implemented by Christopher Otto, unless a specific reference is given by a comment within the code:
  ```dfdetector.py```
  ```main.py```
  ```test.py```
