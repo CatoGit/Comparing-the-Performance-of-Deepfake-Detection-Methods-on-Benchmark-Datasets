@@ -107,7 +107,7 @@ def vid_inference(model, video_frames, label, img_size, normalization, sequence_
         return np.mean(avg_preds), np.mean(avg_loss), frame_level_preds
 
 
-def inference(model, test_df, img_size, normalization, dataset, method,face_margin, sequence_model=False, ensemble=False, num_frames=None, single=False):
+def inference(model, test_df, img_size, normalization, dataset, method,face_margin, sequence_model=False, ensemble=False, num_frames=None, single=False, cmd=False):
     running_loss = 0.0
     running_corrects = 0.0
     running_false = 0.0
@@ -138,13 +138,14 @@ def inference(model, test_df, img_size, normalization, dataset, method,face_marg
             faces, video, save_to=None, face_margin=face_margin, num_frames=num_frames, test=True)
         if single:
             name = video[:-4] + ".jpg"
-            cv2.imwrite(name, vid_frames[0])
+            # save image if accessed via web application
+            if not cmd:
+                print("Save image.")
+                cv2.imwrite(name, vid_frames[0])
         # if no face detected continue to next video
         if not vid_frames:
             print("No face detected.")
             continue
-        # except:
-        #print("Error: Video frames.")
         # inference for each frame
         if not sequence_model:
             # frame level auc can be measured
