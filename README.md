@@ -78,49 +78,49 @@ dfdcdataset/
 ├── val
 ```
 
-### Model choices:
+### Performance of Deepfake Detection Methods (Results) 
 
 The 35 deepfake detection methods that are available for benchmarking. The dataset in the detection method name is the dataset that the detection method was fine-tuned on. All detection methods made use of transfer learning (e.g. imagenet weights, noisy student weights) before they were fine-tuned for additional epochs on the respective dataset (see Experiments section in the thesis for more information).
 
 The average performance of each detection method across all evaluated datasets is given for three metrics: the average accuracy, the average AUC and the average log(wP). 
 
-|Nr.| Deepfake detection method | Average Accuracy | Average AUC | Average log(wP)
+|Nr.| Deepfake detection method | Average Accuracy | Average AUC | Average log(wP), R=0.9|
 | -------------| ------------- | ------------- | ------------- |------------- |
-|1 |xception_uadfv |  55.48|
-| 2|efficientnetb7_uadfv |57.12|
-|3 |mesonet_uadfv | 
-| 4|resnet_lstm_uadfv | 63.99|
-|5 |efficientnetb1_lstm_uadfv | 57.37|
-| 6|dfdcrank90_uadfv | 56.53|
-|7 |six_method_ensemble_uadfv | 58.26|
-| 8|xception_celebdf |  
-|9 |efficientnetb7_celebdf | 
-|10 |mesonet_celebdf | 
-|11 |resnet_lstm_celebdf | 59.87 
-|12 |efficientnetb1_lstm_celebdf | 
-| 13|dfdcrank90_celebdf | 
-| 14|six_method_ensemble_celebdf | 
-| 15|xception_dfdc | 
-| 16|efficientnetb7_dfdc | 
-| 17|mesonet_dfdc | 56.41|
-| 18|resnet_lstm_dfdc | 
-| 19|efficientnetb1_lstm_dfdc |
-| 20|dfdcrank90_dfdc| 
-|21|six_method_ensemble_dfdc | 
-|22 |xception_dftimit_hq| 
-| 23|efficientnetb7_dftimit_hq| 63.47|
-| 24|mesonet_dftimit_hq | 65.60|
-|25 |resnet_lstm_dftimit_hq | 50.45|
-|26 |efficientnetb1_lstm_dftimit_hq | 63.31|
-|27 |dfdcrank90_dftimit_hq | 63.30|
-| 28|six_method_ensemble_dftimit_hq| 68.35|
-|29 |xception_dftimit_lq| 62.90|  
-| 30|efficientnetb7_dftimit_lq| 64.76|
-| 31|mesonet_dftimit_lq | 66.49 |
-|32 |resnet_lstm_dftimit_lq |65.82|
-| 33|efficientnetb1_lstm_dftimit_lq | 67.66|
-|34 |dfdcrank90_dftimit_lq | 67.83|
-|35 |six_method_ensemble_dftimit_lq| 65.19|
+|1 |xception_uadfv |  55.48|56.59|-3,56|
+| 2|efficientnetb7_uadfv |57.12|47.17|-3,56|
+|3 |mesonet_uadfv | 71.63|77.10|-3,57|
+| 4|resnet_lstm_uadfv | 63.99|69.12|-3,37|
+|5 |efficientnetb1_lstm_uadfv | 57.37|58.67|-3,44|
+| 6|dfdcrank90_uadfv | 56.53|57.84|-3,57|
+|7 |six_method_ensemble_uadfv | 58.26|65.36|-3,43|
+| 8|xception_celebdf |  77.45|81.41|-2,63|
+|9 |efficientnetb7_celebdf |72.09| 82.21|-2,58|
+|10 |mesonet_celebdf | 69.97|81.85|-3,50|
+|11 |resnet_lstm_celebdf | 68.83|68.87|-3,63|
+|12 |efficientnetb1_lstm_celebdf | 74.46|91.37|-2,18|
+| 13|dfdcrank90_celebdf | 77.32|84.27|-2,49|
+| 14|six_method_ensemble_celebdf | 74.65|88.76|-2,33|
+| 15|xception_dfdc | 78.64|90.72|-2,60|
+| 16|efficientnetb7_dfdc | **87.98**|94.60|-2.16|
+| 17|mesonet_dfdc | 56.41|64.35|-4,40|
+| 18|resnet_lstm_dfdc | 59.87|68.87|-4,09|
+| 19|efficientnetb1_lstm_dfdc |86.02|**94.79**|-1,80|
+| 20|dfdcrank90_dfdc| 82.14|94.21|-1.91|
+|21|six_method_ensemble_dfdc |85.65|94.40|**-1,62**|
+|22 |xception_dftimit_hq| 73.75|79.52|-3,00|
+| 23|efficientnetb7_dftimit_hq| 63.47|66.30|-2,63|
+| 24|mesonet_dftimit_hq | 65.60|70.31|-3,89|
+|25 |resnet_lstm_dftimit_hq | 50.45|43.35|-4,53|
+|26 |efficientnetb1_lstm_dftimit_hq | 63.31|72.82|-2,86|
+|27 |dfdcrank90_dftimit_hq | 63.30|72.90|-2,52|
+| 28|six_method_ensemble_dftimit_hq| 68.35|72.75|-2,54|
+|29 |xception_dftimit_lq| 62.90| 73.80| -2,57|
+| 30|efficientnetb7_dftimit_lq| 64.76|79.77|-2,51|
+| 31|mesonet_dftimit_lq | 66.49 |76.80|-3,16|
+|32 |resnet_lstm_dftimit_lq |65.82|75.03|-3.46|
+| 33|efficientnetb1_lstm_dftimit_lq | 67.66|66,13|-2,84|
+|34 |dfdcrank90_dftimit_lq | 67.83|70.72|-2,60|
+|35 |six_method_ensemble_dftimit_lq| 65.19|75.33|-2,57|
 
 ## Training
 
@@ -143,8 +143,6 @@ Method arguments that can be used for training:
 |resnet_lstm| ImageNet|
 |efficientnetb1_lstm| ImageNet|
 
-## Performance of Deepfake Detection Methods (Results)
 
-The accuracy of the examined methods is presented here. Further insights can be found in the "Experiments"-file where the performance of each method is evaluated on other metrics as well.
 
 
