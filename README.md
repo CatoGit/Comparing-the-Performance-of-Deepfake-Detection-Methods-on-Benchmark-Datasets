@@ -84,43 +84,43 @@ The 35 deepfake detection methods that are available for benchmarking. The datas
 
 The average performance of each detection method across all evaluated datasets is given for three metrics: the average accuracy, the average AUC and the average log(wP). 
 
-| Deepfake detection method | Average Accuracy | Average AUC | Average log(wP)
-| ------------- | ------------- | ------------- |------------- |
-| xception_uadfv |  55.48|
-| efficientnetb7_uadfv |57.12|
-| mesonet_uadfv | 
-| resnet_lstm_uadfv | 
-| efficientnetb1_lstm_uadfv | 57.37|
-| dfdcrank90_uadfv | 56.53|
-| six_method_ensemble_uadfv | 58.26|
-| xception_celebdf |  
-| efficientnetb7_celebdf | 
-| mesonet_celebdf | 
-| resnet_lstm_celebdf | 59.87 
-| efficientnetb1_lstm_celebdf | 
-| dfdcrank90_celebdf | 
-| six_method_ensemble_celebdf | 
-| xception_dfdc | 
-| efficientnetb7_dfdc | 
-| mesonet_dfdc | 56.41|
-| resnet_lstm_dfdc | 
-| efficientnetb1_lstm_dfdc |
-| dfdcrank90_dfdc| 
-|six_method_ensemble_dfdc | 
-| xception_dftimit_hq| 
-| efficientnetb7_dftimit_hq| 63.47|
-| mesonet_dftimit_hq | 
-| resnet_lstm_dftimit_hq | 50.45|
-| efficientnetb1_lstm_dftimit_hq | 63.31|
-| dfdcrank90_dftimit_hq | 63.30|
-| six_method_ensemble_dftimit_hq| 
-| xception_dftimit_lq| 62.90|  
-| efficientnetb7_dftimit_lq| 
-| mesonet_dftimit_lq | 
-| resnet_lstm_dftimitlq | 
-| efficientnetb1_lstm_dftimit_lq | 
-| dfdcrank90_dftimit_lq | 
-| six_method_ensemble_dftimit_lq| 
+|Nr.| Deepfake detection method | Average Accuracy | Average AUC | Average log(wP)
+| -------------| ------------- | ------------- | ------------- |------------- |
+|1 |xception_uadfv |  55.48|
+| 2|efficientnetb7_uadfv |57.12|
+|3 |mesonet_uadfv | 
+| 4|resnet_lstm_uadfv | 63.99|
+|5 |efficientnetb1_lstm_uadfv | 57.37|
+| 6|dfdcrank90_uadfv | 56.53|
+|7 |six_method_ensemble_uadfv | 58.26|
+| 8|xception_celebdf |  
+|9 |efficientnetb7_celebdf | 
+|10 |mesonet_celebdf | 
+|11 |resnet_lstm_celebdf | 59.87 
+|12 |efficientnetb1_lstm_celebdf | 
+| 13|dfdcrank90_celebdf | 
+| 14|six_method_ensemble_celebdf | 
+| 15|xception_dfdc | 
+| 16|efficientnetb7_dfdc | 
+| 17|mesonet_dfdc | 56.41|
+| 18|resnet_lstm_dfdc | 
+| 19|efficientnetb1_lstm_dfdc |
+| 20|dfdcrank90_dfdc| 
+|21|six_method_ensemble_dfdc | 
+|22 |xception_dftimit_hq| 
+| 23|efficientnetb7_dftimit_hq| 63.47|
+| 24|mesonet_dftimit_hq | 65.60|
+|25 |resnet_lstm_dftimit_hq | 50.45|
+|26 |efficientnetb1_lstm_dftimit_hq | 63.31|
+|27 |dfdcrank90_dftimit_hq | 63.30|
+| 28|six_method_ensemble_dftimit_hq| 68.35|
+|29 |xception_dftimit_lq| 62.90|  
+| 30|efficientnetb7_dftimit_lq| 64.76|
+| 31|mesonet_dftimit_lq | 66.49 |
+|32 |resnet_lstm_dftimit_lq |65.82|
+| 33|efficientnetb1_lstm_dftimit_lq | 67.66|
+|34 |dfdcrank90_dftimit_lq | 67.83|
+|35 |six_method_ensemble_dftimit_lq| 65.19|
 
 ## Training
 
