@@ -8,10 +8,10 @@
 
 ## Getting the models
 
-Before predicting singles or benchmarking, the "weight" folder with the model checkpoints need to be downloaded. All 35 models can be downloaded [here](https://drive.google.com/drive/u/0/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4). After downloading it, copy the folder into:
+Before predicting singles or benchmarking, the "weight" folder with the model checkpoints must be downloaded [here](https://drive.google.com/drive/u/0/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4). After downloading it, copy the folder into:
 ```deepfake_detector/pretrained_mods/```
 
-## Predict on a single image or video
+## Predict for a single video
 
 The best way to detect a single deepfake video is to use the deepfake detection web application:
 ```python deepfake_detector/api.py``` 
@@ -24,17 +24,16 @@ It utilizes the detect_single class method of the DFDetector class and provides 
 
 ## Benchmarking
 
-To benchmark a method against one of the five datasets, provide the path to the dataset and the desired detection method:
+To benchmark a detection method on one of the five datasets, provide the path to the dataset and the desired detection method:
 
 ``` python deepfake_detector/dfdetector.py --benchmark True --data_path /example/path/fake_videos --detection_method efficientnetb7_dfdc```
 
-How the folders of the different datasets should be prepared is described below and the arguments for the 35 available detection methods are given in the Section "Model Choices".
+A description of how the folders of the different datasets should be prepared is given below, and the arguments for the 35 available detection methods are given in the Section "Model Choices".
 
 ## Prepare the datasets
 
-Prior to benchmarking, it is required to fill out a form, to access some of the datasets. After filling out the form, the datasets' authors will send a dataset download link. The links to the author's repositories, where the access to the datasets can be requested are below.
-"your_path" is the path to the dataset folder (e.g. /home/jupyter/) and "datasetfolder" is the (unzipped) folder that contains the dataset (e.g. fake_videos). Below are the examples with the correct dataset folder names given:
-
+It is usually required to fill out a form to gain access to the datasets. After filling out the form, the datasets' authors will provide a dataset download link. The links to the author's repositories, where the access to the datasets can be requested, are below.
+"your_path" is the path to the dataset folder (e.g. /home/jupyter/) and "datasetfolder" is the (unzipped) folder that contains the dataset (e.g. fake_videos). Examples are given below:
 
 | Benchmark dataset keyword| Setup path | Download from |
 | ------------- | ------------- | ------------- |
@@ -79,50 +78,49 @@ dfdcdataset/
 ├── val
 ```
 
-
 ### Model choices:
 
-Seven methods were trained on each of the five datasets. This results in 35 models that are available for benchmarking. The dataset in the model name is the dataset that the method was fine-tuned on.  If available, all models made use of transfer learning (e.g. imagenet weights, noisy student weights), before they were fine-tuned for additional epochs on the respective dataset (see Experiments section in the thesis for more information).
+The 35 deepfake detection methods that are available for benchmarking. The dataset in the detection method name is the dataset that the detection method was fine-tuned on. All detection methods made use of transfer learning (e.g. imagenet weights, noisy student weights) before they were fine-tuned for additional epochs on the respective dataset (see Experiments section in the thesis for more information).
 
-The best measured performance (i.e. the highest accuracy) on a dataset is marked in bold.
+The average performance of each detection method across all evaluated datasets is given for three metrics: the average accuracy, the average AUC and the average log(wP). 
 
-| Deepfake detection models | ACC on UADFV | ACC on Celeb-DF | ACC on DFDC| ACC on DF-TIMIT-HQ | ACC on DF-TIMIT-LQ|
-| ------------- | ------------- | ------------- |------------- |------------- | ------------- |
-| xception_uadfv | ***100.00*** | 37.07 | 50.00 |  44.17 | 45.83 | 
-| efficientnetb7_uadfv | ***100.00*** | 35.33 | 49.90 |  50.00 | 50.00 |
-| mesonet_uadfv | 89.29 | 65.25 | 55.70 |  70.00 | 77.50 |
-| resnet_lstm_uadfv | ***100.00***  | 49.23 | 56.30 |  55.92 | 61.67 | 
-| efficientnetb1_lstm_uadfv | ***100.00*** | 38.03 | 55.10 |  41.67 | 51.67 |
-| dfdcrank90_uadfv | ***100.00*** | 35.52 | 50.45 | 49.17 | 47.50 |
-| six_method_ensemble_uadfv | ***100.00*** | 38.80 | 51.66 |  44.17 | 56.67 |
-| xception_celebdf | ***100.00*** | 98.07 | 53.80 |  51.67 | 83.33 |  
-| efficientnetb7_celebdf | ***100.00*** | 97.68 | 52.40 | 50.00 | 60.00 |
-| mesonet_celebdf | 64.29 | 78.19 | 54.50 | 65.00 | 87.50 |
-| resnet_lstm_celebdf | 71.43 | 95.37 | 56.10 | 50.83 | 70.00 |
-| efficientnetb1_lstm_celebdf | 78.57 | 97.68 | 54.00 | 61.67 | 80.00 | 
-| dfdcrank90_celebdf | 96.43 | 98.65 | 53.17 | 55.00 |  83.33 |
-| six_method_ensemble_celebdf | 89.29 | ***99.04*** |  53.27 | 50.83 | 80.83 |
-| xception_dfdc | 78.57 | 55.99 | 90.50 |  72.50 | 95.00 |  
-| efficientnetb7_dfdc | 89.29 | 67.18 | ***93.60*** | 90.00 |  99.17 |
-| mesonet_dfdc |64.29 | 63.13 | 58.40 | 47.50 | 48.33 |  
-| resnet_lstm_dfdc | 50.00 | 66.41 | 70.80 | 55.83 |  55.83 |
-| efficientnetb1_lstm_dfdc | 78.57 | 67.18 | 87.90 | 96.68 |  99.17 |
-| dfdcrank90_dfdc| 82.14 | 59.14 | 91.94 | 77.50 |  ***100.00*** |
-|six_method_ensemble_dfdc | 82.14 | 58.98 | 92.95 | 94.17 |  ***100.00*** |
-| xception_dftimithq| 57.14 | 72.01 | 50.90 |  91.67 | 96.67 | 
-| efficientnetb7_dftimithq| 35.71 | 35.14 | 46.70 | ***100.00*** | ***100.00*** |
-| mesonet_dftimithq | 50.00 | 64.87 | 51.10 | 72.50 | 89.17 |
-| resnet_lstm_dftimithq | 46.43 | 64.87 | 51.10 | 72.50 | 45.00
-| efficientnetb1_lstm_dftimithq | 32.14 | 35.33 | 50.40 | 99.17 |  99.17
-| dfdcrank90_dftimithq | 25.00 | 37.84 | 53.68 | ***100.00*** | ***100.00*** |
-| six_method_ensemble_dftimithq| 39.29 | 51.93 | 52.17 | 99.17 | 99.17 |
-| xception_dftimitlq| 50.00 | 36.29 | 57.80 | 70.00 | ***100.00*** |   
-| efficientnetb7_dftimitlq| 50.00 | 35.14 | 54.10 | 84.17 | ***100.00***  | 
-| mesonet_dftimitlq | 64.29 | 50.00 | 58.60 | 61.67 |  97.50 |
-| resnet_lstm_dftimitlq | 67.86 | 51.93 | 55.60 | 59.17 | 94.17 |
-| efficientnetb1_lstm_dftimitlq | 35.71 | 51.54 | 52.90 | 99.17 |  99.17 |
-| dfdcrank90_dftimitlq | 50.00 | 36.68 | 56.60 | 95.83 | ***100.00*** |
-| six_method_ensemble_dftimitlq| 50.00 | 40.93 | 57.50 | 77.50 |  ***100.00*** |  
+| Deepfake detection method | Average Accuracy | Average AUC | Average log(wP)
+| ------------- | ------------- | ------------- |------------- |
+| xception_uadfv |  55.48|
+| efficientnetb7_uadfv |57.12|
+| mesonet_uadfv | 
+| resnet_lstm_uadfv | 
+| efficientnetb1_lstm_uadfv | 57.37|
+| dfdcrank90_uadfv | 56.53|
+| six_method_ensemble_uadfv | 58.26|
+| xception_celebdf |  
+| efficientnetb7_celebdf | 
+| mesonet_celebdf | 
+| resnet_lstm_celebdf | 59.87 
+| efficientnetb1_lstm_celebdf | 
+| dfdcrank90_celebdf | 
+| six_method_ensemble_celebdf | 
+| xception_dfdc | 
+| efficientnetb7_dfdc | 
+| mesonet_dfdc | 56.41|
+| resnet_lstm_dfdc | 
+| efficientnetb1_lstm_dfdc |
+| dfdcrank90_dfdc| 
+|six_method_ensemble_dfdc | 
+| xception_dftimit_hq| 
+| efficientnetb7_dftimit_hq| 63.47|
+| mesonet_dftimit_hq | 
+| resnet_lstm_dftimit_hq | 50.45|
+| efficientnetb1_lstm_dftimit_hq | 63.31|
+| dfdcrank90_dftimit_hq | 63.30|
+| six_method_ensemble_dftimit_hq| 
+| xception_dftimit_lq| 62.90|  
+| efficientnetb7_dftimit_lq| 
+| mesonet_dftimit_lq | 
+| resnet_lstm_dftimitlq | 
+| efficientnetb1_lstm_dftimit_lq | 
+| dfdcrank90_dftimit_lq | 
+| six_method_ensemble_dftimit_lq| 
 
 ## Training
 
