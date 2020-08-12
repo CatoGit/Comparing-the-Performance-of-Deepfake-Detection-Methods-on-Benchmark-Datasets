@@ -59,7 +59,7 @@ class DFDetector():
         elif method == "xception_celebdf":
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-            used = "Xception_CELEBDF"
+            used = "Xception_CELEB-DF"
         elif method == "xception_dfdc":
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
@@ -79,7 +79,7 @@ class DFDetector():
         elif method == "efficientnetb7_celebdf":
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-            used = "EfficientNet-B7_CELEBDF"
+            used = "EfficientNet-B7_CELEB-DF"
         elif method == "efficientnetb7_dfdc":
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
@@ -99,7 +99,7 @@ class DFDetector():
         elif method == "mesonet_celebdf":
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-            used = "MesoNet_CELEBDF"
+            used = "MesoNet_CELEB-DF"
         elif method == "mesonet_dfdc":
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
@@ -121,7 +121,7 @@ class DFDetector():
             sequence_model = True
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-            used = "ResNet+LSTM_CELEBDF"
+            used = "ResNet+LSTM_CELEB-DF"
         elif method == "resnet_lstm_dfdc":
             sequence_model = True
             model, img_size, normalization = prepare_method(
@@ -141,28 +141,49 @@ class DFDetector():
             sequence_model = True
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-            used = "EfficientNet-B1_LSTM_UADFV"
+            used = "EfficientNet-B1+LSTM_UADFV"
         elif method == "efficientnetb1_lstm_celebdf":
             sequence_model = True
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-            used = "EfficientNet-B1_LSTM_CELEBDF"
+            used = "EfficientNet-B1+LSTM_CELEB-DF"
         elif method == "efficientnetb1_lstm_dfdc":
             sequence_model = True
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-            used = "EfficientNet-B1_LSTM_DFDC"
+            used = "EfficientNet-B1+LSTM_DFDC"
         elif method == "efficientnetb1_lstm_dftimit_hq":
             sequence_model = True
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-            used = "EfficientNet-B1_LSTM_DF-TIMIT-HQ"
+            used = "EfficientNet-B1+LSTM_DF-TIMIT-HQ"
         elif method == "efficientnetb1_lstm_dftimit_lq":
             sequence_model = True
             model, img_size, normalization = prepare_method(
                 method=method, dataset=None, mode='test')
-            used = "EfficientNet-B1_LSTM_DF-TIMIT-LQ"
-    
+            used = "EfficientNet-B1+LSTM_DF-TIMIT-LQ"
+        elif method == "efficientnetb1_lstm_dftimit_lq":
+            sequence_model = True
+            model, img_size, normalization = prepare_method(
+                method=method, dataset=None, mode='test')
+            used = "EfficientNet-B1+LSTM_DF-TIMIT-LQ"
+        elif method == "dfdcrank90_uadfv" or method == 'dfdcrank90_celebdf' or method == 'dfdcrank90_dftimit_lq' or method == 'dfdcrank90_dftimit_hq' or method == 'dfdcrank90_dfdc':
+            ds = None
+            data = [[1, video_path]] 
+            df = pd.DataFrame(data, columns = ['label', 'video']) 
+            print(df)
+            loss = prepare_dfdc_rank90(method, ds, df, face_margin=0.3,num_frames=20, single=True)
+            print(loss)
+            if method == 'dfdcrank90_uadfv':
+                used = "DFDC-Rank-90_UADFV"
+            elif method == 'dfdcrank90_celebdf':
+                used = "DFDC-Rank-90_CELEB-DF"
+            elif method == 'dfdcrank90_dftimit_lq':
+                used = "DFDC-Rank-90_DF-TIMIT-LQ"
+            elif method == 'dfdcrank90_dftimit_hq':
+                used = "DFDC-Rank-90_DF-TIMIT-HQ"
+            elif method == 'dfdcrank90_dfdc':
+                used = "DFDC-Rank-90_DFDC"    
         # video
         # apply facedetector
         # predict on 20 images
@@ -226,12 +247,11 @@ class DFDetector():
                     result = "This is a real image."
             return used, result
         elif video_path:
-            data = [[1, video_path]] 
-            df = pd.DataFrame(data, columns = ['label', 'video']) 
-            print(df)
-            loss = test.inference(
-                model, df, img_size, normalization, dataset=None, method=method,face_margin=0.3, sequence_model=sequence_model, num_frames=20, single=True)
-            print(loss)
+            if not method == "dfdcrank90_uadfv" and not method == 'dfdcrank90_celebdf' and not method == 'dfdcrank90_dfdc' and not method == 'dfdcrank90_dftimit_lq' and not method =='dfdcrank90_dftimit_hq':
+                data = [[1, video_path]] 
+                df = pd.DataFrame(data, columns = ['label', 'video']) 
+                loss = test.inference(
+                    model, df, img_size, normalization, dataset=None, method=method,face_margin=0.3, sequence_model=sequence_model, num_frames=20, single=True)
             if round(loss) == 1:
                 result = "Deepfake detected."
                 print("Deepfake detected.")
@@ -679,7 +699,7 @@ def prepare_method(method, dataset, mode='train'):
             f"{method} is not available. Please use one of the available methods.")
 
 
-def prepare_dfdc_rank90(method, dataset, df, face_margin,num_frames):
+def prepare_dfdc_rank90(method, dataset, df, face_margin,num_frames,single=False):
     """Prepares the DFDC rank 90 ensemble."""
     img_size_xception = 299
     img_size_b1 = 240
@@ -713,7 +733,7 @@ def prepare_dfdc_rank90(method, dataset, df, face_margin,num_frames):
     model3.load_state_dict(model_params3)
     print("Inference EfficientNetB1 + LSTM")
     df3 = test.inference(
-        model3, df, img_size_b1, normalization_b1, dataset=dataset, method=method,face_margin=face_margin, sequence_model=True, ensemble=True,num_frames=num_frames)
+        model3, df, img_size_b1, normalization_b1, dataset=dataset, method=method,face_margin=face_margin, sequence_model=True, ensemble=True,num_frames=num_frames,single=single)
 
     model1 = xception.imagenet_pretrained_xception()
     # load the xception model that was pretrained on the uadfv training data
@@ -723,7 +743,7 @@ def prepare_dfdc_rank90(method, dataset, df, face_margin,num_frames):
 
     print("Inference Xception One")
     df1 = test.inference(
-        model1, df, img_size_xception, normalization_xception, dataset=dataset, method=method, face_margin=face_margin, ensemble=True, num_frames=num_frames)
+        model1, df, img_size_xception, normalization_xception, dataset=dataset, method=method, face_margin=face_margin, ensemble=True, num_frames=num_frames, single=single)
 
     model2 = xception.imagenet_pretrained_xception()
     # load the xception model that was pretrained on the uadfv training data
@@ -733,11 +753,14 @@ def prepare_dfdc_rank90(method, dataset, df, face_margin,num_frames):
 
     print("Inference Xception Two")
     df2 = test.inference(
-        model2, df, img_size_xception, normalization_xception, dataset=dataset, method=method,face_margin=face_margin, ensemble=True, num_frames=num_frames)
-
+        model2, df, img_size_xception, normalization_xception, dataset=dataset, method=method,face_margin=face_margin, ensemble=True, num_frames=num_frames, single=single)
     # average predictions of all three models
-    df1['Prediction'] = (df1['Prediction'] +
-                         df2['Prediction'] + df3['Prediction'])/3
+    
+    if single:
+        prds = (df1 + df2+ df3)/3
+        return prds
+    
+    df1['Prediction'] = (df1['Prediction'] + df2['Prediction'] + df3['Prediction'])/3
     labs = list(df1['Label'])
     prds = list(df1['Prediction'])
     df1.to_csv(f'{method}_predictions_on_{dataset}.csv', index=False)
