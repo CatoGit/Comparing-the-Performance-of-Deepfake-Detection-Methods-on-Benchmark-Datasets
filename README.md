@@ -8,34 +8,31 @@
 
 ## Getting the models
 
-Before predicting singles or benchmarking, the model checkpoints need to be downloaded and added to the "weights" folder. All 35 models can be downloaded [here](https://drive.google.com/drive/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4?usp=sharing). 
+Before predicting singles or benchmarking, the "weight" folder with the model checkpoints need to be downloaded. All 35 models can be downloaded [here](https://drive.google.com/drive/u/0/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4). After downloading it, copy the folder into:
+```deepfake_detector/pretrained_mods/```
 
 ## Predict on a single image or video
 
-The best way to make predictions on a single image or video is to use the deepfake detection web application (api.py). 
+The best way to detect a single deepfake video is to use the deepfake detection web application:
+```python deepfake_detector/api.py``` 
 
 ![Wep application][webapp]
 
-It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface. Alternatively the detect_single method can be used in code, for example:
+It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface. Alternatively the detect_single method can be called from the command line:
 
-```method, result = DFDetector.detect_single(video_path="/example/path/video.mp4", image_path=None, method="xception_uadfv")```
+```python deepfake_detector/dfdetector.py --detect_single True --path_to_vid /example/path/0000_fake.mp4 --detection_method efficientnetb7_dfdc```
 
 ## Benchmarking
 
-To benchmark a method against one of the five datasets, simply call .benchmark(dataset,data_path,method) on the DFDetector:
+To benchmark a method against one of the five datasets, provide the path to the dataset and the desired detection method:
 
-```benchmark_result = DFDetector.benchmark(dataset="uadfv",data_path="/home/jupyter/fake_videos", method="xception_celebdf")```
+``` python deepfake_detector/dfdetector.py --benchmark True --data_path /example/path/fake_videos --detection_method efficientnetb7_dfdc```
 
-You can also benchmark from the command line by simply passing the three arguments via arg.parse:
-
-#TODO
-
-What should you specify for dataset, data_path and method?
+How the folders of the different datasets should be prepared is described below and the arguments for the 35 available detection methods are given in the Section "Model Choices".
 
 ## Prepare the datasets
 
-Prior to benchmarking, you have to download the respective datasets and setup the path to each dataset. To get access to some of the datasets, the datasets' authors require you to fill out a form where you have to agree to their terms of use. After filling out the form, the datasets' authors will send you a dataset download link. Links to the authors repositories, where you can access datasets or forms are linked below.
-data_path takes arguments in the following way: your_path/datasetfolder
+Prior to benchmarking, it is required to fill out a form, to access some of the datasets. After filling out the form, the datasets' authors will send a dataset download link. The links to the author's repositories, where the access to the datasets can be requested are below.
 "your_path" is the path to the dataset folder (e.g. /home/jupyter/) and "datasetfolder" is the (unzipped) folder that contains the dataset (e.g. fake_videos). Below are the examples with the correct dataset folder names given:
 
 
@@ -47,7 +44,7 @@ data_path takes arguments in the following way: your_path/datasetfolder
 | dftimit_hq | your_path/DeepfakeTIMIT  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
 | dftimit_lq  | your_path/DeepfakeTIMIT  |Fake Videos: https://www.idiap.ch/dataset/deepfaketimit <br/> Real Videos: http://conradsanderson.id.au/vidtimit/|
 
-The datasets should be extracted to the folders in the following way.
+The datasets should be extracted to the folders in the following way:
 
 #### UADFV:
 After extracting the fake_videos.zip folder, remove the file that are listed in uadfv_test.csv from the "fake" and "real" folders.
