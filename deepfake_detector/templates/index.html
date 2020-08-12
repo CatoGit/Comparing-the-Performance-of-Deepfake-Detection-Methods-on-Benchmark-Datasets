@@ -33,48 +33,55 @@
 
   <body class="text-center">
     <form class="form-upload"  method=post enctype=multipart/form-data>
-      <h1 class="h3 mb-3 font-weight-normal">Please upload image or video.</h1>
+      <h1 class="h3 mb-3 font-weight-normal">Please upload a video (.mp4 or .avi)</h1>
       <input type="file" id="image" name="image" class="form-control" required autofocus>
       <br>
-      <h3 class="h3 mb-3 font-weight-normal">Choose a detection method:</h3>
+      <h3 class="h3 mb-3 font-weight-normal">Choose a deepfake detection method:</h3>
       <select name=methodchoice class="selectpicker">
         <option value="xception_uadfv">Xception_UADFV</option>
+        <option value="xception_dftimit_lq">Xception_DF-TIMIT-LQ</option>
+        <option value="xception_dftimit_hq">Xception_DF-TIMIT-HQ</option>
         <option value="xception_celebdf">Xception_CELEB-DF</option>
         <option value="xception_dfdc">Xception_DFDC</option>
-        <option value="xception_dftimit_hq">Xception_DF-TIMIT-HQ</option>
-        <option value="xception_dftimit_lq">Xception_DF-TIMIT-LQ</option>
+
         <option value="efficientnetb7_uadfv">EfficientNet-B7_UADFV</option>
+        <option value="efficientnetb7_dftimit_lq">EfficientNet-B7_DF-TIMIT-LQ</option>
+        <option value="efficientnetb7_dftimit_hq">EfficientNet-B7_DF-TIMIT-HQ</option>
         <option value="efficientnetb7_celebdf">EfficientNet-B7_CELEB-DF</option>
         <option value="efficientnetb7_dfdc">EfficientNet-B7_DFDC</option>
-        <option value="efficientnetb7_dftimit_hq">EfficientNet-B7_DF-TIMIT-HQ</option>
-        <option value="efficientnetb7_dftimit_lq">EfficientNet-B7_DF-TIMIT-LQ</option>
+
         <option value="mesonet_uadfv">MesoNet_UADFV</option>
+        <option value="mesonet_dftimit_lq">MesoNet_DF-TIMIT-LQ</option>
+        <option value="mesonet_dftimit_hq">MesoNet_DF-TIMIT-HQ</option>
         <option value="mesonet_celebdf">MesoNet_CELEB-DF</option>
         <option value="mesonet_dfdc">MesoNet_DFDC</option>
-        <option value="mesonet_dftimit_hq">MesoNet_DF-TIMIT-HQ</option>
-        <option value="mesonet_dftimit_lq">MesoNet_DF-TIMIT-LQ</option>
+
         <option value="resnet_lstm_uadfv">ResNet+LSTM_UADFV</option>
+        <option value="resnet_lstm_dftimit_lq">ResNet+LSTM_DF-TIMIT-LQ</option>
+        <option value="resnet_lstm_dftimit_hq">ResNet+LSTM_DF-TIMIT-HQ</option>
         <option value="resnet_lstm_celebdf">ResNet+LSTM_CELEB-DF</option>
         <option value="resnet_lstm_dfdc">ResNet+LSTM_DFDC</option>
-        <option value="resnet_lstm_dftimit_hq">ResNet+LSTM_DF-TIMIT-HQ</option>
-        <option value="resnet_lstm_dftimit_lq">ResNet+LSTM_DF-TIMIT-LQ</option>
+
         <option value="efficientnetb1_lstm_uadfv">EfficientNet-B1+LSTM_UADFV</option>
+        <option value="efficientnetb1_lstm_dftimit_lq">EfficientNet-B1+LSTM_DF-TIMIT-LQ</option>
+        <option value="efficientnetb1_lstm_dftimit_hq">EfficientNet-B1+LSTM_DF-TIMIT-HQ</option>
         <option value="efficientnetb1_lstm_celebdf">EfficientNet-B1+LSTM_CELEB-DF</option>
         <option value="efficientnetb1_lstm_dfdc">EfficientNet-B1+LSTM_DFDC</option>
-        <option value="efficientnetb1_lstm_dftimit_hq">EfficientNet-B1+LSTM_DF-TIMIT-HQ</option>
-        <option value="efficientnetb1_lstm_dftimit_lq">EfficientNet-B1+LSTM_DF-TIMIT-LQ</option>
+        
+        
 
         <option value="dfdcrank90_uadfv">DFDC-Rank-90_UADFV</option>
-        <option value="dfdcrank90_celebdf">DFDC-Rank-90_CELEB-DF</option>
         <option value="dfdcrank90_dftimit_lq">DFDC-Rank-90_DF-TIMIT-LQ</option>
         <option value="dfdcrank90_dftimit_hq">DFDC-Rank-90_DF-TIMIT-HQ</option>
+        <option value="dfdcrank90_celebdf">DFDC-Rank-90_CELEB-DF</option>
         <option value="dfdcrank90_dfdc">DFDC-Rank-90_DFDC</option>
+
+        <option value="six_method_ensemble_uadfv">Six-Method_Ensemble_UADFV</option>
+        <option value="six_method_ensemble_dftimit_lq">Six-Method_Ensemble_DF-TIMIT-LQ</option>
+        <option value="six_method_ensemble_dftimit_hq">Six-Method_Ensemble_DF-TIMIT-HQ</option>
+        <option value="six_method_ensemble_celebdf">Six-Method_Ensemble_CELEB-DF</option>
+        <option value="six_method_ensemble_dfdc">Six-Method_Ensemble_DFDC</option>
         
-
-        
-
-
-
       </select>     
       <br>
       <br>

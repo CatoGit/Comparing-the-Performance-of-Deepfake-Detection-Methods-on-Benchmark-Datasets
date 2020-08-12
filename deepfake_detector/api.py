@@ -31,8 +31,6 @@ def upload_predict():
                 method, pred = dfdetector.DFDetector.detect_single(image_path=image_location, method=select)
             elif image_file.filename.endswith(".mp4") or image_file.filename.endswith(".avi"):
                 method, pred = dfdetector.DFDetector.detect_single(video_path=image_location, method=select)
-            print(method)
-            print(pred)
             # add random number to circumvent browser image caching of images with the same name
             randn = random.randint(0, 1000)
             return render_template("index.html", prediction = pred, method=method, image_loc=image_file.filename[:-4] + '.jpg', random_num = randn)

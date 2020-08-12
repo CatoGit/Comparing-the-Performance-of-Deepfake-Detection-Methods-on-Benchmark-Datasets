@@ -49,7 +49,7 @@ class DFDetector():
 
     @classmethod
     def detect_single(cls, video_path=None, image_path=None, label=None, method="xception_uadfv"):
-        """Perform deepfake detection on a single video or image with a chosen method."""
+        """Perform deepfake detection on a single video with a chosen method."""
         # prepare the method of choice
         sequence_model = False
         if method == "xception_uadfv":
@@ -169,11 +169,10 @@ class DFDetector():
             used = "EfficientNet-B1+LSTM_DF-TIMIT-LQ"
         elif method == "dfdcrank90_uadfv" or method == 'dfdcrank90_celebdf' or method == 'dfdcrank90_dftimit_lq' or method == 'dfdcrank90_dftimit_hq' or method == 'dfdcrank90_dfdc':
             ds = None
-            data = [[1, video_path]] 
+            if video_path:
+                data = [[1, video_path]] 
             df = pd.DataFrame(data, columns = ['label', 'video']) 
-            print(df)
             loss = prepare_dfdc_rank90(method, ds, df, face_margin=0.3,num_frames=20, single=True)
-            print(loss)
             if method == 'dfdcrank90_uadfv':
                 used = "DFDC-Rank-90_UADFV"
             elif method == 'dfdcrank90_celebdf':
@@ -183,75 +182,90 @@ class DFDetector():
             elif method == 'dfdcrank90_dftimit_hq':
                 used = "DFDC-Rank-90_DF-TIMIT-HQ"
             elif method == 'dfdcrank90_dfdc':
-                used = "DFDC-Rank-90_DFDC"    
-        # video
-        # apply facedetector
-        # predict on 20 images
-        # result
-        # if input is single image
-        if image_path:
-            # read image in
-            img = os.path.join(image_path)
-            try:
-                img = cv2.imread(img)
+                used = "DFDC-Rank-90_DFDC" 
+        elif method == "six_method_ensemble_uadfv":
+            method_uadfv = "xception_uadfv"
+            loss1 = six_method_app(method_uadfv,video_path,sequence_model=False)
+            method_effb7 = "efficientnetb7_uadfv"
+            loss2 = six_method_app(method_effb7,video_path,sequence_model=False)
+            method_meso = "mesonet_uadfv"
+            loss3 = six_method_app(method_meso,video_path,sequence_model=False)
+            method_resnet = "resnet_lstm_uadfv"
+            loss4 = six_method_app(method_resnet,video_path,sequence_model=True)
+            method_effb1 = "efficientnetb1_lstm_uadfv"
+            loss5 = six_method_app(method_effb1,video_path,sequence_model=True)
+            method_uadfv = "dfdcrank90_uadfv"
+            loss6 = six_method_app(method_uadfv, video_path,sequence_model=False)
+            loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
+            used = "Six-Method-Ensemble_UADFV"
+        elif method == "six_method_ensemble_celebdf":
+            method_uadfv = "xception_celebdf"
+            loss1 = six_method_app(method_uadfv, video_path,sequence_model=False)
+            method_effb7 = "efficientnetb7_celebdf"
+            loss2 = six_method_app(method_effb7,video_path,sequence_model=False)
+            method_meso = "mesonet_celebdf"
+            loss3 = six_method_app(method_meso, video_path,sequence_model=False)
+            method_resnet = "resnet_lstm_celebdf"
+            loss4 = six_method_app(method_resnet, video_path,sequence_model=True)
+            method_effb1 = "efficientnetb1_lstm_celebdf"
+            loss5 = six_method_app(method_effb1,video_path,sequence_model=True)
+            method_uadfv = "dfdcrank90_celebdf"
+            loss6 = six_method_app(method_uadfv, video_path,sequence_model=False)
+            loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
+            used = "Six-Method-Ensemble_CELEB-DF"
+        elif method == "six_method_ensemble_dftimit_lq":
+            method_uadfv = "xception_dftimit_lq"
+            loss1 = six_method_app(method_uadfv,video_path,sequence_model=False)
+            method_effb7 = "efficientnetb7_dftimit_lq"
+            loss2 = six_method_app(method_effb7,video_path,sequence_model=False)
+            method_meso = "mesonet_dftimit_lq"
+            loss3 = six_method_app(method_meso, video_path,sequence_model=False)
+            method_resnet = "resnet_lstm_dftimit_lq"
+            loss4 = six_method_app(method_resnet, video_path,sequence_model=True)
+            method_effb1 = "efficientnetb1_lstm_dftimit_lq"
+            loss5 = six_method_app(method_effb1,video_path,sequence_model=True)
+            method_uadfv = "dfdcrank90_dftimit_lq"
+            loss6 = six_method_app(method_uadfv, video_path,sequence_model=False)
+            loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
+            used = "Six-Method-Ensemble_DF-TIMIT-LQ"
+        elif method == "six_method_ensemble_dftimit_hq":
+            method_uadfv = "xception_dftimit_hq"
+            loss1 = six_method_app(method_uadfv, video_path,sequence_model=False)
+            method_effb7 = "efficientnetb7_dftimit_hq"
+            loss2 = six_method_app(method_effb7, video_path,sequence_model=False)
+            method_meso = "mesonet_dftimit_hq"
+            loss3 = six_method_app(method_meso,video_path,sequence_model=False)
+            method_resnet = "resnet_lstm_dftimit_hq"
+            loss4 = six_method_app(method_resnet,video_path,sequence_model=True)
+            method_effb1 = "efficientnetb1_lstm_dftimit_hq"
+            loss5 = six_method_app(method_effb1,video_path,sequence_model=True)
+            method_uadfv = "dfdcrank90_dftimit_hq"
+            loss6 = six_method_app(method_uadfv,video_path,sequence_model=False)
+            loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
+            used = "Six-Method-Ensemble_DF-TIMIT-HQ"
+        elif method == "six_method_ensemble_dfdc":
+            method_uadfv = "xception_dfdc"
+            loss1 = six_method_app(method_uadfv, video_path,sequence_model=False)
+            method_effb7 = "efficientnetb7_dfdc"
+            loss2 = six_method_app(method_effb7,video_path,sequence_model=False)
+            method_meso = "mesonet_dfdc"
+            loss3 = six_method_app(method_meso, video_path,sequence_model=False)
+            method_resnet = "resnet_lstm_dfdc"
+            loss4 = six_method_app(method_resnet, video_path,sequence_model=True)
+            method_effb1 = "efficientnetb1_lstm_dfdc"
+            loss5 = six_method_app(method_effb1,video_path,sequence_model=True)
+            method_uadfv = "dfdcrank90_dfdc"
+            loss6 = six_method_app(method_uadfv, video_path,sequence_model=False)
+            loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
+            used = "Six-Method-Ensemble_DFDC"
 
-            except:
-                print(img)
-            # turn img to rgb color
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            augmentations = Resize(width=img_size, height=img_size)
-            img = augmentations(image=img)['image']
-            img = torch.tensor(img).permute(2, 0, 1)
-            # turn dtype from uint8 to float and normalize to [0,1] range
-            img = img.float() / 255.0
-            # normalize
-            if normalization == "xception":
-                # normalize by xception stats
-                transform = transforms.Normalize(
-                    [0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-            elif normalization == "imagenet":
-                # normalize by imagenet stats
-                transform = transforms.Normalize(
-                    [0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-            img = transform(img)
-            # load model for prediction
-            # add batch dimension
-            prediction = model(img.unsqueeze(0))
-            # get probabilitiy for frame from logits
-            preds = torch.sigmoid(prediction)
-            preds = preds.detach().numpy()[0]
-            preds = round(preds[0])
-            if preds == 1:
-                if label == 0 and preds == 1:
-                    print(
-                        "False Positive: Thought it's a deepfake, but the image is real.")
-                    result = "False Positive."
-                else:
-                    img = mpimg.imread(image_path)
-                    imgplot = plt.imshow(img)
-                    plt.text(50, 50, "Deepfake detected.", color="red", fontsize=25, bbox=dict(
-                        fill=False, edgecolor='red', linewidth=2))
-                    plt.show()
-                    result = "Deepfake detected."
-            else:
-                if label == 1 and preds == 0:
-                    print(
-                        "False Negative: Thought it is a real image, but it is actually a deepfake.")
-                    result = "False Negative."
-                else:
-                    img = mpimg.imread(image_path)
-                    imgplot = plt.imshow(img)
-                    plt.text(50, 50, "This is a real image.", color="green", fontsize=25, bbox=dict(
-                        fill=False, edgecolor='green', linewidth=2))
-                    plt.show()
-                    result = "This is a real image."
-            return used, result
-        elif video_path:
-            if not method == "dfdcrank90_uadfv" and not method == 'dfdcrank90_celebdf' and not method == 'dfdcrank90_dfdc' and not method == 'dfdcrank90_dftimit_lq' and not method =='dfdcrank90_dftimit_hq':
+        if video_path:
+            if not method == "dfdcrank90_uadfv" and not method == 'dfdcrank90_celebdf' and not method == 'dfdcrank90_dfdc' and not method == 'dfdcrank90_dftimit_lq' and not method =='dfdcrank90_dftimit_hq' and not method == "six_method_ensemble_uadfv"  and not method == "six_method_ensemble_celebdf"  and not method == "six_method_ensemble_dftimit_lq"  and not method == "six_method_ensemble_dftimit_hq" and not method == "six_method_ensemble_dfdc":
                 data = [[1, video_path]] 
                 df = pd.DataFrame(data, columns = ['label', 'video']) 
                 loss = test.inference(
                     model, df, img_size, normalization, dataset=None, method=method,face_margin=0.3, sequence_model=sequence_model, num_frames=20, single=True)
+
             if round(loss) == 1:
                 result = "Deepfake detected."
                 print("Deepfake detected.")
@@ -472,33 +486,33 @@ class DFDetector():
                             /val/
                     """
                     )
-#                 if not os.path.exists(img_save_path + addon_path):
-#                     # create directory in save path for face crops
-#                     os.mkdir(img_save_path + addon_path)
-#                     os.mkdir(img_save_path + '/facecrops/real/')
-#                     os.mkdir(img_save_path + '/facecrops/fake/')
-#                     for i in range(50):
-#                         os.mkdir(img_save_path + f'/facecrops/real/{i}/')
-#                         os.mkdir(img_save_path + f'/facecrops/fake/{i}/')
-#                     os.mkdir(img_save_path + val_path)
-#                     os.mkdir(img_save_path + '/val/facecrops/')
-#                     os.mkdir(img_save_path + '/val/facecrops/real')
-#                     os.mkdir(img_save_path + '/val/facecrops/fake/')
+                if not os.path.exists(img_save_path + addon_path):
+                    # create directory in save path for face crops
+                    os.mkdir(img_save_path + addon_path)
+                    os.mkdir(img_save_path + '/facecrops/real/')
+                    os.mkdir(img_save_path + '/facecrops/fake/')
+                    for i in range(50):
+                        os.mkdir(img_save_path + f'/facecrops/real/{i}/')
+                        os.mkdir(img_save_path + f'/facecrops/fake/{i}/')
+                    os.mkdir(img_save_path + val_path)
+                    os.mkdir(img_save_path + '/val/facecrops/')
+                    os.mkdir(img_save_path + '/val/facecrops/real')
+                    os.mkdir(img_save_path + '/val/facecrops/fake/')
                     
-#                 else:
-#                     # delete create again if it already exists with old files
-#                     shutil.rmtree(img_save_path + addon_path)
-#                     os.mkdir(img_save_path + addon_path)
-#                     os.mkdir(img_save_path + '/facecrops/real/')
-#                     os.mkdir(img_save_path + '/facecrops/fake/')
-#                     shutil.rmtree(img_save_path + val_path)
-#                     for i in range(50):
-#                         os.mkdir(img_save_path + f'/facecrops/real/{i}/')
-#                         os.mkdir(img_save_path + f'/facecrops/fake/{i}/')
-#                     os.mkdir(img_save_path + val_path)
-#                     os.mkdir(img_save_path + '/val/facecrops/')
-#                     os.mkdir(img_save_path + '/val/facecrops/real')
-#                     os.mkdir(img_save_path + '/val/facecrops/fake/')
+                else:
+                    # delete create again if it already exists with old files
+                    shutil.rmtree(img_save_path + addon_path)
+                    os.mkdir(img_save_path + addon_path)
+                    os.mkdir(img_save_path + '/facecrops/real/')
+                    os.mkdir(img_save_path + '/facecrops/fake/')
+                    shutil.rmtree(img_save_path + val_path)
+                    for i in range(50):
+                        os.mkdir(img_save_path + f'/facecrops/real/{i}/')
+                        os.mkdir(img_save_path + f'/facecrops/fake/{i}/')
+                    os.mkdir(img_save_path + val_path)
+                    os.mkdir(img_save_path + '/val/facecrops/')
+                    os.mkdir(img_save_path + '/val/facecrops/real')
+                    os.mkdir(img_save_path + '/val/facecrops/fake/')
 
             if cls.dataset == 'dfdc':
                 num_frames = 5
@@ -558,10 +572,6 @@ class DFDetector():
                     vid_name = row.loc['videoname']
                     video = vid_name
                     folder = row.loc['folder']
-#                     if folder != folder_count:
-#                         print(f"Finishing folder{folder_count}") 
-#                         folder_count += 1
-#                         print(f"Starting folder{folder_count}") 
                     if cls.fulltrain:
                         if label == 1:
                             save_dir = os.path.join(
@@ -1639,3 +1649,20 @@ def prepare_six_method_ensemble(method, dataset, df):
         print("Wow! A perfect classifier!")
 
     return auc, ap, loss, acc
+
+def six_method_app(method, video_path, sequence_model):
+    if method.startswith("dfdcrank90"): 
+        ds = None
+        if video_path:
+            data = [[1, video_path]] 
+            df = pd.DataFrame(data, columns = ['label', 'video']) 
+            loss = prepare_dfdc_rank90(method, ds, df, face_margin=0.3,num_frames=20, single=True)
+            return loss
+    model, img_size, normalization = prepare_method(
+                    method=method, dataset=None, mode='test')
+    if video_path:
+        data = [[1, video_path]] 
+    df = pd.DataFrame(data, columns = ['label', 'video']) 
+    loss = test.inference(
+        model, df, img_size, normalization, dataset=None, method=method,face_margin=0.3, sequence_model=sequence_model, num_frames=20, single=True)
+    return loss
