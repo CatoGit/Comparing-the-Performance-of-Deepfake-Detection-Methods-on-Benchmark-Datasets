@@ -12,6 +12,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import metrics
+import matplotlib.pyplot as plt
 import cv2
 import datasets
 import torchvision
@@ -35,18 +36,55 @@ from facedetector.retinaface import df_retinaface
 from pretrained_mods import efficientnetb1lstm
 from pretrained_mods import mesonet
 from pretrained_mods import resnetlstm
+from utils import vidtimit_setup_real_videos
+
 
 
 parser = argparse.ArgumentParser(
-    description='Start deepfake detection.') 
-parser.add_argument('--detect_single',default=False, type=bool, help='Choose for single prediction.')
-parser.add_argument('--benchmark',default=False, type=bool, help='Choose for benchmarking.')
-parser.add_argument('--path_to_vid',default=None, type=str, help='Choose video path.')
-parser.add_argument('--path_to_img',default=None, type=str, help='Choose image path.')
-parser.add_argument('--detection_method',default="xception_uadfv", type=str, help='Choose detection method.')
-parser.add_argument('--data_path',default=None, type=str, help='Specify path to dataset.')
-parser.add_argument('--dataset',default="uadfv", type=str, help='Specify the name of the dataset.')
-parser.add_argument('--cmd',default="True", type=str, help='True if executed via command line.')
+    description='Start deepfake detection.')
+parser.add_argument('--detect_single', default=False,
+                    type=bool, help='Choose for single prediction.')
+parser.add_argument('--benchmark', default=False, type=bool,
+                    help='Choose for benchmarking.')
+parser.add_argument('--train', default=False, type=bool,
+                    help='Choose for training.')
+parser.add_argument('--path_to_vid', default=None,
+                    type=str, help='Choose video path.')
+parser.add_argument('--path_to_img', default=None,
+                    type=str, help='Choose image path.')
+parser.add_argument('--detection_method', default="xception_uadfv",
+                    type=str, help='Choose detection method.')
+parser.add_argument('--data_path', default=None, type=str,
+                    help='Specify path to dataset.')
+parser.add_argument('--dataset', default="uadfv", type=str,
+                    help='Specify the name of the dataset.')
+parser.add_argument('--cmd', default="True", type=str,
+                    help='True if executed via command line.')
+parser.add_argument('--model_type', default="xception",
+                    type=str, help='Choose detection model type for training.')
+parser.add_argument('--epochs', default=1,
+                    type=int, help='Choose number of training epochs.')
+parser.add_argument('--batch_size', default=32,
+                    type=int, help='Choose the minibatch size.')
+parser.add_argument('--lr', default=0.0001,
+                    type=int, help='Choose the minibatch size.')
+parser.add_argument('--folds', default=1,
+                    type=int, help='Choose validation folds.')
+parser.add_argument('--augs', default="weak",
+                    type=str, help='Choose augmentation strength.')
+parser.add_argument('--fulltrain', default=False,
+                    type=bool, help='Choose whether to train with the full dataset and no validation set.')
+parser.add_argument('--facecrops_available', default=False,
+                    type=bool, help='Choose whether videos are already preprocessed.')
+parser.add_argument('--face_margin', default=0.3,
+                    type=float, help='Choose the face margin.')
+parser.add_argument('--seed', default=24,
+                    type=int, help='Choose the random seed.')
+parser.add_argument('--save_path', default=None,
+                    type=str, help='Choose the path where face crops shall be saved.')                       
+                                                             
+                                      
+
 
 class DFDetector():
     """
@@ -185,7 +223,7 @@ class DFDetector():
                 data = [[1, video_path]]
             df = pd.DataFrame(data, columns=['label', 'video'])
             loss = prepare_dfdc_rank90(
-                method, ds, df, face_margin=0.3, num_frames=20, single=True,cmd=cmd)
+                method, ds, df, face_margin=0.3, num_frames=20, single=True, cmd=cmd)
             if method == 'dfdcrank90_uadfv':
                 used = "DFDC-Rank-90_UADFV"
             elif method == 'dfdcrank90_celebdf':
@@ -199,106 +237,106 @@ class DFDetector():
         elif method == "six_method_ensemble_uadfv":
             method_uadfv = "xception_uadfv"
             loss1 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             method_effb7 = "efficientnetb7_uadfv"
             loss2 = six_method_app(
-                method_effb7, video_path, sequence_model=False, cmd = cmd)
+                method_effb7, video_path, sequence_model=False, cmd=cmd)
             method_meso = "mesonet_uadfv"
             loss3 = six_method_app(
-                method_meso, video_path, sequence_model=False, cmd = cmd)
+                method_meso, video_path, sequence_model=False, cmd=cmd)
             method_resnet = "resnet_lstm_uadfv"
             loss4 = six_method_app(
-                method_resnet, video_path, sequence_model=True, cmd = cmd)
+                method_resnet, video_path, sequence_model=True, cmd=cmd)
             method_effb1 = "efficientnetb1_lstm_uadfv"
             loss5 = six_method_app(
-                method_effb1, video_path, sequence_model=True, cmd = cmd)
+                method_effb1, video_path, sequence_model=True, cmd=cmd)
             method_uadfv = "dfdcrank90_uadfv"
             loss6 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
             used = "Six-Method-Ensemble_UADFV"
         elif method == "six_method_ensemble_celebdf":
             method_uadfv = "xception_celebdf"
             loss1 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             method_effb7 = "efficientnetb7_celebdf"
             loss2 = six_method_app(
-                method_effb7, video_path, sequence_model=False, cmd = cmd)
+                method_effb7, video_path, sequence_model=False, cmd=cmd)
             method_meso = "mesonet_celebdf"
             loss3 = six_method_app(
-                method_meso, video_path, sequence_model=False, cmd = cmd)
+                method_meso, video_path, sequence_model=False, cmd=cmd)
             method_resnet = "resnet_lstm_celebdf"
             loss4 = six_method_app(
-                method_resnet, video_path, sequence_model=True, cmd = cmd)
+                method_resnet, video_path, sequence_model=True, cmd=cmd)
             method_effb1 = "efficientnetb1_lstm_celebdf"
             loss5 = six_method_app(
-                method_effb1, video_path, sequence_model=True, cmd = cmd)
+                method_effb1, video_path, sequence_model=True, cmd=cmd)
             method_uadfv = "dfdcrank90_celebdf"
             loss6 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
             used = "Six-Method-Ensemble_CELEB-DF"
         elif method == "six_method_ensemble_dftimit_lq":
             method_uadfv = "xception_dftimit_lq"
             loss1 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             method_effb7 = "efficientnetb7_dftimit_lq"
             loss2 = six_method_app(
-                method_effb7, video_path, sequence_model=False, cmd = cmd)
+                method_effb7, video_path, sequence_model=False, cmd=cmd)
             method_meso = "mesonet_dftimit_lq"
             loss3 = six_method_app(
-                method_meso, video_path, sequence_model=False, cmd = cmd)
+                method_meso, video_path, sequence_model=False, cmd=cmd)
             method_resnet = "resnet_lstm_dftimit_lq"
             loss4 = six_method_app(
-                method_resnet, video_path, sequence_model=True, cmd = cmd)
+                method_resnet, video_path, sequence_model=True, cmd=cmd)
             method_effb1 = "efficientnetb1_lstm_dftimit_lq"
             loss5 = six_method_app(
-                method_effb1, video_path, sequence_model=True, cmd = cmd)
+                method_effb1, video_path, sequence_model=True, cmd=cmd)
             method_uadfv = "dfdcrank90_dftimit_lq"
             loss6 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
             used = "Six-Method-Ensemble_DF-TIMIT-LQ"
         elif method == "six_method_ensemble_dftimit_hq":
             method_uadfv = "xception_dftimit_hq"
             loss1 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             method_effb7 = "efficientnetb7_dftimit_hq"
             loss2 = six_method_app(
-                method_effb7, video_path, sequence_model=False, cmd = cmd)
+                method_effb7, video_path, sequence_model=False, cmd=cmd)
             method_meso = "mesonet_dftimit_hq"
             loss3 = six_method_app(
-                method_meso, video_path, sequence_model=False, cmd = cmd)
+                method_meso, video_path, sequence_model=False, cmd=cmd)
             method_resnet = "resnet_lstm_dftimit_hq"
             loss4 = six_method_app(
-                method_resnet, video_path, sequence_model=True, cmd = cmd)
+                method_resnet, video_path, sequence_model=True, cmd=cmd)
             method_effb1 = "efficientnetb1_lstm_dftimit_hq"
             loss5 = six_method_app(
-                method_effb1, video_path, sequence_model=True, cmd = cmd)
+                method_effb1, video_path, sequence_model=True, cmd=cmd)
             method_uadfv = "dfdcrank90_dftimit_hq"
             loss6 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
             used = "Six-Method-Ensemble_DF-TIMIT-HQ"
         elif method == "six_method_ensemble_dfdc":
             method_uadfv = "xception_dfdc"
             loss1 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             method_effb7 = "efficientnetb7_dfdc"
             loss2 = six_method_app(
-                method_effb7, video_path, sequence_model=False, cmd = cmd)
+                method_effb7, video_path, sequence_model=False, cmd=cmd)
             method_meso = "mesonet_dfdc"
             loss3 = six_method_app(
-                method_meso, video_path, sequence_model=False, cmd = cmd)
+                method_meso, video_path, sequence_model=False, cmd=cmd)
             method_resnet = "resnet_lstm_dfdc"
             loss4 = six_method_app(
-                method_resnet, video_path, sequence_model=True, cmd = cmd)
+                method_resnet, video_path, sequence_model=True, cmd=cmd)
             method_effb1 = "efficientnetb1_lstm_dfdc"
             loss5 = six_method_app(
-                method_effb1, video_path, sequence_model=True, cmd = cmd)
+                method_effb1, video_path, sequence_model=True, cmd=cmd)
             method_uadfv = "dfdcrank90_dfdc"
             loss6 = six_method_app(
-                method_uadfv, video_path, sequence_model=False, cmd = cmd)
+                method_uadfv, video_path, sequence_model=False, cmd=cmd)
             loss = (loss1 + loss2 + loss3 + loss4 + loss5 + loss6)/6
             used = "Six-Method-Ensemble_DFDC"
 
@@ -307,7 +345,7 @@ class DFDetector():
                 data = [[1, video_path]]
                 df = pd.DataFrame(data, columns=['label', 'video'])
                 loss = test.inference(
-                    model, df, img_size, normalization, dataset=None, method=method, face_margin=0.3, sequence_model=sequence_model, num_frames=20, single=True,cmd=cmd)
+                    model, df, img_size, normalization, dataset=None, method=method, face_margin=0.3, sequence_model=sequence_model, num_frames=20, single=True, cmd=cmd)
 
             if round(loss) == 1:
                 result = "Deepfake detected."
@@ -636,7 +674,6 @@ class DFDetector():
                 # detect faces, add margin, crop, upsample to same size, save to images
                 faces = df_retinaface.detect_faces(
                     net, vid, cfg, num_frames=num_frames)
-
                 # save frames to directory
                 vid_frames = df_retinaface.extract_frames(
                     faces, video, save_to=save_dir, face_margin=cls.face_margin, num_frames=num_frames, test=False)
@@ -755,7 +792,7 @@ def prepare_method(method, dataset, mode='train'):
             f"{method} is not available. Please use one of the available methods.")
 
 
-def prepare_dfdc_rank90(method, dataset, df, face_margin, num_frames, single=False,cmd=False):
+def prepare_dfdc_rank90(method, dataset, df, face_margin, num_frames, single=False, cmd=False):
     """Prepares the DFDC rank 90 ensemble."""
     img_size_xception = 299
     img_size_b1 = 240
@@ -789,7 +826,7 @@ def prepare_dfdc_rank90(method, dataset, df, face_margin, num_frames, single=Fal
     model3.load_state_dict(model_params3)
     print("Inference EfficientNetB1 + LSTM")
     df3 = test.inference(
-        model3, df, img_size_b1, normalization_b1, dataset=dataset, method=method, face_margin=face_margin, sequence_model=True, ensemble=True, num_frames=num_frames, single=single,cmd = cmd)
+        model3, df, img_size_b1, normalization_b1, dataset=dataset, method=method, face_margin=face_margin, sequence_model=True, ensemble=True, num_frames=num_frames, single=single, cmd=cmd)
 
     model1 = xception.imagenet_pretrained_xception()
     # load the xception model that was pretrained on the uadfv training data
@@ -799,7 +836,7 @@ def prepare_dfdc_rank90(method, dataset, df, face_margin, num_frames, single=Fal
 
     print("Inference Xception One")
     df1 = test.inference(
-        model1, df, img_size_xception, normalization_xception, dataset=dataset, method=method, face_margin=face_margin, ensemble=True, num_frames=num_frames, single=single,cmd = cmd)
+        model1, df, img_size_xception, normalization_xception, dataset=dataset, method=method, face_margin=face_margin, ensemble=True, num_frames=num_frames, single=single, cmd=cmd)
 
     model2 = xception.imagenet_pretrained_xception()
     # load the xception model that was pretrained on the uadfv training data
@@ -809,7 +846,7 @@ def prepare_dfdc_rank90(method, dataset, df, face_margin, num_frames, single=Fal
 
     print("Inference Xception Two")
     df2 = test.inference(
-        model2, df, img_size_xception, normalization_xception, dataset=dataset, method=method, face_margin=face_margin, ensemble=True, num_frames=num_frames, single=single,cmd = cmd)
+        model2, df, img_size_xception, normalization_xception, dataset=dataset, method=method, face_margin=face_margin, ensemble=True, num_frames=num_frames, single=single, cmd=cmd)
     # average predictions of all three models
 
     if single:
@@ -1714,7 +1751,7 @@ def prepare_six_method_ensemble(method, dataset, df):
     return auc, ap, loss, acc
 
 
-def six_method_app(method, video_path, sequence_model,cmd=False):
+def six_method_app(method, video_path, sequence_model, cmd=False):
     if method.startswith("dfdcrank90"):
         ds = None
         if video_path:
@@ -1729,7 +1766,7 @@ def six_method_app(method, video_path, sequence_model,cmd=False):
         data = [[1, video_path]]
     df = pd.DataFrame(data, columns=['label', 'video'])
     loss = test.inference(
-        model, df, img_size, normalization, dataset=None, method=method, face_margin=0.3, sequence_model=sequence_model, num_frames=20, single=True,cmd = cmd)
+        model, df, img_size, normalization, dataset=None, method=method, face_margin=0.3, sequence_model=sequence_model, num_frames=20, single=True, cmd=cmd)
     return loss
 
 
@@ -1739,11 +1776,16 @@ def main():
     # initialize the deepfake detector with the desired task
     if args.detect_single:
         print(f"Detecting with {args.detection_method}.")
-        DFDetector.detect_single(video_path=args.path_to_vid,image_path=args.path_to_img, method=args.detection_method, cmd=args.cmd)
+        DFDetector.detect_single(
+            video_path=args.path_to_vid, image_path=args.path_to_img, method=args.detection_method, cmd=args.cmd)
     elif args.benchmark:
-        DFDetector.benchmark(dataset=args.dataset,data_path=args.data_path, method=args.detection_method)
+        DFDetector.benchmark(
+            dataset=args.dataset, data_path=args.data_path, method=args.detection_method)
     elif args.train:
-        DFDetector.train()
+        print(args)
+        print(args.facecrops_available)
+        DFDetector.train_method(dataset=args.dataset, data_path=args.data_path, method=args.model_type, img_save_path=args.save_path, epochs=args.epochs, batch_size=args.batch_size,
+                     lr=args.lr, folds=args.folds, augmentation_strength=args.augs, fulltrain=args.fulltrain,  face_margin=args.face_margin, faces_available=args.facecrops_available, seed=args.seed)
     else:
         print("Please choose one of the three modes: detect_single, benchmark, or train.")
 
