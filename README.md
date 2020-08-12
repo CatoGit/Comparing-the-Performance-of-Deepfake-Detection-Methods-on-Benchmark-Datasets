@@ -124,16 +124,16 @@ The average performance of each detection method across all evaluated datasets i
 
 ## Training
 
-The detection methods can be re-trained by calling the train_method on the deepfake detector. An example for training the xception model type on the UADFV dataset.
+The detection methods can be re-trained by calling the train_method on the deepfake detector. Below is an example for training the `xception model` type on the UADFV dataset:
 
 `python deepfake_detector/dfdetector.py --train True --model_type xception --dataset uadfv --save_path your_path/fake_videos --data_path your_path/fake_videos ` 
 
 Provide the datasets with their corresponding paths as well as the model type in the same way as described below (Note: for the DFDC dataset you need to download the remaining folders 0-44).  
-Hyperparameter arguments can be given to the deepfake detector. The arguments that were used to train the final models are given in the hyperparameter settings section of the experiments .xlsx file.
+Hyperparameter arguments can be given to the deepfake detector. The arguments that were used to train the final deepfake detection methods are given in the hyperparameter settings section of the experiments .xlsx file that is available in the `data` folder.
                   
-Method arguments that can be used for training:
+Modet lype arguments that can be used for training:
 
-| Model type | Pretrained weights | 
+| Model Type | Pretrained Weights | 
 | ------------- | ------------- | 
 |xception| ImageNet|
 |efficientnetb7| NoisyStudent|
