@@ -28,7 +28,7 @@ To benchmark a detection method on one of the five datasets, provide the path to
 
 ``` python deepfake_detector/dfdetector.py --benchmark True --data_path /example/path/fake_videos --detection_method efficientnetb7_dfdc```
 
-A description of how the folders of the different datasets should be prepared is given below, and the arguments for the 35 available detection methods are given in the Section "Model Choices".
+A description of how the folders of the different datasets should be prepared is given below, and the arguments for the 35 available detection methods are given in the Section "Performance of Deepfake Detection Methods" in column "Deepfake Detection Method".
 
 ## Prepare the datasets
 
@@ -84,7 +84,7 @@ The 35 deepfake detection methods that are available for benchmarking. The datas
 
 The average performance of each detection method across all evaluated datasets is given for three metrics: the average accuracy, the average AUC and the average log(wP). 
 
-|Nr.| Deepfake detection method | Average Accuracy | Average AUC | Average log(wP), R=0.9|
+|Nr.| Deepfake Detection Method | Average Accuracy | Average AUC | Average log(wP), R=0.9|
 | -------------| ------------- | ------------- | ------------- |------------- |
 |1 |xception_uadfv |  55.48|56.59|-3,56|
 | 2|efficientnetb7_uadfv |57.12|47.17|-3,56|
@@ -124,18 +124,16 @@ The average performance of each detection method across all evaluated datasets i
 
 ## Training
 
-You can simply retrain the inference models yourself by calling train_method on the deepfake detector. An example for training the xception method on the UADFV dataset.
+The detection methods can be re-trained by calling the train_method on the deepfake detector. An example for training the xception model type on the UADFV dataset.
 
-`model, average_auc, average_ap, average_acc, average_loss = DFDetector.train_method(
-                dataset="uadfv", data_path="/home/jupyter/fake_videos", method="xception",
-                img_save_path="/home/jupyter/fake_videos",epochs=10, batch_size=32, lr=0.0001,folds=1,augmentation_strength="weak", fulltrain=True,faces_available=False,face_margin=0.3, seed=24)` 
+`python deepfake_detector/dfdetector.py --train True --model_type xception --dataset uadfv --save_path your_path/fake_videos --data_path your_path/fake_videos ` 
 
-Provide the datasets with their corresponding paths as well as the method in the same way as described in the "Inference" section (Note: for the DFDC dataset you need to download the remaining folders 0-44 to train it).  
-Hyperparameter arguments can be given to the deepfake detector. The arguments that were used to train the final models are given in the hyperparameter settings section of the experiments file.
+Provide the datasets with their corresponding paths as well as the model type in the same way as described below (Note: for the DFDC dataset you need to download the remaining folders 0-44).  
+Hyperparameter arguments can be given to the deepfake detector. The arguments that were used to train the final models are given in the hyperparameter settings section of the experiments .xlsx file.
                   
 Method arguments that can be used for training:
 
-| Method argument | Pretrained weights | 
+| Model type | Pretrained weights | 
 | ------------- | ------------- | 
 |xception| ImageNet|
 |efficientnetb7| NoisyStudent|
