@@ -1,6 +1,7 @@
 [//]: # (Image References)
 [webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/webapp.PNG "webapp"
 [dfdetect]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/efficientnetb7-on-all-datasets.png "dfdetect"
+[results]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/bestmethodsresult.png "results"
 
 ## Comparing the Performance of Deepfake Detection Methods on Benchmark Datasets
 
@@ -83,6 +84,11 @@ dfdcdataset/
 The 35 deepfake detection methods that are available for benchmarking. The dataset in the detection method name is the dataset that the detection method was fine-tuned on. All detection methods made use of transfer learning (e.g. imagenet weights, noisy student weights) before they were fine-tuned for additional epochs on the respective dataset (see Experiments section in the thesis for more information).
 
 The average performance of each detection method across all evaluated datasets is given for three metrics: the average accuracy, the average AUC and the average log(wP). 
+
+
+![Best Detection Methods][results]
+
+
 
 |Nr.| Deepfake Detection Method | Average Accuracy | Average AUC | Average log(wP), R=0.9|
 | -------------| ------------- | ------------- | ------------- |------------- |
