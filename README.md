@@ -1,5 +1,5 @@
 [//]: # (Image References)
-[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/images/webapp.png "webapp"
+[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/images/webapp.PNG "webapp"
 [dfdetect]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/images/efficientnetb7-on-all-datasets.png "dfdetect"
 [results]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/images/bestmethodsresult.png "results"
 
