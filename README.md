@@ -167,7 +167,7 @@ The face images at the top are taken from the respective datasets and are usuall
 
 ## Contact
 
-If you have any questions, you can contact me at: [christopher.otto@outlook.com](christopher.otto@outlook.com)
+If you have any questions, you can contact me at: [christopher.otto@outlook.com](mailto:christopher.otto@outlook.com)
 
 ## References
 
