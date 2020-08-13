@@ -1,5 +1,5 @@
 [//]: # (Image References)
-[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/webapp.PNG "webapp"
+[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/webapp1.png "webapp"
 [dfdetect]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/efficientnetb7-on-all-datasets.png "dfdetect"
 [results]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/bestmethodsresult.png "results"
 
@@ -20,6 +20,9 @@ Before predicting singles or benchmarking, the "weight" folder with the model ch
 The best way to check if a single video is a deepfake is to use the deepfake detection web application. It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface:
 
 ```python deepfake_detector/api.py``` 
+
+
+
 
 ![Wep application][webapp]
 
