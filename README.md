@@ -7,6 +7,11 @@
 
 ![Deepfake detection][dfdetect]
 
+
+## Overview
+
+This repository contains a deepfake detector that enables benchmarking, training, or predictions on single videos with 35 different deepfake detection methods. It is part of my Master Thesis "Comparing the Performance of Deepfake Detection Methods on Benchmark Datasets" at the Cognitive Systems Group, University of Bamberg.
+
 ## Getting the models
 
 Before predicting singles or benchmarking, the "weight" folder with the model checkpoints must be downloaded [here](https://drive.google.com/drive/u/0/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4). After downloading it, copy the folder into:
@@ -14,20 +19,21 @@ Before predicting singles or benchmarking, the "weight" folder with the model ch
 
 ## Predict for a single video
 
-The best way to detect a single deepfake video is to use the deepfake detection web application:
+The best way to detect a single deepfake video is to use the deepfake detection web application. It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface:
+
 ```python deepfake_detector/api.py``` 
 
 ![Wep application][webapp]
 
-It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface. Alternatively the detect_single method can be called from the command line:
+ Alternatively the detect_single method can be called from the command line:
 
-```python deepfake_detector/dfdetector.py --detect_single True --path_to_vid /example/path/0000_fake.mp4 --detection_method efficientnetb7_dfdc```
+```python deepfake_detector/dfdetector.py --detect_single True --path_to_vid your_path/0000_fake.mp4 --detection_method efficientnetb7_dfdc```
 
 ## Benchmarking
 
 To benchmark a detection method on one of the five datasets, provide the path to the dataset and the desired detection method:
 
-``` python deepfake_detector/dfdetector.py --benchmark True --data_path /example/path/fake_videos --detection_method efficientnetb7_dfdc```
+``` python deepfake_detector/dfdetector.py --benchmark True --data_path your_path/fake_videos --detection_method efficientnetb7_dfdc```
 
 A description of how the folders of the different datasets should be prepared is given below, and the arguments for the 35 available detection methods are given in the Section "Performance of Deepfake Detection Methods" in column "Deepfake Detection Method".
 
@@ -137,7 +143,7 @@ The detection methods can be re-trained by calling the train_method on the deepf
 Provide the datasets with their corresponding paths as well as the model type in the same way as described below (Note: for the DFDC dataset you need to download the remaining folders 0-44).  
 Hyperparameter arguments can be given to the deepfake detector. The arguments that were used to train the final deepfake detection methods are given in the hyperparameter settings section of the experiments .xlsx file that is available in the `data` folder.
                   
-Modet lype arguments that can be used for training:
+Model type arguments that can be used for training:
 
 | Model Type | Pretrained Weights | 
 | ------------- | ------------- | 
@@ -148,5 +154,12 @@ Modet lype arguments that can be used for training:
 |efficientnetb1_lstm| ImageNet|
 
 
+## References
+
+1. [UADFV:](https://arxiv.org/pdf/1811.00661.pdf) Yang, X., Li, Y., and Lyu, S. (2019).  Exposing deep fakes using inconsistent head poses. In IEEE International Conference on  Acoustics, Speech and Signal Processing (ICASSP).  
+2. [DF-TIMIT-LQ and HQ:](https://arxiv.org/pdf/1812.08685.pdf) Korshunov, P. and Marcel, S. (2018). Deepfakes: a new threat to face recognition? Assessment and detection. arXiv preprint.  
+3. [CELEB-DF:](https://arxiv.org/pdf/1909.12962.pdf) Li, Y., Yang, X., Sun, P., Qi, H., and Lyu, S. (2020). Celeb-DF: A new dataset for deepfake forensics. IEEE Conference on Computer Vision and Patten Recognition (CVPR).  
+4. [DFDC:](https://arxiv.org/pdf/2006.07397.pdf) Dolhansky, B., Bitton, J., Pflaum, B., Lu, J., Howes, R., Wang, M., and Ferrer,C. C. (2020). The deepfake detection challenge dataset. arXiv preprint.  
+5. [WebApp inspired by:](https://www.youtube.com/watch?v=BUh76-xD5qU) Thakur, A. (2020) Build a web-app to serve a deep learning model for skin cancer detection. YouTube.
 
 
