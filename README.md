@@ -7,19 +7,18 @@
 
 ![Deepfake detection][dfdetect]
 
-
 ## Overview
 
-This repository contains a deepfake detector that enables benchmarking, training, or predictions on single videos with 35 different deepfake detection methods. It is part of my Master Thesis "Comparing the Performance of Deepfake Detection Methods on Benchmark Datasets" at the Cognitive Systems Group, University of Bamberg.
+This repository contains a deepfake detector that enables benchmarking, training, and detecting single deepfake videos with 35 different deepfake detection methods. It is part of my Master Thesis "Comparing the Performance of Deepfake Detection Methods on Benchmark Datasets" at the Cognitive Systems Group, University of Bamberg.
 
 ## Getting the models
 
 Before predicting singles or benchmarking, the "weight" folder with the model checkpoints must be downloaded [here](https://drive.google.com/drive/u/0/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4). After downloading it, copy the folder into:
 ```deepfake_detector/pretrained_mods/```
 
-## Predict for a single video
+## Detect a single deepfake video
 
-The best way to detect a single deepfake video is to use the deepfake detection web application. It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface:
+The best way to check if a single video is a deepfake is to use the deepfake detection web application. It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface:
 
 ```python deepfake_detector/api.py``` 
 
@@ -136,7 +135,7 @@ The average performance of each detection method across all evaluated datasets i
 
 ## Training
 
-The detection methods can be re-trained by calling the train_method on the deepfake detector. Below is an example for training the `xception model` type on the UADFV dataset:
+The detection methods can be re-trained by calling the train_method on the deepfake detector. Below is an example for training the `xception` model type on the UADFV dataset:
 
 `python deepfake_detector/dfdetector.py --train True --model_type xception --dataset uadfv --save_path your_path/fake_videos --data_path your_path/fake_videos ` 
 
@@ -153,6 +152,22 @@ Model type arguments that can be used for training:
 |resnet_lstm| ImageNet|
 |efficientnetb1_lstm| ImageNet|
 
+## Citation
+```
+@misc{otto2020dfperformancecomp,
+  title={Comparing the Performance of Deepfake Detection Methods on Benchmark Datasets},
+  author={Otto, Christopher},
+  year={2020}
+}
+```
+
+## Privacy statement
+
+The face images at the top are taken from the respective datasets and are usually published for non-commercial research purposes only. If you hold the rights to those face images and wish them to be removed, please contact me. 
+
+## Contact
+
+If you have any questions, you can contact me at: [christopher.otto@outlook.com](christopher.otto@outlook.com)
 
 ## References
 
@@ -162,4 +177,5 @@ Model type arguments that can be used for training:
 4. [DFDC:](https://arxiv.org/pdf/2006.07397.pdf) Dolhansky, B., Bitton, J., Pflaum, B., Lu, J., Howes, R., Wang, M., and Ferrer,C. C. (2020). The deepfake detection challenge dataset. arXiv preprint.  
 5. [WebApp inspired by:](https://www.youtube.com/watch?v=BUh76-xD5qU) Thakur, A. (2020) Build a web-app to serve a deep learning model for skin cancer detection. YouTube.
 
-
+## Terms of Use
+Copyright © 2020
