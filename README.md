@@ -1,7 +1,7 @@
 [//]: # (Image References)
-[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/webapp1.png "webapp"
-[dfdetect]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/efficientnetb7-on-all-datasets.png "dfdetect"
-[results]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/bestmethodsresult.png "results"
+[webapp]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/images/webapp.png "webapp"
+[dfdetect]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/images/efficientnetb7-on-all-datasets.png "dfdetect"
+[results]: https://github.com/CatoGit/Comparing-the-Performance-of-Deepfake-Detection-Methods-on-Benchmark-Datasets/blob/master/images/bestmethodsresult.png "results"
 
 ## Comparing the Performance of Deepfake Detection Methods on Benchmark Datasets
 
