@@ -394,7 +394,7 @@ class DFDetector():
             num_frames = 20
             setup_dftimit_lq_benchmark(cls.data_path, cls.method)
         elif cls.dataset == 'dfdc':
-            # benchmark on only 10 frames per video, because of dataset size
+            # benchmark on only 5 frames per video, because of dataset size
             num_frames = 5
         else:
             raise ValueError(f"{cls.dataset} does not exist.")
