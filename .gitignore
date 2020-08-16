@@ -139,7 +139,7 @@ cython_debug/
 
 # Large data files
 *.pth
-!deepfake_detector/data/*.csv
+
 
 # Visual Studio Code
 .vscode
