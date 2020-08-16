@@ -12,7 +12,7 @@
 This repository contains a deepfake detector that enables benchmarking, training, and detecting single deepfake videos with 35 different deepfake detection methods. It is part of my Master Thesis "Comparing the Performance of Deepfake Detection Methods on Benchmark Datasets" at the Cognitive Systems Group, University of Bamberg.
 ## Getting the models
 
-Before predicting singles or benchmarking, the "weight" folder with the model checkpoints must be downloaded [here](https://drive.google.com/drive/u/0/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4). After downloading it, copy the folder into:
+Before predicting singles, benchmarking or training, the "weight" folder with the model checkpoints must be downloaded [here](https://drive.google.com/drive/u/0/folders/1C9T07evRE7S5rFa5H0SmdjCpLsR9Cqa4). After downloading it, copy the folder into:
 ```deepfake_detector/pretrained_mods/```
 
 ## Detect a single deepfake video
