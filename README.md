@@ -153,6 +153,8 @@ Model type arguments that can be used for training:
 |resnet_lstm| ImageNet|
 |efficientnetb1_lstm| ImageNet|
 
+To save the trained detection method, the argument `--fulltrain` must be set to `True`.
+
 ## Citation
 ```
 @misc{otto2020dfperformancecomp,
