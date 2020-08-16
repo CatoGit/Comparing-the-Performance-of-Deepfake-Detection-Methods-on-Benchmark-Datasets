@@ -17,7 +17,7 @@ Before predicting singles or benchmarking, the "weight" folder with the model ch
 
 ## Detect a single deepfake video
 
-The best way to check if a single video is a deepfake is to use the deepfake detection web application. It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface:
+The best way to check if a single video is a deepfake is to use the deepfake detection web application. It utilizes the detect_single class method of the DFDetector class and provides an intuitive user interface. To open the web application, execute:
 
 ```python deepfake_detector/api.py``` 
 
@@ -36,12 +36,12 @@ To benchmark a detection method on one of the five datasets, provide the path to
 
 ``` python deepfake_detector/dfdetector.py --benchmark True --data_path your_path/fake_videos --detection_method efficientnetb7_dfdc```
 
-A description of how the folders of the different datasets should be prepared is given below, and the arguments for the 35 available detection methods are given in the Section "Performance of Deepfake Detection Methods" in column "Deepfake Detection Method".
+A description of how the folders of the different datasets should be prepared is given below, and the arguments for the 35 available detection methods are given in the Section "Performance of Deepfake Detection Methods" in the column "Deepfake Detection Method".
 
 ## Prepare the datasets
 
 It is usually required to fill out a form to gain access to the datasets. After filling out the form, the datasets' authors will provide a dataset download link. The links to the author's repositories, where the access to the datasets can be requested, are below.
-"your_path" is the path to the dataset folder (e.g. /home/jupyter/) and "datasetfolder" is the (unzipped) folder that contains the dataset (e.g. fake_videos). Examples are given below:
+"your_path" is the path to the dataset folder (e.g. /home/jupyter/). It is followed by the (unzipped) dataset folder that contains the dataset (e.g. fake_videos). Examples are given below:
 
 | Benchmark dataset keyword| Setup path | Download from |
 | ------------- | ------------- | ------------- |
@@ -54,7 +54,7 @@ It is usually required to fill out a form to gain access to the datasets. After 
 The datasets should be extracted to the folders in the following way:
 
 #### UADFV:
-After extracting the fake_videos.zip folder, remove the file that are listed in uadfv_test.csv from the "fake" and "real" folders.
+After extracting the fake_videos.zip folder, remove the files that are listed in ```/deepfake_detector/data/uadfv_test.csv``` from the "fake" and "real" folders.
 ```
 fake_videos/
 ├── fake
@@ -69,7 +69,7 @@ celebdf/
 ├── Celeb-real
 ```
 #### DF-TIMIT-LQ and DF-TIMIT-HQ:
-The vidtimit dataset of real videos is only available in frame format. These frames need to be turned into videos. utils.py provides a method vidtimit_setup_real_videos(path_to_dataset) that turns the frames into the necessary videos. Afterwards, the folders should be ordered like this:
+The VidTIMIT dataset of real videos is only available in frame format. These frames need to be turned into videos. ```utils.py``` provides a method vidtimit_setup_real_videos that turns the frames into the necessary videos. Afterwards, the folders should be ordered like this:
 ```
 DeepfakeTIMIT/
 ├── lower_quality
@@ -77,7 +77,7 @@ DeepfakeTIMIT/
 ├── dftimitreal
 ```
 #### DFDC:
-Video files from folders 0 to 44 must be copied to the train folder. Video files from folders 45 to 49 must be copied to the test folder. They can be downloaded from Kaggle using the following command for each folder: !wget --load-cookies cookies.txt https://www.kaggle.com/c/16880/datadownload/dfdc_train_part_45.zip and the cookies.txt file.
+Video files from folders 0 to 44 must be copied to the train folder. Video files from folders 45 to 49 must be copied to the test folder. They can be downloaded from Kaggle using the following command for each folder: ```!wget --load-cookies cookies.txt https://www.kaggle.com/c/16880/datadownload/dfdc_train_part_45.zip``` and the cookies.txt file. The cookies.txt file can be created by navigating to https://www.kaggle.com/c/deepfake-detection-challenge/data and then utlizing the cookies.txt Chrome extension.
 ```
 dfdcdataset/
 ├── train
@@ -141,7 +141,7 @@ The detection methods can be re-trained by calling the train_method on the deepf
 `python deepfake_detector/dfdetector.py --train True --model_type xception --dataset uadfv --save_path your_path/fake_videos --data_path your_path/fake_videos ` 
 
 Provide the datasets with their corresponding paths as well as the model type in the same way as described below (Note: for the DFDC dataset you need to download the remaining folders 0-44).  
-Hyperparameter arguments can be given to the deepfake detector. The arguments that were used to train the final deepfake detection methods are given in the hyperparameter settings section of the experiments .xlsx file that is available in the `data` folder.
+Hyperparameter arguments can be given to the deepfake detector. The arguments that were used to train the final deepfake detection methods are given in the hyperparameter settings section of the `Experiments.xlsx` file that is available in the `data` folder.
                   
 Model type arguments that can be used for training:
 
