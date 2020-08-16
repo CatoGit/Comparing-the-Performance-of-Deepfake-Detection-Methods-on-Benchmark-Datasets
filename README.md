@@ -69,7 +69,7 @@ celebdf/
 ├── Celeb-real
 ```
 #### DF-TIMIT-LQ and DF-TIMIT-HQ:
-The vidtimit dataset of real videos is only available in frame format. These frames need to be turned into videos. ```utils.py``` provides a method vidtimit_setup_real_videos that turns the frames into the necessary videos. Afterwards, the folders should be ordered like this:
+The VidTIMIT dataset of real videos is only available in frame format. These frames need to be turned into videos. ```utils.py``` provides a method vidtimit_setup_real_videos that turns the frames into the necessary videos. Afterwards, the folders should be ordered like this:
 ```
 DeepfakeTIMIT/
 ├── lower_quality
@@ -77,7 +77,7 @@ DeepfakeTIMIT/
 ├── dftimitreal
 ```
 #### DFDC:
-Video files from folders 0 to 44 must be copied to the train folder. Video files from folders 45 to 49 must be copied to the test folder. They can be downloaded from Kaggle using the following command for each folder: !wget --load-cookies cookies.txt https://www.kaggle.com/c/16880/datadownload/dfdc_train_part_45.zip and the cookies.txt file. The cookies.txt file can be created by navigating to https://www.kaggle.com/c/deepfake-detection-challenge/data and then utlizing the cookies.txt Chrome extension.
+Video files from folders 0 to 44 must be copied to the train folder. Video files from folders 45 to 49 must be copied to the test folder. They can be downloaded from Kaggle using the following command for each folder: ```!wget --load-cookies cookies.txt https://www.kaggle.com/c/16880/datadownload/dfdc_train_part_45.zip``` and the cookies.txt file. The cookies.txt file can be created by navigating to https://www.kaggle.com/c/deepfake-detection-challenge/data and then utlizing the cookies.txt Chrome extension.
 ```
 dfdcdataset/
 ├── train
